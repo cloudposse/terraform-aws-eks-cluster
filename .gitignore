@@ -7,3 +7,9 @@
 
 # .tfvars files
 *.tfvars
+
+**/.idea
+**/*.iml
+
+**/.build-harness
+**/build-harness
