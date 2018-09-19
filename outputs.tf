@@ -1,6 +1,6 @@
 output "kubeconfig" {
-  description = "`kubectl` configuration to connect to the cluster https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#obtaining-kubectl-configuration-from-terraform"
-  value       = "${local.kubeconfig}"
+  description = "`kubeconfig` configuration to connect to the cluster using `kubectl`. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#obtaining-kubectl-configuration-from-terraform"
+  value       = "${join("", data.template_file.kubeconfig.*.rendered)}"
 }
 
 output "security_group_id" {

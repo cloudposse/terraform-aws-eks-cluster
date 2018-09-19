@@ -5,7 +5,7 @@
 # terraform-aws-eks-cluster [![Build Status](https://travis-ci.org/cloudposse/terraform-aws-eks-cluster.svg?branch=master)](https://travis-ci.org/cloudposse/terraform-aws-eks-cluster) [![Latest Release](https://img.shields.io/github/release/cloudposse/terraform-aws-eks-cluster.svg)](https://github.com/cloudposse/terraform-aws-eks-cluster/releases/latest) [![Slack Community](https://slack.cloudposse.com/badge.svg)](https://slack.cloudposse.com)
 
 
-Terraform module to provision [EKS](https://aws.amazon.com/eks/) cluster on AWS.
+Terraform module to provision an [EKS](https://aws.amazon.com/eks/) cluster on AWS.
 
 
 ---
@@ -27,7 +27,7 @@ It's 100% Open Source and licensed under the [APACHE2](LICENSE).
 
 The module provisions the following resources:
 
-- EKS cluster
+- EKS cluster of master nodes that can be used together with the [terraform-aws-eks-workers](https://github.com/cloudposse/terraform-aws-eks-workers) module to create a full-blown cluster
 - IAM Role to allow the cluster to access other AWS services
 - Security Group which is used by EKS workers to connect to the cluster and kubelets and pods to receive communication from the cluster control plane (see [terraform-aws-eks-workers](https://github.com/cloudposse/terraform-aws-eks-workers))
 - The module generates `kubeconfig` configuration to connect to the cluster using `kubectl`
@@ -42,6 +42,13 @@ provider "aws" {
   region = "${var.region}"
 }
 
+locals {
+  # The usage of the specific kubernetes.io/cluster/* resource tags below are required
+  # for EKS and Kubernetes to discover and manage networking resources
+  # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#base-vpc-networking
+  tags = "${merge(var.tags, map("kubernetes.io/cluster/${var.cluster_name}", "shared"))}"
+}
+
 data "aws_availability_zones" "available" {}
 
 module "vpc" {
@@ -50,7 +57,7 @@ module "vpc" {
   stage      = "${var.stage}"
   name       = "${var.name}"
   attributes = "${var.attributes}"
-  tags       = "${var.tags}"
+  tags       = "${local.tags}"
   cidr_block = "10.0.0.0/16"
 }
 
@@ -61,7 +68,7 @@ module "subnets" {
   stage               = "${var.stage}"
   name                = "${var.name}"
   attributes          = "${var.attributes}"
-  tags                = "${var.tags}"
+  tags                = "${local.tags}"
   region              = "${var.region}"
   vpc_id              = "${module.vpc.vpc_id}"
   igw_id              = "${module.vpc.igw_id}"
@@ -80,6 +87,34 @@ module "eks_cluster" {
   subnet_ids              = ["${module.subnets.public_subnet_ids}"]
   allowed_security_groups = ["${var.allowed_security_groups}"]
   allowed_cidr_blocks     = ["${var.allowed_cidr_blocks}"]
+}
+
+module "eks_workers" {
+  source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=master"
+  namespace                          = "${var.namespace}"
+  stage                              = "${var.stage}"
+  name                               = "${var.name}"
+  attributes                         = "${var.attributes}"
+  tags                               = "${var.tags}"
+  image_id                           = "${var.image_id}"
+  eks_worker_ami_name_filter         = "${var.eks_worker_ami_name_filter}"
+  instance_type                      = "${var.instance_type}"
+  vpc_id                             = "${module.vpc.vpc_id}"
+  subnet_ids                         = ["${module.subnets.public_subnet_ids}"]
+  health_check_type                  = "${var.health_check_type}"
+  min_size                           = "${var.min_size}"
+  max_size                           = "${var.max_size}"
+  wait_for_capacity_timeout          = "${var.wait_for_capacity_timeout}"
+  associate_public_ip_address        = "${var.associate_public_ip_address}"
+  cluster_name                       = "${module.eks_cluster.eks_cluster_id}"
+  cluster_endpoint                   = "${module.eks_cluster.eks_cluster_endpoint}"
+  cluster_certificate_authority_data = "${module.eks_cluster.eks_cluster_certificate_authority_date}"
+  cluster_security_group_id          = "${module.eks_cluster.security_group_id}"
+
+  # Auto-scaling policies and CloudWatch metric alarms
+  autoscaling_policies_enabled           = "${var.autoscaling_policies_enabled}"
+  cpu_utilization_high_threshold_percent = "${var.cpu_utilization_high_threshold_percent}"
+  cpu_utilization_low_threshold_percent  = "${var.cpu_utilization_low_threshold_percent}"
 }
 ```
 
@@ -125,7 +160,7 @@ Available targets:
 | eks_cluster_endpoint | The endpoint for the Kubernetes API server |
 | eks_cluster_id | The name of the cluster |
 | eks_cluster_version | The Kubernetes server version of the cluster |
-| kubeconfig | `kubectl` configuration to connect to the cluster https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#obtaining-kubectl-configuration-from-terraform |
+| kubeconfig | `kubeconfig` configuration to connect to the cluster using `kubectl`. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#obtaining-kubectl-configuration-from-terraform |
 | security_group_arn | ARN of the EKS cluster Security Group |
 | security_group_id | ID of the EKS cluster Security Group |
 | security_group_name | Name of the EKS cluster Security Group |

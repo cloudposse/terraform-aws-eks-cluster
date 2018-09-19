@@ -25,7 +25,7 @@
 | eks_cluster_endpoint | The endpoint for the Kubernetes API server |
 | eks_cluster_id | The name of the cluster |
 | eks_cluster_version | The Kubernetes server version of the cluster |
-| kubeconfig | `kubectl` configuration to connect to the cluster https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#obtaining-kubectl-configuration-from-terraform |
+| kubeconfig | `kubeconfig` configuration to connect to the cluster using `kubectl`. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#obtaining-kubectl-configuration-from-terraform |
 | security_group_arn | ARN of the EKS cluster Security Group |
 | security_group_id | ID of the EKS cluster Security Group |
 | security_group_name | Name of the EKS cluster Security Group |

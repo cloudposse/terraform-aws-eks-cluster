@@ -99,31 +99,13 @@ resource "aws_eks_cluster" "default" {
   ]
 }
 
-locals {
-  kubeconfig = <<KUBECONFIG
-apiVersion: v1
-clusters:
-- cluster:
-    server: ${join("", aws_eks_cluster.default.*.endpoint)}
-    certificate-authority-data: ${join("", aws_eks_cluster.default.*.certificate_authority.0.data)}
-  name: kubernetes
-contexts:
-- context:
-    cluster: kubernetes
-    user: aws
-  name: aws
-current-context: aws
-kind: Config
-preferences: {}
-users:
-- name: aws
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1alpha1
-      command: aws-iam-authenticator
-      args:
-        - "token"
-        - "-i"
-        - "${module.label.id}"
-KUBECONFIG
+data "template_file" "kubeconfig" {
+  count    = "${var.enabled == "true" ? 1 : 0}"
+  template = "${file("${path.module}/kubeconfig.tpl")}"
+
+  vars {
+    server                     = "${join("", aws_eks_cluster.default.*.endpoint)}"
+    certificate_authority_data = "${join("", aws_eks_cluster.default.*.certificate_authority.0.data)}"
+    cluster_name               = "${module.label.id}"
+  }
 }
