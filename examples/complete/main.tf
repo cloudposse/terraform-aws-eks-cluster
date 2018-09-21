@@ -6,7 +6,7 @@ locals {
   # The usage of the specific kubernetes.io/cluster/* resource tags below are required
   # for EKS and Kubernetes to discover and manage networking resources
   # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#base-vpc-networking
-  tags = "${merge(var.tags, map("kubernetes.io/cluster/${var.cluster_name}", "shared"))}"
+  tags = "${merge(var.tags, map("kubernetes.io/cluster/${module.eks_cluster.eks_cluster_id}", "shared"))}"
 }
 
 data "aws_availability_zones" "available" {}

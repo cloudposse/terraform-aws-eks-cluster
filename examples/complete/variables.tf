@@ -1,11 +1,13 @@
 variable "namespace" {
   type        = "string"
+  default     = "eg"
   description = "Namespace, which could be your organization name, e.g. 'eg' or 'cp'"
 }
 
 variable "stage" {
   type        = "string"
-  description = "Stage, e.g. 'prod', 'staging', 'dev', or 'test'"
+  default     = "testing"
+  description = "Stage, e.g. 'prod', 'staging', 'dev', or 'testing'"
 }
 
 variable "environment" {
@@ -16,7 +18,7 @@ variable "environment" {
 
 variable "name" {
   type        = "string"
-  default     = "app"
+  default     = "cluster"
   description = "Solution name, e.g. 'app' or 'cluster'"
 }
 
@@ -42,16 +44,6 @@ variable "enabled" {
   type        = "string"
   description = "Whether to create the resources. Set to `false` to prevent the module from creating any resources"
   default     = "true"
-}
-
-variable "vpc_id" {
-  type        = "string"
-  description = "VPC ID for the EKS cluster"
-}
-
-variable "subnet_ids" {
-  description = "A list of subnet IDs to launch the cluster in"
-  type        = "list"
 }
 
 variable "allowed_security_groups" {
