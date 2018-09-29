@@ -3,6 +3,11 @@ output "kubeconfig" {
   value       = "${module.eks_cluster.kubeconfig}"
 }
 
+output "config_map_aws_auth" {
+  description = "Kubernetes ConfigMap configuration to allow the worker nodes to join the EKS cluster. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#required-kubernetes-configuration-to-join-worker-nodes"
+  value       = "${module.eks_workers.config_map_aws_auth}"
+}
+
 output "eks_cluster_security_group_id" {
   description = "ID of the EKS cluster Security Group"
   value       = "${module.eks_cluster.security_group_id}"
@@ -28,9 +33,9 @@ output "eks_cluster_arn" {
   value       = "${module.eks_cluster.eks_cluster_arn}"
 }
 
-output "eks_cluster_certificate_authority_date" {
+output "eks_cluster_certificate_authority_data" {
   description = "The base64 encoded certificate data required to communicate with the cluster"
-  value       = "${module.eks_cluster.eks_cluster_certificate_authority_date}"
+  value       = "${module.eks_cluster.eks_cluster_certificate_authority_data}"
 }
 
 output "eks_cluster_endpoint" {
@@ -111,9 +116,4 @@ output "workers_security_group_arn" {
 output "workers_security_group_name" {
   description = "Name of the worker nodes Security Group"
   value       = "${module.eks_workers.security_group_name}"
-}
-
-output "workers_config_map_aws_auth" {
-  description = "Kubernetes ConfigMap configuration to allow the worker nodes to join the EKS cluster. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#required-kubernetes-configuration-to-join-worker-nodes"
-  value       = "${module.eks_workers.config_map_aws_auth}"
 }

@@ -2,11 +2,22 @@ provider "aws" {
   region = "${var.region}"
 }
 
+module "label" {
+  source     = "git::https://github.com/cloudposse/terraform-terraform-label.git?ref=tags/0.1.6"
+  namespace  = "${var.namespace}"
+  name       = "${var.name}"
+  stage      = "${var.stage}"
+  delimiter  = "${var.delimiter}"
+  attributes = "${var.attributes}"
+  tags       = "${var.tags}"
+  enabled    = "${var.enabled}"
+}
+
 locals {
   # The usage of the specific kubernetes.io/cluster/* resource tags below are required
   # for EKS and Kubernetes to discover and manage networking resources
   # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#base-vpc-networking
-  tags = "${merge(var.tags, map("kubernetes.io/cluster/${module.eks_cluster.eks_cluster_id}", "shared"))}"
+  tags = "${merge(var.tags, map("kubernetes.io/cluster/${module.label.id}", "shared"))}"
 }
 
 data "aws_availability_zones" "available" {}
@@ -18,7 +29,7 @@ module "vpc" {
   name       = "${var.name}"
   attributes = "${var.attributes}"
   tags       = "${local.tags}"
-  cidr_block = "10.0.0.0/16"
+  cidr_block = "${var.vpc_cidr_block}"
 }
 
 module "subnets" {
@@ -45,8 +56,9 @@ module "eks_cluster" {
   tags                    = "${var.tags}"
   vpc_id                  = "${module.vpc.vpc_id}"
   subnet_ids              = ["${module.subnets.public_subnet_ids}"]
-  allowed_security_groups = ["${var.allowed_security_groups}"]
-  allowed_cidr_blocks     = ["${var.allowed_cidr_blocks}"]
+  allowed_security_groups = ["${distinct(compact(concat(var.allowed_security_groups_cluster, list(module.eks_workers.security_group_id))))}"]
+  allowed_cidr_blocks     = ["${var.allowed_cidr_blocks_cluster}"]
+  enabled                 = "${var.enabled}"
 }
 
 module "eks_workers" {
@@ -68,8 +80,11 @@ module "eks_workers" {
   associate_public_ip_address        = "${var.associate_public_ip_address}"
   cluster_name                       = "${module.eks_cluster.eks_cluster_id}"
   cluster_endpoint                   = "${module.eks_cluster.eks_cluster_endpoint}"
-  cluster_certificate_authority_data = "${module.eks_cluster.eks_cluster_certificate_authority_date}"
+  cluster_certificate_authority_data = "${module.eks_cluster.eks_cluster_certificate_authority_data}"
   cluster_security_group_id          = "${module.eks_cluster.security_group_id}"
+  allowed_security_groups            = ["${var.allowed_security_groups_workers}"]
+  allowed_cidr_blocks                = ["${var.allowed_cidr_blocks_workers}"]
+  enabled                            = "${var.enabled}"
 
   # Auto-scaling policies and CloudWatch metric alarms
   autoscaling_policies_enabled           = "${var.autoscaling_policies_enabled}"
