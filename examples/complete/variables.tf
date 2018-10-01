@@ -1,24 +1,16 @@
 variable "namespace" {
   type        = "string"
-  default     = "eg"
   description = "Namespace, which could be your organization name, e.g. 'eg' or 'cp'"
 }
 
 variable "stage" {
   type        = "string"
-  default     = "testing"
-  description = "Stage, e.g. 'prod', 'staging', 'dev', or 'testing'"
-}
-
-variable "environment" {
-  type        = "string"
-  default     = ""
-  description = "Environment, e.g. 'testing', 'UAT'"
+  description = "Stage, e.g. 'prod', 'staging', 'dev' or 'testing'"
 }
 
 variable "name" {
   type        = "string"
-  default     = "cluster"
+  default     = "eks"
   description = "Solution name, e.g. 'app' or 'cluster'"
 }
 
@@ -46,28 +38,45 @@ variable "enabled" {
   default     = "true"
 }
 
-variable "allowed_security_groups" {
+variable "allowed_security_groups_cluster" {
   type        = "list"
   default     = []
   description = "List of Security Group IDs to be allowed to connect to the EKS cluster"
 }
 
-variable "allowed_cidr_blocks" {
+variable "allowed_security_groups_workers" {
+  type        = "list"
+  default     = []
+  description = "List of Security Group IDs to be allowed to connect to the worker nodes"
+}
+
+variable "allowed_cidr_blocks_cluster" {
   type        = "list"
   default     = []
   description = "List of CIDR blocks to be allowed to connect to the EKS cluster"
 }
 
+variable "allowed_cidr_blocks_workers" {
+  type        = "list"
+  default     = []
+  description = "List of CIDR blocks to be allowed to connect to the worker nodes"
+}
+
 variable "region" {
   type        = "string"
-  default     = "us-west-2"
   description = "AWS Region"
+}
+
+variable "vpc_cidr_block" {
+  type        = "string"
+  default     = "172.30.0.0/16"
+  description = "VPC CIDR block. See https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html for more details"
 }
 
 variable "image_id" {
   type        = "string"
-  description = "EC2 image ID to launch. If not provided, the module will lookup the most recent EKS AMI. See https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html for more details on EKS-optimized images"
   default     = ""
+  description = "EC2 image ID to launch. If not provided, the module will lookup the most recent EKS AMI. See https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html for more details on EKS-optimized images"
 }
 
 variable "eks_worker_ami_name_filter" {
@@ -94,13 +103,13 @@ variable "max_size" {
 }
 
 variable "min_size" {
-  default     = 1
+  default     = 2
   description = "The minimum size of the AutoScaling Group"
 }
 
 variable "wait_for_capacity_timeout" {
   type        = "string"
-  description = "A maximum duration that Terraform should wait for ASG instances to be healthy before timing out. (See also Waiting for Capacity below.) Setting this to '0' causes Terraform to skip all Capacity Waiting behavior"
+  description = "A maximum duration that Terraform should wait for ASG instances to be healthy before timing out. Setting this to '0' causes Terraform to skip all Capacity Waiting behavior"
   default     = "10m"
 }
 
@@ -125,4 +134,10 @@ variable "cpu_utilization_low_threshold_percent" {
   type        = "string"
   default     = "20"
   description = "Worker nodes AutoScaling Group CPU utilization low threshold percent"
+}
+
+variable "apply_config_map_aws_auth" {
+  type        = "string"
+  default     = "true"
+  description = "Whether to generate local files from `kubeconfig` and `config_map_aws_auth` and perform `kubectl apply` to apply the ConfigMap to allow the worker nodes to join the EKS cluster"
 }

@@ -1,19 +1,23 @@
 apiVersion: v1
+kind: Config
+preferences: {}
+
 clusters:
 - cluster:
     server: ${server}
     certificate-authority-data: ${certificate_authority_data}
-  name: kubernetes
+  name: ${cluster_name}
+
 contexts:
 - context:
-    cluster: kubernetes
-    user: aws
-  name: aws
-current-context: aws
-kind: Config
-preferences: {}
+    cluster: ${cluster_name}
+    user: ${cluster_name}
+  name: ${cluster_name}
+
+current-context: ${cluster_name}
+
 users:
-- name: aws
+- name: ${cluster_name}
   user:
     exec:
       apiVersion: client.authentication.k8s.io/v1alpha1

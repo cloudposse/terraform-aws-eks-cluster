@@ -28,9 +28,9 @@ output "eks_cluster_arn" {
   value       = "${join("", aws_eks_cluster.default.*.arn)}"
 }
 
-output "eks_cluster_certificate_authority_date" {
+output "eks_cluster_certificate_authority_data" {
   description = "The base64 encoded certificate data required to communicate with the cluster"
-  value       = "${join("", aws_eks_cluster.default.*.certificate_authority.0.data)}"
+  value       = "${local.certificate_authority_data}"
 }
 
 output "eks_cluster_endpoint" {

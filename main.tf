@@ -1,13 +1,12 @@
 module "label" {
-  source      = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.5.3"
-  namespace   = "${var.namespace}"
-  name        = "${var.name}"
-  stage       = "${var.stage}"
-  environment = "${var.environment}"
-  delimiter   = "${var.delimiter}"
-  attributes  = "${var.attributes}"
-  tags        = "${var.tags}"
-  enabled     = "${var.enabled}"
+  source     = "git::https://github.com/cloudposse/terraform-terraform-label.git?ref=tags/0.1.6"
+  namespace  = "${var.namespace}"
+  stage      = "${var.stage}"
+  name       = "${var.name}"
+  delimiter  = "${var.delimiter}"
+  attributes = ["${compact(concat(var.attributes, list("cluster")))}"]
+  tags       = "${var.tags}"
+  enabled    = "${var.enabled}"
 }
 
 data "aws_iam_policy_document" "assume_role" {
@@ -65,7 +64,7 @@ resource "aws_security_group_rule" "ingress_security_groups" {
   count                    = "${var.enabled == "true" ? length(var.allowed_security_groups) : 0}"
   description              = "Allow inbound traffic from existing Security Groups"
   from_port                = 0
-  to_port                  = 0
+  to_port                  = 65535
   protocol                 = "-1"
   source_security_group_id = "${element(var.allowed_security_groups, count.index)}"
   security_group_id        = "${join("", aws_security_group.default.*.id)}"
@@ -76,7 +75,7 @@ resource "aws_security_group_rule" "ingress_cidr_blocks" {
   count             = "${var.enabled == "true" && length(var.allowed_cidr_blocks) > 0 ? 1 : 0}"
   description       = "Allow inbound traffic from CIDR blocks"
   from_port         = 0
-  to_port           = 0
+  to_port           = 65535
   protocol          = "-1"
   cidr_blocks       = ["${var.allowed_cidr_blocks}"]
   security_group_id = "${join("", aws_security_group.default.*.id)}"
@@ -99,13 +98,20 @@ resource "aws_eks_cluster" "default" {
   ]
 }
 
+locals {
+  certificate_authority_data_list          = "${coalescelist(aws_eks_cluster.default.*.certificate_authority, list(list(map("data", ""))))}"
+  certificate_authority_data_list_internal = "${local.certificate_authority_data_list[0]}"
+  certificate_authority_data_map           = "${local.certificate_authority_data_list_internal[0]}"
+  certificate_authority_data               = "${local.certificate_authority_data_map["data"]}"
+}
+
 data "template_file" "kubeconfig" {
   count    = "${var.enabled == "true" ? 1 : 0}"
   template = "${file("${path.module}/kubeconfig.tpl")}"
 
   vars {
     server                     = "${join("", aws_eks_cluster.default.*.endpoint)}"
-    certificate_authority_data = "${join("", aws_eks_cluster.default.*.certificate_authority.0.data)}"
+    certificate_authority_data = "${local.certificate_authority_data}"
     cluster_name               = "${module.label.id}"
   }
 }

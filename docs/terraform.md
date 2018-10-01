@@ -21,7 +21,7 @@
 | Name | Description |
 |------|-------------|
 | eks_cluster_arn | The Amazon Resource Name (ARN) of the cluster |
-| eks_cluster_certificate_authority_date | The base64 encoded certificate data required to communicate with the cluster |
+| eks_cluster_certificate_authority_data | The base64 encoded certificate data required to communicate with the cluster |
 | eks_cluster_endpoint | The endpoint for the Kubernetes API server |
 | eks_cluster_id | The name of the cluster |
 | eks_cluster_version | The Kubernetes server version of the cluster |
