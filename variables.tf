@@ -65,3 +65,12 @@ variable "allowed_cidr_blocks" {
   default     = []
   description = "List of CIDR blocks to be allowed to connect to the EKS cluster"
 }
+
+variable "workers_security_group_ids" {
+  type        = "list"
+  description = "Security Group IDs of the worker nodes"
+}
+
+variable "workers_security_group_count" {
+  description = "Count of the worker Security Groups. Needed to prevent Terraform error `count can't be computed`"
+}

@@ -60,6 +60,17 @@ resource "aws_security_group_rule" "egress" {
   type              = "egress"
 }
 
+resource "aws_security_group_rule" "ingress_workers" {
+  count                    = "${var.enabled == "true" ? length(var.workers_security_group_count) : 0}"
+  description              = "Allow the cluster to receive communication from the worker nodes"
+  from_port                = 0
+  to_port                  = 65535
+  protocol                 = "-1"
+  source_security_group_id = "${element(var.workers_security_group_ids, count.index)}"
+  security_group_id        = "${join("", aws_security_group.default.*.id)}"
+  type                     = "ingress"
+}
+
 resource "aws_security_group_rule" "ingress_security_groups" {
   count                    = "${var.enabled == "true" ? length(var.allowed_security_groups) : 0}"
   description              = "Allow inbound traffic from existing Security Groups"
