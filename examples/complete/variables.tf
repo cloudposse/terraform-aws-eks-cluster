@@ -1,10 +1,12 @@
 variable "namespace" {
   type        = "string"
+  default     = "eg"
   description = "Namespace, which could be your organization name, e.g. 'eg' or 'cp'"
 }
 
 variable "stage" {
   type        = "string"
+  default     = "testing"
   description = "Stage, e.g. 'prod', 'staging', 'dev' or 'testing'"
 }
 
@@ -64,6 +66,7 @@ variable "allowed_cidr_blocks_workers" {
 
 variable "region" {
   type        = "string"
+  default     = "us-east-1"
   description = "AWS Region"
 }
 
@@ -134,6 +137,12 @@ variable "cpu_utilization_low_threshold_percent" {
   type        = "string"
   default     = "20"
   description = "Worker nodes AutoScaling Group CPU utilization low threshold percent"
+}
+
+variable "availability_zones" {
+  type        = "list"
+  default     = ["us-east-1a", "us-east-1b", "us-east-1c", "us-east-1d"]
+  description = "Availability Zones for the cluster"
 }
 
 variable "apply_config_map_aws_auth" {
