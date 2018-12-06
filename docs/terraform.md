@@ -15,6 +15,8 @@
 | subnet_ids | A list of subnet IDs to launch the cluster in | list | - | yes |
 | tags | Additional tags (e.g. `map('BusinessUnit`,`XYZ`) | map | `<map>` | no |
 | vpc_id | VPC ID for the EKS cluster | string | - | yes |
+| workers_security_group_count | Count of the worker Security Groups. Needed to prevent Terraform error `count can't be computed` | string | - | yes |
+| workers_security_group_ids | Security Group IDs of the worker nodes | list | - | yes |
 
 ## Outputs
 
@@ -25,7 +27,7 @@
 | eks_cluster_endpoint | The endpoint for the Kubernetes API server |
 | eks_cluster_id | The name of the cluster |
 | eks_cluster_version | The Kubernetes server version of the cluster |
-| kubeconfig | `kubeconfig` configuration to connect to the cluster using `kubectl`. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#obtaining-kubectl-configuration-from-terraform |
+| kubeconfig | `kubeconfig` configuration to connect to the cluster using `kubectl`. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#configuring-kubectl-for-eks |
 | security_group_arn | ARN of the EKS cluster Security Group |
 | security_group_id | ID of the EKS cluster Security Group |
 | security_group_name | Name of the EKS cluster Security Group |
