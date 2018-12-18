@@ -124,7 +124,7 @@ module "eks_workers" {
   associate_public_ip_address        = true
   cluster_name                       = "eg-testing-cluster"
   cluster_endpoint                   = "${module.eks_cluster.eks_cluster_endpoint}"
-  cluster_certificate_authority_data = "${module.eks_cluster.eks_cluster_certificate_authority_date}"
+  cluster_certificate_authority_data = "${module.eks_cluster.eks_cluster_certificate_authority_data}"
   cluster_security_group_id          = "${module.eks_cluster.security_group_id}"
 
   # Auto-scaling policies and CloudWatch metric alarms
@@ -149,7 +149,6 @@ Available targets:
   lint                                Lint terraform code
 
 ```
-
 ## Inputs
 
 | Name | Description | Type | Default | Required |
