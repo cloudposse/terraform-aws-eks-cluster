@@ -97,7 +97,7 @@ resource "aws_eks_cluster" "default" {
   count    = "${var.enabled == "true" ? 1 : 0}"
   name     = "${module.label.id}"
   role_arn = "${join("", aws_iam_role.default.*.arn)}"
-  version = "${var.kubernetes_version}"
+  version  = "${var.kubernetes_version}"
 
   vpc_config {
     security_group_ids = ["${join("", aws_security_group.default.*.id)}"]
