@@ -51,7 +51,11 @@ The module provisions the following resources:
 ## Usage
 
 
-For a complete example, see [examples/complete](examples/complete)
+Module usage examples:
+
+- [examples/complete](examples/complete) - complete example
+- [terraform-root-modules/eks](https://github.com/cloudposse/terraform-root-modules/tree/master/aws/eks) - Cloud Posse's service catalog of "root module" invocations for provisioning reference architectures
+- [terraform-root-modules/eks-backing-services-peering](https://github.com/cloudposse/terraform-root-modules/tree/master/aws/eks-backing-services-peering) - example of VPC peering between the EKS VPC and backing services VPC
 
 ```hcl
 provider "aws" {
