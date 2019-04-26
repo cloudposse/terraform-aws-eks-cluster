@@ -1,5 +1,5 @@
 module "label" {
-  source     = "git::https://github.com/cloudposse/terraform-terraform-label.git?ref=tags/0.1.6"
+  source     = "git::https://github.com/cloudposse/terraform-terraform-label.git?ref=tags/0.2.1"
   namespace  = "${var.namespace}"
   stage      = "${var.stage}"
   name       = "${var.name}"
@@ -98,10 +98,13 @@ resource "aws_eks_cluster" "default" {
   name     = "${module.label.id}"
   role_arn = "${join("", aws_iam_role.default.*.arn)}"
   version  = "${var.kubernetes_version}"
+  enabled_cluster_log_types = ["${var.enabled_cluster_log_types}"]
 
   vpc_config {
     security_group_ids = ["${join("", aws_security_group.default.*.id)}"]
     subnet_ids         = ["${var.subnet_ids}"]
+    endpoint_private_access = "${var.endpoint_private_access}"
+    endpoint_public_access = "${var.endpoint_public_access}"
   }
 
   depends_on = [

@@ -80,3 +80,21 @@ variable "kubernetes_version" {
   default     = ""
   description = "Desired Kubernetes master version. If you do not specify a value, the latest available version is used."
 }
+
+variable "endpoint_private_access" {
+  type        = "string"
+  default     = "false"
+  description = "Indicates whether or not the Amazon EKS private API server endpoint is enabled. Default to AWS EKS resource and it is false"
+}
+
+variable "endpoint_public_access" {
+  type        = "string"
+  default     = "true"
+  description = "Indicates whether or not the Amazon EKS public API server endpoint is enabled. Default to AWS EKS resource and it is is true"
+}
+
+variable "enabled_cluster_log_types" {
+  type        = "list"
+  default     = []
+  description = "A list of the desired control plane logging to enable. For more information, see https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. Possible values [api,audit,authenticator,controllerManager,scheduler]"
+}
