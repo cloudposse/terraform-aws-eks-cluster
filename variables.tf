@@ -90,11 +90,11 @@ variable "endpoint_private_access" {
 variable "endpoint_public_access" {
   type        = "string"
   default     = "true"
-  description = "Indicates whether or not the Amazon EKS public API server endpoint is enabled. Default to AWS EKS resource and it is is true"
+  description = "Indicates whether or not the Amazon EKS public API server endpoint is enabled. Default to AWS EKS resource and it is true"
 }
 
 variable "enabled_cluster_log_types" {
   type        = "list"
   default     = []
-  description = "A list of the desired control plane logging to enable. For more information, see https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. Possible values [api,audit,authenticator,controllerManager,scheduler]"
+  description = "A list of the desired control plane logging to enable. For more information, see https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. Possible values [`api`, `audit`, `authenticator`, `controllerManager`, `scheduler`]"
 }
