@@ -51,6 +51,11 @@ The module provisions the following resources:
 ## Usage
 
 
+**IMPORTANT:** The `master` branch is used in `source` just as an example. In your code, do not pin to `master` because there may be breaking changes between releases.
+Instead pin to the release tag (e.g. `?ref=tags/x.y.z`) of one of our [latest releases](https://github.com/cloudposse/terraform-aws-eks-cluster/releases).
+
+
+
 Module usage examples:
 
 - [examples/complete](examples/complete) - complete example
@@ -59,7 +64,7 @@ Module usage examples:
 
 ```hcl
 provider "aws" {
-  region = "us-west-2"
+  region = "us-west-1"
 }
 
 variable "tags" {
@@ -91,7 +96,7 @@ module "subnets" {
   stage               = "testing"
   name                = "cluster"
   tags                = "${local.tags}"
-  region              = "us-west-2"
+  region              = "us-west-1"
   vpc_id              = "${module.vpc.vpc_id}"
   igw_id              = "${module.vpc.igw_id}"
   cidr_block          = "${module.vpc.vpc_cidr_block}"

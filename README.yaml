@@ -83,7 +83,7 @@ usage: |-
 
   ```hcl
   provider "aws" {
-    region = "us-west-2"
+    region = "us-west-1"
   }
 
   variable "tags" {
@@ -115,7 +115,7 @@ usage: |-
     stage               = "testing"
     name                = "cluster"
     tags                = "${local.tags}"
-    region              = "us-west-2"
+    region              = "us-west-1"
     vpc_id              = "${module.vpc.vpc_id}"
     igw_id              = "${module.vpc.igw_id}"
     cidr_block          = "${module.vpc.vpc_cidr_block}"
