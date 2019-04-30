@@ -167,6 +167,9 @@ Available targets:
 | attributes | Additional attributes (e.g. `1`) | list | `<list>` | no |
 | delimiter | Delimiter to be used between `name`, `namespace`, `stage`, etc. | string | `-` | no |
 | enabled | Whether to create the resources. Set to `false` to prevent the module from creating any resources | string | `true` | no |
+| enabled_cluster_log_types | A list of the desired control plane logging to enable. For more information, see https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. Possible values [`api`, `audit`, `authenticator`, `controllerManager`, `scheduler`] | list | `<list>` | no |
+| endpoint_private_access | Indicates whether or not the Amazon EKS private API server endpoint is enabled. Default to AWS EKS resource and it is false | string | `false` | no |
+| endpoint_public_access | Indicates whether or not the Amazon EKS public API server endpoint is enabled. Default to AWS EKS resource and it is true | string | `true` | no |
 | environment | Environment, e.g. 'testing', 'UAT' | string | `` | no |
 | kubernetes_version | Desired Kubernetes master version. If you do not specify a value, the latest available version is used. | string | `` | no |
 | name | Solution name, e.g. 'app' or 'cluster' | string | `app` | no |
