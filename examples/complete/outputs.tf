@@ -117,3 +117,9 @@ output "workers_security_group_name" {
   description = "Name of the worker nodes Security Group"
   value       = "${module.eks_workers.security_group_name}"
 }
+
+
+output "set_context" {
+  description = "CLI command to set context to this cluster"
+  value = local.set_context
+}
