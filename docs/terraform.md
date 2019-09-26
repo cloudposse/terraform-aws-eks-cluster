@@ -4,6 +4,7 @@
 |------|-------------|:----:|:-----:|:-----:|
 | allowed_cidr_blocks | List of CIDR blocks to be allowed to connect to the EKS cluster | list(string) | `<list>` | no |
 | allowed_security_groups | List of Security Group IDs to be allowed to connect to the EKS cluster | list(string) | `<list>` | no |
+| apply_config_map_aws_auth | Whether to generate local files from `kubeconfig` and `config_map_aws_auth` and perform `kubectl apply` to apply the ConfigMap to allow worker nodes to join the EKS cluster | bool | `true` | no |
 | attributes | Additional attributes (e.g. `1`) | list(string) | `<list>` | no |
 | delimiter | Delimiter to be used between `name`, `namespace`, `stage`, etc. | string | `-` | no |
 | enabled | Whether to create the resources. Set to `false` to prevent the module from creating any resources | bool | `true` | no |
@@ -17,6 +18,7 @@
 | subnet_ids | A list of subnet IDs to launch the cluster in | list(string) | - | yes |
 | tags | Additional tags (e.g. `map('BusinessUnit`,`XYZ`) | map(string) | `<map>` | no |
 | vpc_id | VPC ID for the EKS cluster | string | - | yes |
+| workers_role_arns | List of Role ARNs of the worker nodes | list(string) | - | yes |
 | workers_security_group_count | Count of the worker Security Groups. Needed to prevent Terraform error `count can't be computed` | number | - | yes |
 | workers_security_group_ids | Security Group IDs of the worker nodes | list(string) | - | yes |
 
@@ -24,6 +26,7 @@
 
 | Name | Description |
 |------|-------------|
+| config_map_aws_auth | Kubernetes ConfigMap configuration for worker nodes to join the EKS cluster. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#required-kubernetes-configuration-to-join-worker-nodes |
 | eks_cluster_arn | The Amazon Resource Name (ARN) of the cluster |
 | eks_cluster_certificate_authority_data | The base64 encoded certificate data required to communicate with the cluster |
 | eks_cluster_endpoint | The endpoint for the Kubernetes API server |

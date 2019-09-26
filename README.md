@@ -3,7 +3,7 @@
 
 [![Cloud Posse][logo]](https://cpco.io/homepage)
 
-# terraform-aws-eks-cluster [![Build Status](https://travis-ci.org/cloudposse/terraform-aws-eks-cluster.svg?branch=master)](https://travis-ci.org/cloudposse/terraform-aws-eks-cluster) [![Latest Release](https://img.shields.io/github/release/cloudposse/terraform-aws-eks-cluster.svg)](https://github.com/cloudposse/terraform-aws-eks-cluster/releases/latest) [![Slack Community](https://slack.cloudposse.com/badge.svg)](https://slack.cloudposse.com)
+# terraform-aws-eks-cluster [![Codefresh Build Status](https://g.codefresh.io/api/badges/pipeline/cloudposse/terraform-modules%2Fterraform-aws-eks-cluster?type=cf-1)](https://g.codefresh.io/public/accounts/cloudposse/pipelines/5d8cd583941e46a098d3992d) [![Latest Release](https://img.shields.io/github/release/cloudposse/terraform-aws-eks-cluster.svg)](https://github.com/cloudposse/terraform-aws-eks-cluster/releases/latest) [![Slack Community](https://slack.cloudposse.com/badge.svg)](https://slack.cloudposse.com)
 
 
 Terraform module to provision an [EKS](https://aws.amazon.com/eks/) cluster on AWS.
@@ -164,6 +164,7 @@ Available targets:
 |------|-------------|:----:|:-----:|:-----:|
 | allowed_cidr_blocks | List of CIDR blocks to be allowed to connect to the EKS cluster | list(string) | `<list>` | no |
 | allowed_security_groups | List of Security Group IDs to be allowed to connect to the EKS cluster | list(string) | `<list>` | no |
+| apply_config_map_aws_auth | Whether to generate local files from `kubeconfig` and `config_map_aws_auth` and perform `kubectl apply` to apply the ConfigMap to allow worker nodes to join the EKS cluster | bool | `true` | no |
 | attributes | Additional attributes (e.g. `1`) | list(string) | `<list>` | no |
 | delimiter | Delimiter to be used between `name`, `namespace`, `stage`, etc. | string | `-` | no |
 | enabled | Whether to create the resources. Set to `false` to prevent the module from creating any resources | bool | `true` | no |
@@ -177,6 +178,7 @@ Available targets:
 | subnet_ids | A list of subnet IDs to launch the cluster in | list(string) | - | yes |
 | tags | Additional tags (e.g. `map('BusinessUnit`,`XYZ`) | map(string) | `<map>` | no |
 | vpc_id | VPC ID for the EKS cluster | string | - | yes |
+| workers_role_arns | List of Role ARNs of the worker nodes | list(string) | - | yes |
 | workers_security_group_count | Count of the worker Security Groups. Needed to prevent Terraform error `count can't be computed` | number | - | yes |
 | workers_security_group_ids | Security Group IDs of the worker nodes | list(string) | - | yes |
 
@@ -184,6 +186,7 @@ Available targets:
 
 | Name | Description |
 |------|-------------|
+| config_map_aws_auth | Kubernetes ConfigMap configuration for worker nodes to join the EKS cluster. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#required-kubernetes-configuration-to-join-worker-nodes |
 | eks_cluster_arn | The Amazon Resource Name (ARN) of the cluster |
 | eks_cluster_certificate_authority_data | The base64 encoded certificate data required to communicate with the cluster |
 | eks_cluster_endpoint | The endpoint for the Kubernetes API server |
@@ -212,7 +215,7 @@ Check out these related projects.
 - [terraform-aws-ec2-autoscale-group](https://github.com/cloudposse/terraform-aws-ec2-autoscale-group) - Terraform module to provision Auto Scaling Group and Launch Template on AWS
 - [terraform-aws-ecs-container-definition](https://github.com/cloudposse/terraform-aws-ecs-container-definition) - Terraform module to generate well-formed JSON documents (container definitions) that are passed to the  aws_ecs_task_definition Terraform resource
 - [terraform-aws-ecs-alb-service-task](https://github.com/cloudposse/terraform-aws-ecs-alb-service-task) - Terraform module which implements an ECS service which exposes a web service via ALB
-- [erraform-aws-ecs-web-app](https://github.com/cloudposse/terraform-aws-ecs-web-app) - Terraform module that implements a web app on ECS and supports autoscaling, CI/CD, monitoring, ALB integration, and much more
+- [terraform-aws-ecs-web-app](https://github.com/cloudposse/terraform-aws-ecs-web-app) - Terraform module that implements a web app on ECS and supports autoscaling, CI/CD, monitoring, ALB integration, and much more
 - [terraform-aws-ecs-codepipeline](https://github.com/cloudposse/terraform-aws-ecs-codepipeline) - Terraform module for CI/CD with AWS Code Pipeline and Code Build for ECS
 - [terraform-aws-ecs-cloudwatch-autoscaling](https://github.com/cloudposse/terraform-aws-ecs-cloudwatch-autoscaling) - Terraform module to autoscale ECS Service based on CloudWatch metrics
 - [terraform-aws-ecs-cloudwatch-sns-alarms](https://github.com/cloudposse/terraform-aws-ecs-cloudwatch-sns-alarms) - Terraform module to create CloudWatch Alarms on ECS Service level metrics
