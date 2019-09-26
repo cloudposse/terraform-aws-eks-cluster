@@ -77,8 +77,8 @@ locals {
   }
 
   map_worker_roles = flatten([
-    for key in var.workers_role_arns : {
-      rolearn : var.workers_role_arns[key]
+    for role_arns in var.workers_role_arns : {
+      rolearn : role_arns
       username : "system:node:{{EC2PrivateDNSName}}"
       groups : [
         "system:bootstrappers",
