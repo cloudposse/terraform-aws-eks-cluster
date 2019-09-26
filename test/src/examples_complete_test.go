@@ -56,7 +56,7 @@ func TestExamplesComplete(t *testing.T) {
 	assert.Equal(t, "eg-test-eks-cluster-workers", securityGroupName)
 
 	// Run `terraform output` to get the value of an output variable
-	workerRoleName := terraform.Output(t, terraformOptions, "worker_role_name")
+	workerRoleName := terraform.Output(t, terraformOptions, "workers_role_name")
 	// Verify we're getting back the outputs we expect
 	assert.Equal(t, "eg-test-eks-cluster-workers", workerRoleName)
 }

@@ -83,19 +83,19 @@ output "security_group_name" {
   value       = module.eks_workers.security_group_name
 }
 
-output "worker_role_arn" {
+output "workers_role_arn" {
   description = "ARN of the worker nodes IAM role"
-  value       = module.eks_workers.worker_role_arn
+  value       = module.eks_workers.workers_role_arn
 }
 
-output "worker_role_name" {
+output "workers_role_name" {
   description = "Name of the worker nodes IAM role"
-  value       = module.eks_workers.worker_role_name
+  value       = module.eks_workers.workers_role_name
 }
 
 output "config_map_aws_auth" {
   description = "Kubernetes ConfigMap configuration for worker nodes to join the EKS cluster. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#required-kubernetes-configuration-to-join-worker-nodes"
-  value       = module.eks_workers.config_map_aws_auth
+  value       = module.eks_cluster.config_map_aws_auth
 }
 
 output "kubeconfig" {

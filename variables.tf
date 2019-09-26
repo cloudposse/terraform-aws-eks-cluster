@@ -61,6 +61,11 @@ variable "allowed_cidr_blocks" {
   description = "List of CIDR blocks to be allowed to connect to the EKS cluster"
 }
 
+variable "workers_role_arns" {
+  type        = list(string)
+  description = "List of Role ARNs of the worker nodes"
+}
+
 variable "workers_security_group_ids" {
   type        = list(string)
   description = "Security Group IDs of the worker nodes"
@@ -93,4 +98,10 @@ variable "enabled_cluster_log_types" {
   type        = list(string)
   default     = []
   description = "A list of the desired control plane logging to enable. For more information, see https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. Possible values [`api`, `audit`, `authenticator`, `controllerManager`, `scheduler`]"
+}
+
+variable "apply_config_map_aws_auth" {
+  type        = bool
+  default     = true
+  description = "Whether to generate local files from `kubeconfig` and `config_map_aws_auth` and perform `kubectl apply` to apply the ConfigMap to allow worker nodes to join the EKS cluster"
 }

@@ -119,14 +119,3 @@ locals {
   certificate_authority_data_map           = local.certificate_authority_data_list_internal[0]
   certificate_authority_data               = local.certificate_authority_data_map["data"]
 }
-
-data "template_file" "kubeconfig" {
-  count    = var.enabled ? 1 : 0
-  template = file("${path.module}/kubeconfig.tpl")
-
-  vars = {
-    server                     = join("", aws_eks_cluster.default.*.endpoint)
-    certificate_authority_data = local.certificate_authority_data
-    cluster_name               = module.label.id
-  }
-}
