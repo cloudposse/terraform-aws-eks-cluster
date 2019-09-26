@@ -2,22 +2,14 @@ provider "aws" {
   region = var.region
 }
 
-# This `label` is needed to prevent `count can't be computed` errors
 module "label" {
   source     = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.15.0"
   namespace  = var.namespace
   name       = var.name
   stage      = var.stage
   delimiter  = var.delimiter
-  attributes = var.attributes
+  attributes = compact(concat(var.attributes, list("cluster")))
   tags       = var.tags
-}
-
-# This `label` is needed to prevent `count can't be computed` errors
-module "cluster_label" {
-  source     = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.15.0"
-  context    = module.label.context
-  attributes = compact(concat(module.label.attributes, list("cluster")))
 }
 
 locals {
@@ -32,6 +24,7 @@ module "vpc" {
   namespace  = var.namespace
   stage      = var.stage
   name       = var.name
+  attributes = var.attributes
   cidr_block = "172.16.0.0/16"
   tags       = local.tags
 }
@@ -42,6 +35,7 @@ module "subnets" {
   namespace            = var.namespace
   stage                = var.stage
   name                 = var.name
+  attributes           = var.attributes
   vpc_id               = module.vpc.vpc_id
   igw_id               = module.vpc.igw_id
   cidr_block           = module.vpc.vpc_cidr_block
@@ -55,6 +49,8 @@ module "eks_workers" {
   namespace                          = var.namespace
   stage                              = var.stage
   name                               = var.name
+  attributes                         = var.attributes
+  tags                               = var.tags
   instance_type                      = var.instance_type
   vpc_id                             = module.vpc.vpc_id
   subnet_ids                         = module.subnets.public_subnet_ids
@@ -62,7 +58,7 @@ module "eks_workers" {
   min_size                           = var.min_size
   max_size                           = var.max_size
   wait_for_capacity_timeout          = var.wait_for_capacity_timeout
-  cluster_name                       = module.cluster_label.id
+  cluster_name                       = module.label.id
   cluster_endpoint                   = module.eks_cluster.eks_cluster_endpoint
   cluster_certificate_authority_data = module.eks_cluster.eks_cluster_certificate_authority_data
   cluster_security_group_id          = module.eks_cluster.security_group_id
@@ -86,4 +82,6 @@ module "eks_cluster" {
   # `workers_security_group_count` is needed to prevent `count can't be computed` errors
   workers_security_group_ids   = [module.eks_workers.security_group_id]
   workers_security_group_count = 1
+
+  workers_role_arns = [module.eks_workers.workers_role_arn]
 }
