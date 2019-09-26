@@ -64,29 +64,24 @@ variable "min_size" {
 variable "wait_for_capacity_timeout" {
   type        = string
   description = "A maximum duration that Terraform should wait for ASG instances to be healthy before timing out. Setting this to '0' causes Terraform to skip all Capacity Waiting behavior"
-  default     = "10m"
 }
 
 variable "autoscaling_policies_enabled" {
   type        = bool
-  default     = true
   description = "Whether to create `aws_autoscaling_policy` and `aws_cloudwatch_metric_alarm` resources to control Auto Scaling"
 }
 
 variable "cpu_utilization_high_threshold_percent" {
   type        = number
-  default     = 80
   description = "Worker nodes AutoScaling Group CPU utilization high threshold percent"
 }
 
 variable "cpu_utilization_low_threshold_percent" {
   type        = number
-  default     = 20
   description = "Worker nodes AutoScaling Group CPU utilization low threshold percent"
 }
 
 variable "cluster_auth_type" {
   type        = string
-  default     = "aws-eks-get-token"
   description = "Cluster authentication type. Valid values are `aws-eks-get-token` and `aws-iam-authenticator`. Amazon EKS uses the `aws eks get-token` command (available in version 1.16.232 or greater of the AWS CLI) or the AWS IAM Authenticator for Kubernetes with `kubectl` for cluster authentication. For more info, see https://docs.aws.amazon.com/en_pv/eks/latest/userguide/create-kubeconfig.html"
 }

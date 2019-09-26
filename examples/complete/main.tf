@@ -84,4 +84,5 @@ module "eks_cluster" {
   workers_security_group_count = 1
 
   workers_role_arns = [module.eks_workers.workers_role_arn]
+  cluster_auth_type = var.cluster_auth_type
 }

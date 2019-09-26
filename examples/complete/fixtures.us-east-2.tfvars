@@ -23,3 +23,5 @@ autoscaling_policies_enabled = true
 cpu_utilization_high_threshold_percent = 80
 
 cpu_utilization_low_threshold_percent = 20
+
+cluster_auth_type = "aws-iam-authenticator"
