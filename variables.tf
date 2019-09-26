@@ -106,13 +106,13 @@ variable "apply_config_map_aws_auth" {
   description = "Whether to generate local files from `kubeconfig` and `config-map-aws-auth` templates and perform `kubectl apply` to apply the ConfigMap to allow worker nodes to join the EKS cluster"
 }
 
-variable "additional_aws_accounts" {
+variable "map_additional_aws_accounts" {
   description = "Additional AWS account numbers to add to `config-map-aws-auth` ConfigMap"
   type        = list(string)
   default     = []
 }
 
-variable "additional_iam_roles" {
+variable "map_additional_iam_roles" {
   description = "Additional IAM roles to add to `config-map-aws-auth` ConfigMap"
 
   type = list(object({
@@ -124,7 +124,7 @@ variable "additional_iam_roles" {
   default = []
 }
 
-variable "additional_iam_users" {
+variable "map_additional_iam_users" {
   description = "Additional IAM users to add to `config-map-aws-auth` ConfigMap"
 
   type = list(object({
@@ -139,5 +139,5 @@ variable "additional_iam_users" {
 variable "cluster_auth_type" {
   type        = string
   default     = "aws-eks-get-token"
-  description = "Cluster authentication type. Possible values are `aws-eks-get-token` and `aws-iam-authenticator`. Amazon EKS uses the `aws eks get-token` command (available in version 1.16.232 or greater of the AWS CLI) or the AWS IAM Authenticator for Kubernetes with `kubectl` for cluster authentication. For more info, see https://docs.aws.amazon.com/en_pv/eks/latest/userguide/create-kubeconfig.html"
+  description = "Cluster authentication type. Valid values are `aws-eks-get-token` and `aws-iam-authenticator`. Amazon EKS uses the `aws eks get-token` command (available in version 1.16.232 or greater of the AWS CLI) or the AWS IAM Authenticator for Kubernetes with `kubectl` for cluster authentication. For more info, see https://docs.aws.amazon.com/en_pv/eks/latest/userguide/create-kubeconfig.html"
 }

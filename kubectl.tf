@@ -12,51 +12,133 @@
 ###########################################################################################################################################
 
 locals {
-  kubeconfig_filename          = "${path.module}/kubeconfig${var.delimiter}${join("", aws_eks_cluster.default.*.id)}.yaml"
-  config_map_aws_auth_filename = "${path.module}/config-map-aws-auth${var.delimiter}${join("", aws_eks_cluster.default.*.id)}.yaml"
+  cluster_endpoint = join("", aws_eks_cluster.default.*.endpoint)
+  cluster_name     = join("", aws_eks_cluster.default.*.id)
+
+  kubeconfig_json_file_path = "${path.module}/kubeconfig${var.delimiter}${local.cluster_name}.json"
+  kubeconfig_yaml_file_path = "${path.module}/kubeconfig${var.delimiter}${local.cluster_name}.yaml"
+  config_map_file_path      = "${path.module}/config-map-aws-auth${var.delimiter}${local.cluster_name}.yaml"
+
+  kubeconfig_command = var.cluster_auth_type == "aws-iam-authenticator" ? "aws-iam-authenticator" : "aws"
+
+  kubeconfig_command_args_iam_authenticator = [
+    "token",
+    "-i",
+    local.cluster_name
+  ]
+
+  kubeconfig_command_args_sts_token = [
+    "eks",
+    "get-token",
+    "--cluster-name",
+    local.cluster_name
+  ]
+
+  kubeconfig_command_args = var.cluster_auth_type == "aws-iam-authenticator" ? local.kubeconfig_command_args_iam_authenticator : local.kubeconfig_command_args_sts_token
+
+  kubeconfig = {
+    apiVersion : "v1"
+    kind : "Config"
+    preferences : {}
+
+    clusters : [
+      {
+        name : local.cluster_name
+        cluster : {
+          server : local.cluster_endpoint
+          certificate-authority-data : local.certificate_authority_data
+        }
+      }
+    ]
+
+    contexts : [
+      {
+        name : local.cluster_name
+        context : {
+          cluster : local.cluster_name
+          user : local.cluster_name
+        }
+      }
+    ]
+
+    current-context : local.cluster_name
+
+    users : [
+      {
+        name : local.cluster_name
+        user : {
+          exec : {
+            apiVersion : "client.authentication.k8s.io/v1alpha1"
+            command : local.kubeconfig_command
+            args : local.kubeconfig_command_args
+          }
+        }
+      }
+    ]
+  }
+
+  map_worker_roles = flatten([
+    for key in var.workers_role_arns : {
+      rolearn : var.workers_role_arns[key]
+      username : "system:node:{{EC2PrivateDNSName}}"
+      groups : [
+        "system:bootstrappers",
+        "system:nodes"
+      ]
+    }
+  ])
+
+  # The EKS service does not provide a cluster-level API parameter or resource to automatically configure the underlying Kubernetes cluster
+  # to allow worker nodes to join the cluster via AWS IAM role authentication.
+  # This is a Kubernetes ConfigMap configuration for worker nodes to join the cluster
+  # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#required-kubernetes-configuration-to-join-worker-nodes
+  config_map = {
+    apiVersion : "v1"
+    kind : "ConfigMap"
+    metadata : {
+      name : "aws-auth"
+      namespace : "kube-system"
+    }
+    data : {
+      mapUsers : var.map_additional_iam_users,
+      mapAccounts : var.map_additional_aws_accounts,
+      mapRoles : compact(concat(local.map_worker_roles, var.map_additional_iam_roles))
+    }
+  }
 }
 
-data "template_file" "kubeconfig" {
+resource "local_file" "kubeconfig_json" {
   count    = var.enabled ? 1 : 0
-  template = file("${path.module}/templates/kubeconfig.tpl")
-
-  vars = {
-    server                     = join("", aws_eks_cluster.default.*.endpoint)
-    certificate_authority_data = local.certificate_authority_data
-    cluster_name               = module.label.id
-  }
+  content  = jsonencode(local.kubeconfig)
+  filename = local.kubeconfig_json_file_path
 }
 
-data "template_file" "config_map_aws_auth" {
-  count    = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
-  template = file("${path.module}/templates/config-map-aws-auth.tpl")
-
-  vars = {
-    aws_iam_role_arn = var.workers_role_arns[0]
-  }
+resource "local_file" "kubeconfig_yaml" {
+  count    = var.enabled ? 1 : 0
+  content  = yamlencode(local.kubeconfig)
+  filename = local.kubeconfig_yaml_file_path
 }
 
-resource "local_file" "kubeconfig" {
+resource "local_file" "config_map_aws_auth_yaml" {
   count    = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
-  content  = join("", data.template_file.kubeconfig.*.rendered)
-  filename = local.kubeconfig_filename
-}
-
-resource "local_file" "config_map_aws_auth" {
-  count    = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
-  content  = join("", data.template_file.config_map_aws_auth.*.rendered)
-  filename = local.config_map_aws_auth_filename
+  content  = yamlencode(local.config_map)
+  filename = "${path.module}/config-map-aws-auth${var.delimiter}${local.cluster_name}.yaml"
 }
 
 resource "null_resource" "apply_config_map_aws_auth" {
   count = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
 
   provisioner "local-exec" {
-    command = "kubectl apply -f ${local.config_map_aws_auth_filename} --kubeconfig ${local.kubeconfig_filename}"
+    command = <<-EOT
+      while [[ ! -e ${local.config_map_file_path} || ! -e ${local.kubeconfig_yaml_file_path} ]] ; do sleep 1; done &&
+      kubectl apply -f ${local.config_map_file_path} --kubeconfig ${local.kubeconfig_yaml_file_path}
+    EOT
   }
 
   triggers {
-    kubeconfig_rendered          = join("", data.template_file.kubeconfig.*.rendered)
-    config_map_aws_auth_rendered = join("", data.template_file.config_map_aws_auth.*.rendered)
+    kubeconfig_rendered = local.kubeconfig
+    config_map_aws_auth_rendered = local.config_map
   }
+
+  depends_on = [aws_eks_cluster.default]
 }

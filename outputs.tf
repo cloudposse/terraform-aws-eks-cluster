@@ -1,11 +1,11 @@
 output "kubeconfig" {
   description = "`kubeconfig` configuration to connect to the cluster using `kubectl`. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#configuring-kubectl-for-eks"
-  value       = join("", data.template_file.kubeconfig.*.rendered)
+  value       = yamlencode(local.kubeconfig)
 }
 
 output "config_map_aws_auth" {
   description = "Kubernetes ConfigMap configuration for worker nodes to join the EKS cluster. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#required-kubernetes-configuration-to-join-worker-nodes"
-  value       = join("", data.template_file.config_map_aws_auth.*.rendered)
+  value       = yamlencode(local.config_map)
 }
 
 output "security_group_id" {

@@ -84,3 +84,9 @@ variable "cpu_utilization_low_threshold_percent" {
   default     = 20
   description = "Worker nodes AutoScaling Group CPU utilization low threshold percent"
 }
+
+variable "cluster_auth_type" {
+  type        = string
+  default     = "aws-eks-get-token"
+  description = "Cluster authentication type. Valid values are `aws-eks-get-token` and `aws-iam-authenticator`. Amazon EKS uses the `aws eks get-token` command (available in version 1.16.232 or greater of the AWS CLI) or the AWS IAM Authenticator for Kubernetes with `kubectl` for cluster authentication. For more info, see https://docs.aws.amazon.com/en_pv/eks/latest/userguide/create-kubeconfig.html"
+}
