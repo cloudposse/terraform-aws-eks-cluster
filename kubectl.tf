@@ -8,6 +8,7 @@
 #
 # https://itnext.io/how-does-client-authentication-work-on-amazon-eks-c4f2b90d943b
 # https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html
+# https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html
 #
 ###########################################################################################################################################
 
@@ -91,31 +92,26 @@ locals {
   # to allow worker nodes to join the cluster via AWS IAM role authentication.
   # This is a Kubernetes ConfigMap configuration for worker nodes to join the cluster
   # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#required-kubernetes-configuration-to-join-worker-nodes
+  # https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html
   config_map = {
-    apiVersion : "v1"
-    kind : "ConfigMap"
-    metadata : {
-      name : "aws-auth"
-      namespace : "kube-system"
-    }
-    data : {
-      mapUsers : var.map_additional_iam_users,
-      mapAccounts : var.map_additional_aws_accounts,
-      mapRoles : concat(local.map_worker_roles, var.map_additional_iam_roles)
-    }
+    mapUsers : var.map_additional_iam_users,
+    mapAccounts : var.map_additional_aws_accounts,
+    mapRoles : concat(local.map_worker_roles, var.map_additional_iam_roles)
   }
 }
 
 resource "local_file" "kubeconfig_file" {
-  count    = var.enabled ? 1 : 0
-  content  = jsonencode(local.kubeconfig)
-  filename = local.kubeconfig_file
+  count      = var.enabled ? 1 : 0
+  content    = jsonencode(local.kubeconfig)
+  filename   = local.kubeconfig_file
+  depends_on = [aws_eks_cluster.default]
 }
 
 resource "local_file" "config_map_aws_auth_file" {
-  count    = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
-  content  = jsonencode(local.config_map)
-  filename = local.config_map_file
+  count      = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
+  content    = jsonencode(local.config_map)
+  filename   = local.config_map_file
+  depends_on = [aws_eks_cluster.default]
 }
 
 resource "null_resource" "apply_config_map_aws_auth" {
@@ -124,7 +120,7 @@ resource "null_resource" "apply_config_map_aws_auth" {
   provisioner "local-exec" {
     command = <<-EOT
       while [[ ! -e ${local.config_map_file} || ! -e ${local.kubeconfig_file} ]] ; do sleep 1; done &&
-      kubectl apply -f ${local.config_map_file} --kubeconfig ${local.kubeconfig_file}
+      kubectl create configmap aws-auth --namespace=kube-system --from-file=${local.config_map_file} --kubeconfig ${local.kubeconfig_file}
     EOT
   }
 
