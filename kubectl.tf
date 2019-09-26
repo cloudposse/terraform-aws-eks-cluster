@@ -7,6 +7,7 @@
 # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#required-kubernetes-configuration-to-join-worker-nodes
 #
 # https://itnext.io/how-does-client-authentication-work-on-amazon-eks-c4f2b90d943b
+# https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html
 #
 ###########################################################################################################################################
 
@@ -17,7 +18,7 @@ locals {
 
 data "template_file" "kubeconfig" {
   count    = var.enabled ? 1 : 0
-  template = file("${path.module}/kubeconfig.tpl")
+  template = file("${path.module}/templates/kubeconfig.tpl")
 
   vars = {
     server                     = join("", aws_eks_cluster.default.*.endpoint)
@@ -28,7 +29,7 @@ data "template_file" "kubeconfig" {
 
 data "template_file" "config_map_aws_auth" {
   count    = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
-  template = file("${path.module}/config_map_aws_auth.tpl")
+  template = file("${path.module}/templates/config_map_aws_auth.tpl")
 
   vars = {
     aws_iam_role_arn = var.workers_role_arns[0]
