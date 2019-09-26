@@ -3,9 +3,9 @@ output "kubeconfig" {
   value       = jsonencode(local.kubeconfig)
 }
 
-output "config_map_aws_auth" {
-  description = "Kubernetes ConfigMap configuration for worker nodes to join the EKS cluster. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#required-kubernetes-configuration-to-join-worker-nodes"
-  value       = jsonencode(local.config_map)
+output "config_map_data" {
+  description = "Kubernetes ConfigMap data for worker nodes to join the EKS cluster. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#required-kubernetes-configuration-to-join-worker-nodes"
+  value       = jsonencode(local.config_map_data)
 }
 
 output "security_group_id" {

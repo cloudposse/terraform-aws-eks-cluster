@@ -41,22 +41,32 @@ func TestExamplesComplete(t *testing.T) {
 	assert.Equal(t, []string{"172.16.96.0/19", "172.16.128.0/19"}, publicSubnetCidrs)
 
 	// Run `terraform output` to get the value of an output variable
-	autoscalingGroupName := terraform.Output(t, terraformOptions, "autoscaling_group_name")
+	workersAutoscalingGroupName := terraform.Output(t, terraformOptions, "workers_autoscaling_group_name")
 	// Verify we're getting back the outputs we expect
-	assert.Contains(t, autoscalingGroupName, "eg-test-eks-cluster-workers")
+	assert.Contains(t, workersAutoscalingGroupName, "eg-test-eks-cluster")
 
 	// Run `terraform output` to get the value of an output variable
-	launchTemplateArn := terraform.Output(t, terraformOptions, "launch_template_arn")
+	workersLaunchTemplateArn := terraform.Output(t, terraformOptions, "workers_launch_template_arn")
 	// Verify we're getting back the outputs we expect
-	assert.Contains(t, launchTemplateArn, "arn:aws:ec2:us-east-2:126450723953:launch-template")
+	assert.Contains(t, workersLaunchTemplateArn, "arn:aws:ec2:us-east-2:126450723953:launch-template")
 
 	// Run `terraform output` to get the value of an output variable
-	securityGroupName := terraform.Output(t, terraformOptions, "security_group_name")
+	workersSecurityGroupName := terraform.Output(t, terraformOptions, "workers_security_group_name")
 	// Verify we're getting back the outputs we expect
-	assert.Equal(t, "eg-test-eks-cluster-workers", securityGroupName)
+	assert.Equal(t, "eg-test-eks-cluster-workers", workersSecurityGroupName)
 
 	// Run `terraform output` to get the value of an output variable
 	workerRoleName := terraform.Output(t, terraformOptions, "workers_role_name")
 	// Verify we're getting back the outputs we expect
 	assert.Equal(t, "eg-test-eks-cluster-workers", workerRoleName)
+
+	// Run `terraform output` to get the value of an output variable
+	eksClusterId := terraform.Output(t, terraformOptions, "eks_cluster_id")
+	// Verify we're getting back the outputs we expect
+	assert.Equal(t, "eg-test-eks-cluster-cluster", eksClusterId)
+
+	// Run `terraform output` to get the value of an output variable
+	eksClusterSecurityGroupName := terraform.Output(t, terraformOptions, "eks_cluster_security_group_name")
+	// Verify we're getting back the outputs we expect
+	assert.Equal(t, "eg-test-eks-cluster-cluster", eksClusterSecurityGroupName)
 }

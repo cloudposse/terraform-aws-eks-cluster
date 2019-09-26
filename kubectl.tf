@@ -12,12 +12,19 @@
 #
 ###########################################################################################################################################
 
+provider "kubernetes" {
+  host = "https://104.196.242.174"
+
+  username = "username"
+  password = "password"
+}
+
 locals {
   cluster_endpoint = join("", aws_eks_cluster.default.*.endpoint)
   cluster_name     = join("", aws_eks_cluster.default.*.id)
 
-  kubeconfig_file = "${path.module}/kubeconfig${var.delimiter}${local.cluster_name}.json"
-  config_map_file = "${path.module}/config-map-aws-auth${var.delimiter}${local.cluster_name}.json"
+  kubeconfig_file      = "${path.module}/kubeconfig${var.delimiter}${local.cluster_name}.json"
+  config_map_data_file = "${path.module}/config-map-aws-auth${var.delimiter}${local.cluster_name}.json"
 
   kubeconfig_command = var.cluster_auth_type == "aws-iam-authenticator" ? "aws-iam-authenticator" : "aws"
 
@@ -93,7 +100,7 @@ locals {
   # This is a Kubernetes ConfigMap configuration for worker nodes to join the cluster
   # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#required-kubernetes-configuration-to-join-worker-nodes
   # https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html
-  config_map = {
+  config_map_data = {
     mapUsers : var.map_additional_iam_users,
     mapAccounts : var.map_additional_aws_accounts,
     mapRoles : concat(local.map_worker_roles, var.map_additional_iam_roles)
@@ -107,10 +114,10 @@ resource "local_file" "kubeconfig_file" {
   depends_on = [aws_eks_cluster.default]
 }
 
-resource "local_file" "config_map_aws_auth_file" {
+resource "local_file" "config_map_data_file" {
   count      = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
-  content    = jsonencode(local.config_map)
-  filename   = local.config_map_file
+  content    = jsonencode(local.config_map_data)
+  filename   = local.config_map_data_file
   depends_on = [aws_eks_cluster.default]
 }
 
@@ -119,14 +126,14 @@ resource "null_resource" "apply_config_map_aws_auth" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      while [[ ! -e ${local.config_map_file} || ! -e ${local.kubeconfig_file} ]] ; do sleep 1; done &&
-      kubectl create configmap aws-auth --namespace=kube-system --from-file=${local.config_map_file} --kubeconfig ${local.kubeconfig_file}
+      while [[ ! -e ${local.config_map_data_file} || ! -e ${local.kubeconfig_file} ]] ; do sleep 1; done &&
+      kubectl create configmap aws-auth --namespace=kube-system --from-file=${local.config_map_data_file} --kubeconfig ${local.kubeconfig_file}
     EOT
   }
 
   triggers = {
     kubeconfig_ready = jsonencode(local.kubeconfig)
-    config_map_aws_auth_ready = jsonencode(local.config_map)
+    config_map_aws_auth_ready = jsonencode(local.config_map_data)
   }
 
   depends_on = [aws_eks_cluster.default]
