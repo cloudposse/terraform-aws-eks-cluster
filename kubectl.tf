@@ -128,9 +128,9 @@ resource "null_resource" "apply_config_map_aws_auth" {
     EOT
   }
 
-  triggers {
-    kubeconfig_rendered = local.kubeconfig
-    config_map_aws_auth_rendered = local.config_map
+  triggers = {
+    kubeconfig_ready = local.kubeconfig
+    config_map_aws_auth_ready = local.config_map
   }
 
   depends_on = [aws_eks_cluster.default]
