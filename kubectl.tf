@@ -101,7 +101,7 @@ locals {
     data : {
       mapUsers : var.map_additional_iam_users,
       mapAccounts : var.map_additional_aws_accounts,
-      mapRoles : compact(concat(local.map_worker_roles, var.map_additional_iam_roles))
+      mapRoles : concat(local.map_worker_roles, var.map_additional_iam_roles)
     }
   }
 }
