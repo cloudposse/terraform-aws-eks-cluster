@@ -149,6 +149,7 @@ Module usage examples:
     workers_security_group_count = 1
 
     workers_role_arns = [module.eks_workers.workers_role_arn]
+    cluster_auth_type = "aws-iam-authenticator"
   }
 ```
 

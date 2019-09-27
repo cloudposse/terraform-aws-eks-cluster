@@ -12,13 +12,6 @@
 #
 ###########################################################################################################################################
 
-provider "kubernetes" {
-  host = "https://104.196.242.174"
-
-  username = "username"
-  password = "password"
-}
-
 locals {
   cluster_endpoint = join("", aws_eks_cluster.default.*.endpoint)
   cluster_name     = join("", aws_eks_cluster.default.*.id)
@@ -43,6 +36,7 @@ locals {
 
   kubeconfig_command_args = var.cluster_auth_type == "aws-iam-authenticator" ? local.kubeconfig_command_args_iam_authenticator : local.kubeconfig_command_args_sts_token
 
+  // Create kubeconfig
   kubeconfig = {
     apiVersion : "v1"
     kind : "Config"
@@ -84,6 +78,12 @@ locals {
     ]
   }
 
+  # The EKS service does not provide a cluster-level API parameter or resource to automatically configure the underlying Kubernetes cluster
+  # to allow worker nodes to join the cluster via AWS IAM role authentication.
+  # This is a Kubernetes ConfigMap configuration for worker nodes to join the cluster
+  # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#required-kubernetes-configuration-to-join-worker-nodes
+  # https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html
+  # Add worker nodes role ARNs (could be from many worker groups) to the ConfigMap
   map_worker_roles = flatten([
     for role_arns in var.workers_role_arns : {
       rolearn : role_arns
@@ -95,11 +95,6 @@ locals {
     }
   ])
 
-  # The EKS service does not provide a cluster-level API parameter or resource to automatically configure the underlying Kubernetes cluster
-  # to allow worker nodes to join the cluster via AWS IAM role authentication.
-  # This is a Kubernetes ConfigMap configuration for worker nodes to join the cluster
-  # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#required-kubernetes-configuration-to-join-worker-nodes
-  # https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html
   config_map_data = {
     mapUsers : var.map_additional_iam_users,
     mapAccounts : var.map_additional_aws_accounts,
@@ -128,6 +123,7 @@ resource "null_resource" "apply_config_map_aws_auth" {
     command = <<-EOT
       while [[ ! -e ${local.config_map_data_file} || ! -e ${local.kubeconfig_file} ]] ; do sleep 1; done &&
       kubectl create configmap aws-auth --namespace=kube-system --from-file=${local.config_map_data_file} --kubeconfig ${local.kubeconfig_file}
+      kubectl get configmap aws-auth --namespace=kube-system --kubeconfig ${local.kubeconfig_file} -o yaml
     EOT
   }
 
