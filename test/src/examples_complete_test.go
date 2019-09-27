@@ -43,7 +43,7 @@ func TestExamplesComplete(t *testing.T) {
 	// Run `terraform output` to get the value of an output variable
 	workersAutoscalingGroupName := terraform.Output(t, terraformOptions, "workers_autoscaling_group_name")
 	// Verify we're getting back the outputs we expect
-	assert.Contains(t, workersAutoscalingGroupName, "eg-test-eks-cluster")
+	assert.Contains(t, workersAutoscalingGroupName, "eg-test-eks")
 
 	// Run `terraform output` to get the value of an output variable
 	workersLaunchTemplateArn := terraform.Output(t, terraformOptions, "workers_launch_template_arn")
@@ -53,20 +53,20 @@ func TestExamplesComplete(t *testing.T) {
 	// Run `terraform output` to get the value of an output variable
 	workersSecurityGroupName := terraform.Output(t, terraformOptions, "workers_security_group_name")
 	// Verify we're getting back the outputs we expect
-	assert.Equal(t, "eg-test-eks-cluster-workers", workersSecurityGroupName)
+	assert.Equal(t, "eg-test-eks-workers", workersSecurityGroupName)
 
 	// Run `terraform output` to get the value of an output variable
 	workerRoleName := terraform.Output(t, terraformOptions, "workers_role_name")
 	// Verify we're getting back the outputs we expect
-	assert.Equal(t, "eg-test-eks-cluster-workers", workerRoleName)
+	assert.Equal(t, "eg-test-eks-workers", workerRoleName)
 
 	// Run `terraform output` to get the value of an output variable
 	eksClusterId := terraform.Output(t, terraformOptions, "eks_cluster_id")
 	// Verify we're getting back the outputs we expect
-	assert.Equal(t, "eg-test-eks-cluster-cluster", eksClusterId)
+	assert.Equal(t, "eg-test-eks-cluster", eksClusterId)
 
 	// Run `terraform output` to get the value of an output variable
 	eksClusterSecurityGroupName := terraform.Output(t, terraformOptions, "eks_cluster_security_group_name")
 	// Verify we're getting back the outputs we expect
-	assert.Equal(t, "eg-test-eks-cluster-cluster", eksClusterSecurityGroupName)
+	assert.Equal(t, "eg-test-eks-cluster", eksClusterSecurityGroupName)
 }

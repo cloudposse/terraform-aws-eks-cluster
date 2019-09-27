@@ -30,7 +30,6 @@
 
 | Name | Description |
 |------|-------------|
-| config_map_data | Kubernetes ConfigMap data for worker nodes to join the EKS cluster. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#required-kubernetes-configuration-to-join-worker-nodes |
 | eks_cluster_arn | The Amazon Resource Name (ARN) of the cluster |
 | eks_cluster_certificate_authority_data | The base64 encoded certificate data required to communicate with the cluster |
 | eks_cluster_endpoint | The endpoint for the Kubernetes API server |

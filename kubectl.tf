@@ -16,8 +16,10 @@ locals {
   cluster_endpoint = join("", aws_eks_cluster.default.*.endpoint)
   cluster_name     = join("", aws_eks_cluster.default.*.id)
 
-  kubeconfig_file      = "${path.module}/kubeconfig${var.delimiter}${local.cluster_name}.json"
-  config_map_data_file = "${path.module}/config-map-aws-auth${var.delimiter}${local.cluster_name}.json"
+  kubeconfig_file          = "${path.module}/kubeconfig${var.delimiter}${local.cluster_name}.json"
+  config_map_users_file    = "${path.module}/mapUsers"
+  config_map_accounts_file = "${path.module}/mapAccounts"
+  config_map_roles_file    = "${path.module}/mapRoles"
 
   kubeconfig_command = var.cluster_auth_type == "aws-iam-authenticator" ? "aws-iam-authenticator" : "aws"
 
@@ -94,12 +96,6 @@ locals {
       ]
     }
   ])
-
-  config_map_data = {
-    mapUsers : var.map_additional_iam_users,
-    mapAccounts : var.map_additional_aws_accounts,
-    mapRoles : concat(local.map_worker_roles, var.map_additional_iam_roles)
-  }
 }
 
 resource "local_file" "kubeconfig_file" {
@@ -109,10 +105,24 @@ resource "local_file" "kubeconfig_file" {
   depends_on = [aws_eks_cluster.default]
 }
 
-resource "local_file" "config_map_data_file" {
+resource "local_file" "config_map_users_file" {
   count      = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
-  content    = jsonencode(local.config_map_data)
-  filename   = local.config_map_data_file
+  content    = yamlencode(var.map_additional_iam_users)
+  filename   = local.config_map_users_file
+  depends_on = [aws_eks_cluster.default]
+}
+
+resource "local_file" "config_map_accounts_file" {
+  count      = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
+  content    = yamlencode(var.map_additional_aws_accounts)
+  filename   = local.config_map_accounts_file
+  depends_on = [aws_eks_cluster.default]
+}
+
+resource "local_file" "config_map_roles_file" {
+  count      = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
+  content    = yamlencode(concat(local.map_worker_roles, var.map_additional_iam_roles))
+  filename   = local.config_map_roles_file
   depends_on = [aws_eks_cluster.default]
 }
 
@@ -121,15 +131,17 @@ resource "null_resource" "apply_config_map_aws_auth" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      while [[ ! -e ${local.config_map_data_file} || ! -e ${local.kubeconfig_file} ]] ; do sleep 1; done &&
-      kubectl create configmap aws-auth --namespace=kube-system --from-file=${local.config_map_data_file} --kubeconfig ${local.kubeconfig_file}
-      kubectl get configmap aws-auth --namespace=kube-system --kubeconfig ${local.kubeconfig_file} -o yaml
+      while [[ ! -e ${local.config_map_users_file} || ! -e ${local.kubeconfig_file} ]] ; do sleep 1; done &&
+      kubectl create configmap aws-auth --namespace=kube-system --kubeconfig ${local.kubeconfig_file} \
+      --from-file=${local.config_map_users_file} \
+      --from-file=${local.config_map_accounts_file} \
+      --from-file=${local.config_map_roles_file}
     EOT
   }
 
   triggers = {
     kubeconfig_ready = jsonencode(local.kubeconfig)
-    config_map_aws_auth_ready = jsonencode(local.config_map_data)
+    config_map_ready = jsonencode(concat(local.map_worker_roles, var.map_additional_iam_roles))
   }
 
   depends_on = [aws_eks_cluster.default]

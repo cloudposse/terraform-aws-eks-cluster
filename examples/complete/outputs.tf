@@ -13,11 +13,6 @@ output "vpc_cidr" {
   description = "VPC ID"
 }
 
-output "config_map_data" {
-  description = "Kubernetes ConfigMap data for worker nodes to join the EKS cluster. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#required-kubernetes-configuration-to-join-worker-nodes"
-  value       = module.eks_cluster.config_map_data
-}
-
 output "kubeconfig" {
   description = "`kubeconfig` configuration to connect to the cluster using `kubectl`. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#configuring-kubectl-for-eks"
   value       = module.eks_cluster.kubeconfig

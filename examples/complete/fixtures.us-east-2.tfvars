@@ -6,7 +6,7 @@ namespace = "eg"
 
 stage = "test"
 
-name = "eks-cluster"
+name = "eks"
 
 instance_type = "t2.small"
 
