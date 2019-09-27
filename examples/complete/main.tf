@@ -16,7 +16,7 @@ locals {
   # The usage of the specific kubernetes.io/cluster/* resource tags below are required
   # for EKS and Kubernetes to discover and manage networking resources
   # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#base-vpc-networking
-  tags = merge(var.tags, map("kubernetes.io/cluster/${module.label.id}", "shared"))
+  tags = merge(module.label.tags, map("kubernetes.io/cluster/${module.label.id}", "shared"))
 }
 
 module "vpc" {
@@ -45,7 +45,7 @@ module "subnets" {
 }
 
 module "eks_workers" {
-  source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=fix-count-error"
+  source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=tags/0.9.0"
   namespace                          = var.namespace
   stage                              = var.stage
   name                               = var.name
@@ -84,5 +84,4 @@ module "eks_cluster" {
   workers_security_group_count = 1
 
   workers_role_arns = [module.eks_workers.workers_role_arn]
-  cluster_auth_type = var.cluster_auth_type
 }

@@ -13,11 +13,6 @@ output "vpc_cidr" {
   description = "VPC ID"
 }
 
-output "kubeconfig" {
-  description = "`kubeconfig` configuration to connect to the cluster using `kubectl`. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#configuring-kubectl-for-eks"
-  value       = module.eks_cluster.kubeconfig
-}
-
 output "eks_cluster_security_group_id" {
   description = "ID of the EKS cluster Security Group"
   value       = module.eks_cluster.security_group_id
@@ -41,11 +36,6 @@ output "eks_cluster_id" {
 output "eks_cluster_arn" {
   description = "The Amazon Resource Name (ARN) of the cluster"
   value       = module.eks_cluster.eks_cluster_arn
-}
-
-output "eks_cluster_certificate_authority_data" {
-  description = "The base64 encoded certificate data required to communicate with the cluster"
-  value       = module.eks_cluster.eks_cluster_certificate_authority_data
 }
 
 output "eks_cluster_endpoint" {

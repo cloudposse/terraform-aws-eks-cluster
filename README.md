@@ -176,7 +176,6 @@ Available targets:
 | allowed_security_groups | List of Security Group IDs to be allowed to connect to the EKS cluster | list(string) | `<list>` | no |
 | apply_config_map_aws_auth | Whether to generate local files from `kubeconfig` and `config-map-aws-auth` templates and perform `kubectl apply` to apply the ConfigMap to allow worker nodes to join the EKS cluster | bool | `true` | no |
 | attributes | Additional attributes (e.g. `1`) | list(string) | `<list>` | no |
-| cluster_auth_type | Cluster authentication type. Valid values are `aws-eks-get-token` and `aws-iam-authenticator`. Amazon EKS uses the `aws eks get-token` command (available in version 1.16.232 or greater of the AWS CLI) or the AWS IAM Authenticator for Kubernetes with `kubectl` for cluster authentication. For more info, see https://docs.aws.amazon.com/en_pv/eks/latest/userguide/create-kubeconfig.html | string | `aws-eks-get-token` | no |
 | delimiter | Delimiter to be used between `name`, `namespace`, `stage`, etc. | string | `-` | no |
 | enabled | Whether to create the resources. Set to `false` to prevent the module from creating any resources | bool | `true` | no |
 | enabled_cluster_log_types | A list of the desired control plane logging to enable. For more information, see https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. Possible values [`api`, `audit`, `authenticator`, `controllerManager`, `scheduler`] | list(string) | `<list>` | no |
@@ -201,11 +200,10 @@ Available targets:
 | Name | Description |
 |------|-------------|
 | eks_cluster_arn | The Amazon Resource Name (ARN) of the cluster |
-| eks_cluster_certificate_authority_data | The base64 encoded certificate data required to communicate with the cluster |
+| eks_cluster_certificate_authority_data | The Kubernetes cluster certificate authority data |
 | eks_cluster_endpoint | The endpoint for the Kubernetes API server |
 | eks_cluster_id | The name of the cluster |
 | eks_cluster_version | The Kubernetes server version of the cluster |
-| kubeconfig | `kubeconfig` configuration to connect to the cluster using `kubectl`. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#configuring-kubectl-for-eks |
 | security_group_arn | ARN of the EKS cluster Security Group |
 | security_group_id | ID of the EKS cluster Security Group |
 | security_group_name | Name of the EKS cluster Security Group |
@@ -354,8 +352,8 @@ Check out [our other projects][github], [follow us on twitter][twitter], [apply 
 
 ### Contributors
 
-|  [![Erik Osterman][osterman_avatar]][osterman_homepage]<br/>[Erik Osterman][osterman_homepage] | [![Andriy Knysh][aknysh_avatar]][aknysh_homepage]<br/>[Andriy Knysh][aknysh_homepage] | [![Igor Rodionov][goruha_avatar]][goruha_homepage]<br/>[Igor Rodionov][goruha_homepage] |
-|---|---|---|
+|  [![Erik Osterman][osterman_avatar]][osterman_homepage]<br/>[Erik Osterman][osterman_homepage] | [![Andriy Knysh][aknysh_avatar]][aknysh_homepage]<br/>[Andriy Knysh][aknysh_homepage] | [![Igor Rodionov][goruha_avatar]][goruha_homepage]<br/>[Igor Rodionov][goruha_homepage] | [![Oscar][osulli_avatar]][osulli_homepage]<br/>[Oscar][osulli_homepage] |
+|---|---|---|---|
 
 
   [osterman_homepage]: https://github.com/osterman
@@ -368,6 +366,10 @@ Check out [our other projects][github], [follow us on twitter][twitter], [apply 
 
   [goruha_homepage]: https://github.com/goruha/
   [goruha_avatar]: http://s.gravatar.com/avatar/bc70834d32ed4517568a1feb0b9be7e2?s=144
+
+
+  [osulli_homepage]: https://github.com/osulli/
+  [osulli_avatar]: https://avatars1.githubusercontent.com/u/46930728?v=4&s=144
 
 
 
