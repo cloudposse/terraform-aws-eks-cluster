@@ -71,15 +71,16 @@ module "eks_workers" {
 }
 
 module "eks_cluster" {
-  source     = "../../"
-  namespace  = var.namespace
-  stage      = var.stage
-  name       = var.name
-  attributes = var.attributes
-  tags       = var.tags
-  region     = var.region
-  vpc_id     = module.vpc.vpc_id
-  subnet_ids = module.subnets.public_subnet_ids
+  source             = "../../"
+  namespace          = var.namespace
+  stage              = var.stage
+  name               = var.name
+  attributes         = var.attributes
+  tags               = var.tags
+  region             = var.region
+  vpc_id             = module.vpc.vpc_id
+  subnet_ids         = module.subnets.public_subnet_ids
+  kubernetes_version = var.kubernetes_version
 
   # `workers_security_group_count` is needed to prevent `count can't be computed` errors
   workers_security_group_ids   = [module.eks_workers.security_group_id]
