@@ -23,3 +23,7 @@ autoscaling_policies_enabled = true
 cpu_utilization_high_threshold_percent = 80
 
 cpu_utilization_low_threshold_percent = 20
+
+associate_public_ip_address = true
+
+kubernetes_version = "1.14"

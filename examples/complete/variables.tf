@@ -46,9 +46,20 @@ variable "instance_type" {
   description = "Instance type to launch"
 }
 
+variable "kubernetes_version" {
+  type        = string
+  default     = ""
+  description = "Desired Kubernetes master version. If you do not specify a value, the latest available version is used"
+}
+
 variable "health_check_type" {
   type        = "string"
   description = "Controls how health checking is done. Valid values are `EC2` or `ELB`"
+}
+
+variable "associate_public_ip_address" {
+  type        = bool
+  description = "Associate a public IP address with an instance in a VPC"
 }
 
 variable "max_size" {

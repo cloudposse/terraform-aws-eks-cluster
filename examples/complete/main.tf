@@ -54,6 +54,7 @@ module "eks_workers" {
   instance_type                      = var.instance_type
   vpc_id                             = module.vpc.vpc_id
   subnet_ids                         = module.subnets.public_subnet_ids
+  associate_public_ip_address        = var.associate_public_ip_address
   health_check_type                  = var.health_check_type
   min_size                           = var.min_size
   max_size                           = var.max_size
@@ -76,6 +77,7 @@ module "eks_cluster" {
   name       = var.name
   attributes = var.attributes
   tags       = var.tags
+  region     = var.region
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.subnets.public_subnet_ids
 

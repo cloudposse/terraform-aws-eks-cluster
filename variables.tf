@@ -1,3 +1,8 @@
+variable "region" {
+  type        = string
+  description = "AWS Region"
+}
+
 variable "namespace" {
   type        = string
   description = "Namespace, which could be your organization name, e.g. 'eg' or 'cp'"
@@ -47,6 +52,12 @@ variable "vpc_id" {
 variable "subnet_ids" {
   description = "A list of subnet IDs to launch the cluster in"
   type        = list(string)
+}
+
+variable "associate_public_ip_address" {
+  type        = bool
+  description = "Associate a public IP address with an instance in a VPC"
+  default     = true
 }
 
 variable "allowed_security_groups" {
