@@ -45,7 +45,7 @@ module "subnets" {
 }
 
 module "eks_workers" {
-  source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=tags/0.9.0"
+  source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=tags/0.10.0"
   namespace                          = var.namespace
   stage                              = var.stage
   name                               = var.name

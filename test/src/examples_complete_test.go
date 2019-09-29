@@ -1,10 +1,20 @@
 package test
 
 import (
+	"fmt"
+	"os"
+	"os/exec"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // Test the Terraform module in examples/complete using Terratest.
@@ -69,4 +79,48 @@ func TestExamplesComplete(t *testing.T) {
 	eksClusterSecurityGroupName := terraform.Output(t, terraformOptions, "eks_cluster_security_group_name")
 	// Verify we're getting back the outputs we expect
 	assert.Equal(t, "eg-test-eks-cluster", eksClusterSecurityGroupName)
+
+	// Wait for the worker nodes to join the cluster
+	// https://github.com/kubernetes/client-go
+	// https://www.rushtehrani.com/post/using-kubernetes-api
+	// https://rancher.com/using-kubernetes-api-go-kubecon-2017-session-recap
+	// https://gianarb.it/blog/kubernetes-shared-informer
+	res, err := exec.Command("aws eks update-kubeconfig --name=eg-test-eks-cluster --region=us-east-2").Output()
+	assert.NoError(t, err)
+	fmt.Println(res)
+
+	config, err := clientcmd.BuildConfigFromFlags("", os.Getenv("KUBECONFIG"))
+	assert.NoError(t, err)
+
+	clientset, err := kubernetes.NewForConfig(config)
+	assert.NoError(t, err)
+
+	factory := informers.NewSharedInformerFactory(clientset, 0)
+	informer := factory.Core().V1().Nodes().Informer()
+	stopChannel := make(chan struct{})
+	var countOfWorkerNodes uint64 = 0
+
+	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			node := obj.(*corev1.Node)
+			fmt.Printf("Worker Node %s has joined the EKS cluster at %s", node.Name, node.CreationTimestamp)
+			atomic.AddUint64(&countOfWorkerNodes, 1)
+			if countOfWorkerNodes > 1 {
+				close(stopChannel)
+			}
+		},
+	})
+
+	go informer.Run(stopChannel)
+
+	select {
+	case res := <-stopChannel:
+		fmt.Println(res)
+		msg := "All worker nodes have joined the EKS cluster"
+		fmt.Println(msg)
+	case <-time.After(5 * time.Minute):
+		msg := "Not all worker nodes have joined the EKS cluster"
+		fmt.Println(msg)
+		assert.Fail(t, msg)
+	}
 }

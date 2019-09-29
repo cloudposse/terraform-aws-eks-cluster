@@ -27,8 +27,7 @@ locals {
   certificate_authority_data_map           = local.certificate_authority_data_list_internal[0]
   certificate_authority_data               = local.certificate_authority_data_map["data"]
 
-  cluster_name    = join("", aws_eks_cluster.default.*.id)
-  kubeconfig_path = "~/.kube/config"
+  cluster_name = join("", aws_eks_cluster.default.*.id)
 
   # Add worker nodes role ARNs (could be from many worker groups) to the ConfigMap
   map_worker_roles = [
@@ -50,12 +49,13 @@ locals {
 
 # Configure `kubeconfig` with prepopulated server and certificate authority data values for the cluster
 # https://docs.aws.amazon.com/cli/latest/reference/eks/update-kubeconfig.html
-# It will place `kubeconfig` into the default location and will be used by terraform kubernetes provider
+# It will place `kubeconfig` into the default location (specified by `KUBECONFIG` env variable)
+# and will be used by terraform kubernetes provider
 resource "null_resource" "configure_kubeconfig" {
   count = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
 
   provisioner "local-exec" {
-    command = "aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${local.kubeconfig_path}"
+    command = "aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region}"
   }
 
   triggers = {
