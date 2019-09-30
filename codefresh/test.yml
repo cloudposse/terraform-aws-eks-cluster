@@ -73,4 +73,5 @@ steps:
         commands:
           - unset AWS_PROFILE
           - unset AWS_DEFAULT_PROFILE
+          - unset AWS_MFA_PROFILE
           - make -C test/src
