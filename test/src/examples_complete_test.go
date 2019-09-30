@@ -84,7 +84,7 @@ func TestExamplesComplete(t *testing.T) {
 	// https://www.rushtehrani.com/post/using-kubernetes-api
 	// https://rancher.com/using-kubernetes-api-go-kubecon-2017-session-recap
 	// https://gianarb.it/blog/kubernetes-shared-informer
-	kubeconfigPath := "~/.kube/config"
+	kubeconfigPath := "/.kube/config"
 	cmd := fmt.Sprintf("aws eks update-kubeconfig --name=eg-test-eks-cluster --region=us-east-2 --kubeconfig=%s", kubeconfigPath)
 	res, err := exec.Command(cmd).Output()
 	fmt.Println(res)
