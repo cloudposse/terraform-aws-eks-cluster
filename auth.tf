@@ -55,7 +55,7 @@ resource "null_resource" "configure_kubeconfig" {
   count = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
 
   provisioner "local-exec" {
-    command = "aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region}"
+    command = "aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path}"
   }
 
   triggers = {
@@ -67,6 +67,10 @@ resource "null_resource" "configure_kubeconfig" {
   }
 
   depends_on = [aws_eks_cluster.default]
+}
+
+provider "kubernetes" {
+  config_path = var.kubeconfig_path
 }
 
 resource "kubernetes_config_map" "iam_nodes_config_map" {

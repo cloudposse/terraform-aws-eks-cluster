@@ -2,7 +2,6 @@ package test
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"sync/atomic"
 	"testing"
@@ -85,11 +84,13 @@ func TestExamplesComplete(t *testing.T) {
 	// https://www.rushtehrani.com/post/using-kubernetes-api
 	// https://rancher.com/using-kubernetes-api-go-kubecon-2017-session-recap
 	// https://gianarb.it/blog/kubernetes-shared-informer
-	res, err := exec.Command("aws eks update-kubeconfig --name=eg-test-eks-cluster --region=us-east-2").Output()
-	assert.NoError(t, err)
+	kubeconfigPath := "~/.kube/config"
+	cmd := fmt.Sprintf("aws eks update-kubeconfig --name=eg-test-eks-cluster --region=us-east-2 --kubeconfig=%s", kubeconfigPath)
+	res, err := exec.Command(cmd).Output()
 	fmt.Println(res)
+	assert.NoError(t, err)
 
-	config, err := clientcmd.BuildConfigFromFlags("", os.Getenv("KUBECONFIG"))
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
 	assert.NoError(t, err)
 
 	clientset, err := kubernetes.NewForConfig(config)

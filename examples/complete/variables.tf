@@ -91,3 +91,8 @@ variable "cpu_utilization_low_threshold_percent" {
   type        = number
   description = "Worker nodes AutoScaling Group CPU utilization low threshold percent"
 }
+
+variable "kubeconfig_path" {
+  type        = string
+  description = "The path to `kubeconfig` file"
+}

@@ -146,3 +146,9 @@ variable "map_additional_iam_users" {
 
   default = []
 }
+
+variable "kubeconfig_path" {
+  type        = string
+  default     = "~/.kube/config"
+  description = "The path to `kubeconfig` file"
+}
