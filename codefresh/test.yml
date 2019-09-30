@@ -31,8 +31,6 @@ steps:
     stage: Prepare
     commands:
       - cf_export PATH="/usr/local/terraform/0.12/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-      - unset AWS_PROFILE
-      - unset AWS_DEFAULT_PROFILE
       - make init
       - git -C build-harness checkout master
       - make -C test/ clean init TEST_HARNESS_BRANCH=master
@@ -73,4 +71,6 @@ steps:
         image: ${{TEST_IMAGE}}
         stage: Test
         commands:
+          - unset AWS_PROFILE
+          - unset AWS_DEFAULT_PROFILE
           - make -C test/src
