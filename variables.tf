@@ -89,7 +89,7 @@ variable "workers_security_group_count" {
 
 variable "kubernetes_version" {
   type        = string
-  default     = ""
+  default     = "1.14"
   description = "Desired Kubernetes master version. If you do not specify a value, the latest available version is used"
 }
 

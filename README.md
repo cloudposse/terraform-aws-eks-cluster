@@ -144,12 +144,14 @@ Module usage examples:
     vpc_id     = module.vpc.vpc_id
     subnet_ids = module.subnets.public_subnet_ids
 
+    kubernetes_version = var.kubernetes_version
+
     # `workers_security_group_count` is needed to prevent `count can't be computed` errors
     workers_security_group_ids   = [module.eks_workers.security_group_id]
     workers_security_group_count = 1
 
     workers_role_arns = [module.eks_workers.workers_role_arn]
-    cluster_auth_type = "aws-iam-authenticator"
+    kubeconfig_path   = var.kubeconfig_path
   }
 ```
 
@@ -183,7 +185,7 @@ Available targets:
 | endpoint_private_access | Indicates whether or not the Amazon EKS private API server endpoint is enabled. Default to AWS EKS resource and it is false | bool | `false` | no |
 | endpoint_public_access | Indicates whether or not the Amazon EKS public API server endpoint is enabled. Default to AWS EKS resource and it is true | bool | `true` | no |
 | kubeconfig_path | The path to `kubeconfig` file | string | `~/.kube/config` | no |
-| kubernetes_version | Desired Kubernetes master version. If you do not specify a value, the latest available version is used | string | `` | no |
+| kubernetes_version | Desired Kubernetes master version. If you do not specify a value, the latest available version is used | string | `1.14` | no |
 | map_additional_aws_accounts | Additional AWS account numbers to add to `config-map-aws-auth` ConfigMap | list(string) | `<list>` | no |
 | map_additional_iam_roles | Additional IAM roles to add to `config-map-aws-auth` ConfigMap | object | `<list>` | no |
 | map_additional_iam_users | Additional IAM users to add to `config-map-aws-auth` ConfigMap | object | `<list>` | no |
