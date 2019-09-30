@@ -92,6 +92,36 @@ variable "cpu_utilization_low_threshold_percent" {
   description = "Worker nodes AutoScaling Group CPU utilization low threshold percent"
 }
 
+variable "map_additional_aws_accounts" {
+  description = "Additional AWS account numbers to add to `config-map-aws-auth` ConfigMap"
+  type        = list(string)
+  default     = []
+}
+
+variable "map_additional_iam_roles" {
+  description = "Additional IAM roles to add to `config-map-aws-auth` ConfigMap"
+
+  type = list(object({
+    rolearn  = string
+    username = string
+    groups   = list(string)
+  }))
+
+  default = []
+}
+
+variable "map_additional_iam_users" {
+  description = "Additional IAM users to add to `config-map-aws-auth` ConfigMap"
+
+  type = list(object({
+    userarn  = string
+    username = string
+    groups   = list(string)
+  }))
+
+  default = []
+}
+
 variable "kubeconfig_path" {
   type        = string
   description = "The path to `kubeconfig` file"
