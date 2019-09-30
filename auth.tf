@@ -27,6 +27,9 @@ locals {
   certificate_authority_data_map           = local.certificate_authority_data_list_internal[0]
   certificate_authority_data               = local.certificate_authority_data_map["data"]
 
+  configmap_auth_template_file = "${path.module}/configmap-auth.yaml.tpl"
+  configmap_auth_file          = "${path.module}/configmap-auth.yaml"
+
   cluster_name = join("", aws_eks_cluster.default.*.id)
 
   # Add worker nodes role ARNs (could be from many worker groups) to the ConfigMap
@@ -47,16 +50,26 @@ locals {
   map_additional_aws_accounts_yaml = trimspace(yamlencode(var.map_additional_aws_accounts))
 }
 
-# Configure `kubeconfig` with prepopulated server and certificate authority data values for the cluster
-# https://docs.aws.amazon.com/cli/latest/reference/eks/update-kubeconfig.html
-# It will place `kubeconfig` into the default location (specified by `KUBECONFIG` env variable)
-# and will be used by terraform kubernetes provider
-resource "null_resource" "configure_kubeconfig" {
-  count = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
+data "template_file" "configmap_auth" {
+  count    = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
+  template = file(local.configmap_auth_template_file)
 
-  provisioner "local-exec" {
-    command = "aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path}"
+  vars = {
+    map_worker_roles_yaml            = local.map_worker_roles_yaml
+    map_additional_iam_roles_yaml    = local.map_additional_iam_roles_yaml
+    map_additional_iam_users_yaml    = local.map_additional_iam_users_yaml
+    map_additional_aws_accounts_yaml = local.map_additional_aws_accounts_yaml
   }
+}
+
+resource "local_file" "configmap_auth" {
+  count    = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
+  content  = join("", data.template_file.configmap_auth.*.rendered)
+  filename = local.configmap_auth_file
+}
+
+resource "null_resource" "apply_configmap_auth" {
+  count = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
 
   triggers = {
     cluster_updated                 = join("", aws_eks_cluster.default.*.id)
@@ -66,37 +79,13 @@ resource "null_resource" "configure_kubeconfig" {
     additional_aws_accounts_updated = local.map_additional_aws_accounts_yaml
   }
 
-  depends_on = [aws_eks_cluster.default]
-}
+  depends_on = [aws_eks_cluster.default, local_file.configmap_auth]
 
-provider "kubernetes" {
-  config_path = var.kubeconfig_path
-}
-
-resource "kubernetes_config_map" "iam_nodes_config_map" {
-  count = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
-
-  metadata {
-    name      = "aws-auth"
-    namespace = "kube-system"
-  }
-
-  data = {
-    mapRoles = <<-EOT
-      ${local.map_worker_roles_yaml}
-      %{if local.map_additional_iam_roles_yaml != "[]"}
-      ${local.map_additional_iam_roles_yaml}
-      %{endif}
-      %{if local.map_additional_iam_users_yaml != "[]"}
-      mapUsers: |-
-      ${local.map_additional_iam_users_yaml}
-      %{endif}
-      %{if local.map_additional_aws_accounts_yaml != "[]"}
-      mapAccounts: |-
-      ${local.map_additional_aws_accounts_yaml}
-      %{endif}
+  provisioner "local-exec" {
+    command = <<-EOT
+      while [[ ! -e ${local.configmap_auth_file} ]] ; do sleep 1; done && \
+      aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path}" && \
+      kubectl apply -f ${local.configmap_auth_file} --kubeconfig ${var.kubeconfig_path}
     EOT
   }
-
-  depends_on = [aws_eks_cluster.default, null_resource.configure_kubeconfig]
 }
