@@ -3,7 +3,7 @@
 
 [![Cloud Posse][logo]](https://cpco.io/homepage)
 
-# terraform-aws-eks-cluster [![Build Status](https://travis-ci.org/cloudposse/terraform-aws-eks-cluster.svg?branch=master)](https://travis-ci.org/cloudposse/terraform-aws-eks-cluster) [![Latest Release](https://img.shields.io/github/release/cloudposse/terraform-aws-eks-cluster.svg)](https://github.com/cloudposse/terraform-aws-eks-cluster/releases/latest) [![Slack Community](https://slack.cloudposse.com/badge.svg)](https://slack.cloudposse.com)
+# terraform-aws-eks-cluster [![Codefresh Build Status](https://g.codefresh.io/api/badges/pipeline/cloudposse/terraform-modules%2Fterraform-aws-eks-cluster?type=cf-1)](https://g.codefresh.io/public/accounts/cloudposse/pipelines/5d8cd583941e46a098d3992d) [![Latest Release](https://img.shields.io/github/release/cloudposse/terraform-aws-eks-cluster.svg)](https://github.com/cloudposse/terraform-aws-eks-cluster/releases/latest) [![Slack Community](https://slack.cloudposse.com/badge.svg)](https://slack.cloudposse.com)
 
 
 Terraform module to provision an [EKS](https://aws.amazon.com/eks/) cluster on AWS.
@@ -63,84 +63,96 @@ Module usage examples:
 - [terraform-root-modules/eks-backing-services-peering](https://github.com/cloudposse/terraform-root-modules/tree/master/aws/eks-backing-services-peering) - example of VPC peering between the EKS VPC and backing services VPC
 
 ```hcl
-provider "aws" {
-  region = "us-west-1"
-}
+  provider "aws" {
+    region = var.region
+  }
 
-variable "tags" {
-  type        = "map"
-  default     = {}
-  description = "Additional tags (e.g. map('BusinessUnit','XYZ')"
-}
+  module "label" {
+    source     = "git::https://github.com/cloudposse/terraform-null-label.git?ref=master"
+    namespace  = var.namespace
+    name       = var.name
+    stage      = var.stage
+    delimiter  = var.delimiter
+    attributes = compact(concat(var.attributes, list("cluster")))
+    tags       = var.tags
+  }
 
-locals {
-  # The usage of the specific kubernetes.io/cluster/* resource tags below are required
-  # for EKS and Kubernetes to discover and manage networking resources
-  # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#base-vpc-networking
-  tags = "${merge(var.tags, map("kubernetes.io/cluster/eg-testing-cluster", "shared"))}"
-}
+  locals {
+    # The usage of the specific kubernetes.io/cluster/* resource tags below are required
+    # for EKS and Kubernetes to discover and manage networking resources
+    # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#base-vpc-networking
+    tags = merge(var.tags, map("kubernetes.io/cluster/${module.label.id}", "shared"))
+  }
 
-module "vpc" {
-  source     = "git::https://github.com/cloudposse/terraform-aws-vpc.git?ref=master"
-  namespace  = "eg"
-  stage      = "testing"
-  name       = "cluster"
-  tags       = "${local.tags}"
-  cidr_block = "10.0.0.0/16"
-}
+  module "vpc" {
+    source     = "git::https://github.com/cloudposse/terraform-aws-vpc.git?ref=master"
+    namespace  = var.namespace
+    stage      = var.stage
+    name       = var.name
+    attributes = var.attributes
+    cidr_block = "172.16.0.0/16"
+    tags       = local.tags
+  }
 
-module "subnets" {
-  source              = "git::https://github.com/cloudposse/terraform-aws-dynamic-subnets.git?ref=master"
-  availability_zones  = ["us-west-1a", "us-west-1b", "us-west-1c", "us-west-1d"]
-  namespace           = "eg"
-  stage               = "testing"
-  name                = "cluster"
-  tags                = "${local.tags}"
-  region              = "us-west-1"
-  vpc_id              = "${module.vpc.vpc_id}"
-  igw_id              = "${module.vpc.igw_id}"
-  cidr_block          = "${module.vpc.vpc_cidr_block}"
-  nat_gateway_enabled = "true"
-}
+  module "subnets" {
+    source               = "git::https://github.com/cloudposse/terraform-aws-dynamic-subnets.git?ref=master"
+    availability_zones   = var.availability_zones
+    namespace            = var.namespace
+    stage                = var.stage
+    name                 = var.name
+    attributes           = var.attributes
+    vpc_id               = module.vpc.vpc_id
+    igw_id               = module.vpc.igw_id
+    cidr_block           = module.vpc.vpc_cidr_block
+    nat_gateway_enabled  = false
+    nat_instance_enabled = false
+    tags                 = local.tags
+  }
 
-module "eks_cluster" {
-  source                  = "git::https://github.com/cloudposse/terraform-aws-eks-cluster.git?ref=master"
-  namespace               = "eg"
-  stage                   = "testing"
-  name                    = "cluster"
-  tags                    = "${var.tags}"
-  vpc_id                  = "${module.vpc.vpc_id}"
-  subnet_ids              = ["${module.subnets.public_subnet_ids}"]
+  module "eks_workers" {
+    source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=master"
+    namespace                          = var.namespace
+    stage                              = var.stage
+    name                               = var.name
+    attributes                         = var.attributes
+    tags                               = var.tags
+    instance_type                      = var.instance_type
+    vpc_id                             = module.vpc.vpc_id
+    subnet_ids                         = module.subnets.public_subnet_ids
+    health_check_type                  = var.health_check_type
+    min_size                           = var.min_size
+    max_size                           = var.max_size
+    wait_for_capacity_timeout          = var.wait_for_capacity_timeout
+    cluster_name                       = module.label.id
+    cluster_endpoint                   = module.eks_cluster.eks_cluster_endpoint
+    cluster_certificate_authority_data = module.eks_cluster.eks_cluster_certificate_authority_data
+    cluster_security_group_id          = module.eks_cluster.security_group_id
 
-  # `workers_security_group_count` is needed to prevent `count can't be computed` errors
-  workers_security_group_ids   = ["${module.eks_workers.security_group_id}"]
-  workers_security_group_count = 1
-}
+    # Auto-scaling policies and CloudWatch metric alarms
+    autoscaling_policies_enabled           = var.autoscaling_policies_enabled
+    cpu_utilization_high_threshold_percent = var.cpu_utilization_high_threshold_percent
+    cpu_utilization_low_threshold_percent  = var.cpu_utilization_low_threshold_percent
+  }
 
-module "eks_workers" {
-  source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=master"
-  namespace                          = "eg"
-  stage                              = "testing"
-  name                               = "cluster"
-  tags                               = "${var.tags}"
-  instance_type                      = "t2.medium"
-  vpc_id                             = "${module.vpc.vpc_id}"
-  subnet_ids                         = ["${module.subnets.public_subnet_ids}"]
-  health_check_type                  = "EC2"
-  min_size                           = 1
-  max_size                           = 3
-  wait_for_capacity_timeout          = "10m"
-  associate_public_ip_address        = true
-  cluster_name                       = "eg-testing-cluster"
-  cluster_endpoint                   = "${module.eks_cluster.eks_cluster_endpoint}"
-  cluster_certificate_authority_data = "${module.eks_cluster.eks_cluster_certificate_authority_data}"
-  cluster_security_group_id          = "${module.eks_cluster.security_group_id}"
+  module "eks_cluster" {
+    source     = "git::https://github.com/cloudposse/terraform-aws-eks-cluster.git?ref=master"
+    namespace  = var.namespace
+    stage      = var.stage
+    name       = var.name
+    attributes = var.attributes
+    tags       = var.tags
+    vpc_id     = module.vpc.vpc_id
+    subnet_ids = module.subnets.public_subnet_ids
 
-  # Auto-scaling policies and CloudWatch metric alarms
-  autoscaling_policies_enabled           = "true"
-  cpu_utilization_high_threshold_percent = "80"
-  cpu_utilization_low_threshold_percent  = "20"
-}
+    kubernetes_version = var.kubernetes_version
+
+    # `workers_security_group_count` is needed to prevent `count can't be computed` errors
+    workers_security_group_ids   = [module.eks_workers.security_group_id]
+    workers_security_group_count = 1
+
+    workers_role_arns = [module.eks_workers.workers_role_arn]
+    kubeconfig_path   = var.kubeconfig_path
+  }
 ```
 
 
@@ -162,35 +174,41 @@ Available targets:
 
 | Name | Description | Type | Default | Required |
 |------|-------------|:----:|:-----:|:-----:|
-| allowed_cidr_blocks | List of CIDR blocks to be allowed to connect to the EKS cluster | list | `<list>` | no |
-| allowed_security_groups | List of Security Group IDs to be allowed to connect to the EKS cluster | list | `<list>` | no |
-| attributes | Additional attributes (e.g. `1`) | list | `<list>` | no |
+| allowed_cidr_blocks | List of CIDR blocks to be allowed to connect to the EKS cluster | list(string) | `<list>` | no |
+| allowed_security_groups | List of Security Group IDs to be allowed to connect to the EKS cluster | list(string) | `<list>` | no |
+| apply_config_map_aws_auth | Whether to generate local files from `kubeconfig` and `config-map-aws-auth` templates and perform `kubectl apply` to apply the ConfigMap to allow worker nodes to join the EKS cluster | bool | `true` | no |
+| associate_public_ip_address | Associate a public IP address with an instance in a VPC | bool | `true` | no |
+| attributes | Additional attributes (e.g. `1`) | list(string) | `<list>` | no |
 | delimiter | Delimiter to be used between `name`, `namespace`, `stage`, etc. | string | `-` | no |
-| enabled | Whether to create the resources. Set to `false` to prevent the module from creating any resources | string | `true` | no |
-| enabled_cluster_log_types | A list of the desired control plane logging to enable. For more information, see https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. Possible values [`api`, `audit`, `authenticator`, `controllerManager`, `scheduler`] | list | `<list>` | no |
-| endpoint_private_access | Indicates whether or not the Amazon EKS private API server endpoint is enabled. Default to AWS EKS resource and it is false | string | `false` | no |
-| endpoint_public_access | Indicates whether or not the Amazon EKS public API server endpoint is enabled. Default to AWS EKS resource and it is true | string | `true` | no |
-| environment | Environment, e.g. 'testing', 'UAT' | string | `` | no |
-| kubernetes_version | Desired Kubernetes master version. If you do not specify a value, the latest available version is used. | string | `` | no |
-| name | Solution name, e.g. 'app' or 'cluster' | string | `app` | no |
-| namespace | Namespace, which could be your organization name, e.g. 'eg' or 'cp' | string | - | yes |
-| stage | Stage, e.g. 'prod', 'staging', 'dev', or 'test' | string | - | yes |
-| subnet_ids | A list of subnet IDs to launch the cluster in | list | - | yes |
-| tags | Additional tags (e.g. `map('BusinessUnit`,`XYZ`) | map | `<map>` | no |
+| enabled | Whether to create the resources. Set to `false` to prevent the module from creating any resources | bool | `true` | no |
+| enabled_cluster_log_types | A list of the desired control plane logging to enable. For more information, see https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. Possible values [`api`, `audit`, `authenticator`, `controllerManager`, `scheduler`] | list(string) | `<list>` | no |
+| endpoint_private_access | Indicates whether or not the Amazon EKS private API server endpoint is enabled. Default to AWS EKS resource and it is false | bool | `false` | no |
+| endpoint_public_access | Indicates whether or not the Amazon EKS public API server endpoint is enabled. Default to AWS EKS resource and it is true | bool | `true` | no |
+| kubeconfig_path | The path to `kubeconfig` file | string | `~/.kube/config` | no |
+| kubernetes_version | Desired Kubernetes master version. If you do not specify a value, the latest available version is used | string | `1.14` | no |
+| map_additional_aws_accounts | Additional AWS account numbers to add to `config-map-aws-auth` ConfigMap | list(string) | `<list>` | no |
+| map_additional_iam_roles | Additional IAM roles to add to `config-map-aws-auth` ConfigMap | object | `<list>` | no |
+| map_additional_iam_users | Additional IAM users to add to `config-map-aws-auth` ConfigMap | object | `<list>` | no |
+| name | Solution name, e.g. 'app' or 'cluster' | string | - | yes |
+| namespace | Namespace, which could be your organization name, e.g. 'eg' or 'cp' | string | `` | no |
+| region | AWS Region | string | - | yes |
+| stage | Stage, e.g. 'prod', 'staging', 'dev', or 'test' | string | `` | no |
+| subnet_ids | A list of subnet IDs to launch the cluster in | list(string) | - | yes |
+| tags | Additional tags (e.g. `map('BusinessUnit`,`XYZ`) | map(string) | `<map>` | no |
 | vpc_id | VPC ID for the EKS cluster | string | - | yes |
-| workers_security_group_count | Count of the worker Security Groups. Needed to prevent Terraform error `count can't be computed` | string | - | yes |
-| workers_security_group_ids | Security Group IDs of the worker nodes | list | - | yes |
+| workers_role_arns | List of Role ARNs of the worker nodes | list(string) | - | yes |
+| workers_security_group_count | Count of the worker Security Groups. Needed to prevent Terraform error `count can't be computed` | number | - | yes |
+| workers_security_group_ids | Security Group IDs of the worker nodes | list(string) | - | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
 | eks_cluster_arn | The Amazon Resource Name (ARN) of the cluster |
-| eks_cluster_certificate_authority_data | The base64 encoded certificate data required to communicate with the cluster |
+| eks_cluster_certificate_authority_data | The Kubernetes cluster certificate authority data |
 | eks_cluster_endpoint | The endpoint for the Kubernetes API server |
 | eks_cluster_id | The name of the cluster |
 | eks_cluster_version | The Kubernetes server version of the cluster |
-| kubeconfig | `kubeconfig` configuration to connect to the cluster using `kubectl`. https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#configuring-kubectl-for-eks |
 | security_group_arn | ARN of the EKS cluster Security Group |
 | security_group_id | ID of the EKS cluster Security Group |
 | security_group_name | Name of the EKS cluster Security Group |
@@ -213,7 +231,7 @@ Check out these related projects.
 - [terraform-aws-ec2-autoscale-group](https://github.com/cloudposse/terraform-aws-ec2-autoscale-group) - Terraform module to provision Auto Scaling Group and Launch Template on AWS
 - [terraform-aws-ecs-container-definition](https://github.com/cloudposse/terraform-aws-ecs-container-definition) - Terraform module to generate well-formed JSON documents (container definitions) that are passed to the  aws_ecs_task_definition Terraform resource
 - [terraform-aws-ecs-alb-service-task](https://github.com/cloudposse/terraform-aws-ecs-alb-service-task) - Terraform module which implements an ECS service which exposes a web service via ALB
-- [erraform-aws-ecs-web-app](https://github.com/cloudposse/terraform-aws-ecs-web-app) - Terraform module that implements a web app on ECS and supports autoscaling, CI/CD, monitoring, ALB integration, and much more
+- [terraform-aws-ecs-web-app](https://github.com/cloudposse/terraform-aws-ecs-web-app) - Terraform module that implements a web app on ECS and supports autoscaling, CI/CD, monitoring, ALB integration, and much more
 - [terraform-aws-ecs-codepipeline](https://github.com/cloudposse/terraform-aws-ecs-codepipeline) - Terraform module for CI/CD with AWS Code Pipeline and Code Build for ECS
 - [terraform-aws-ecs-cloudwatch-autoscaling](https://github.com/cloudposse/terraform-aws-ecs-cloudwatch-autoscaling) - Terraform module to autoscale ECS Service based on CloudWatch metrics
 - [terraform-aws-ecs-cloudwatch-sns-alarms](https://github.com/cloudposse/terraform-aws-ecs-cloudwatch-sns-alarms) - Terraform module to create CloudWatch Alarms on ECS Service level metrics
@@ -339,8 +357,8 @@ Check out [our other projects][github], [follow us on twitter][twitter], [apply 
 
 ### Contributors
 
-|  [![Erik Osterman][osterman_avatar]][osterman_homepage]<br/>[Erik Osterman][osterman_homepage] | [![Andriy Knysh][aknysh_avatar]][aknysh_homepage]<br/>[Andriy Knysh][aknysh_homepage] | [![Igor Rodionov][goruha_avatar]][goruha_homepage]<br/>[Igor Rodionov][goruha_homepage] |
-|---|---|---|
+|  [![Erik Osterman][osterman_avatar]][osterman_homepage]<br/>[Erik Osterman][osterman_homepage] | [![Andriy Knysh][aknysh_avatar]][aknysh_homepage]<br/>[Andriy Knysh][aknysh_homepage] | [![Igor Rodionov][goruha_avatar]][goruha_homepage]<br/>[Igor Rodionov][goruha_homepage] | [![Oscar][osulli_avatar]][osulli_homepage]<br/>[Oscar][osulli_homepage] |
+|---|---|---|---|
 
 
   [osterman_homepage]: https://github.com/osterman
@@ -353,6 +371,10 @@ Check out [our other projects][github], [follow us on twitter][twitter], [apply 
 
   [goruha_homepage]: https://github.com/goruha/
   [goruha_avatar]: http://s.gravatar.com/avatar/bc70834d32ed4517568a1feb0b9be7e2?s=144
+
+
+  [osulli_homepage]: https://github.com/osulli/
+  [osulli_avatar]: https://avatars1.githubusercontent.com/u/46930728?v=4&s=144
 
 
 
