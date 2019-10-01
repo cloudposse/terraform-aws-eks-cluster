@@ -2,7 +2,6 @@ package test
 
 import (
 	"fmt"
-	"os/exec"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -84,12 +83,9 @@ func TestExamplesComplete(t *testing.T) {
 	// https://www.rushtehrani.com/post/using-kubernetes-api
 	// https://rancher.com/using-kubernetes-api-go-kubecon-2017-session-recap
 	// https://gianarb.it/blog/kubernetes-shared-informer
-	kubeconfigPath := "/.kube/config"
-	cmd := fmt.Sprintf("aws eks update-kubeconfig --name=eg-test-eks-cluster --region=us-east-2 --kubeconfig=%s", kubeconfigPath)
-	res, err := exec.Command(cmd).Output()
-	fmt.Println(res)
-	assert.NoError(t, err)
+	fmt.Println("Waiting for worker nodes to join the EKS cluster")
 
+	kubeconfigPath := "/.kube/config"
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
 	assert.NoError(t, err)
 
@@ -104,7 +100,7 @@ func TestExamplesComplete(t *testing.T) {
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			node := obj.(*corev1.Node)
-			fmt.Printf("Worker Node %s has joined the EKS cluster at %s", node.Name, node.CreationTimestamp)
+			fmt.Printf("Worker Node %s has joined the EKS cluster at %s\n", node.Name, node.CreationTimestamp)
 			atomic.AddUint64(&countOfWorkerNodes, 1)
 			if countOfWorkerNodes > 1 {
 				close(stopChannel)
@@ -115,8 +111,7 @@ func TestExamplesComplete(t *testing.T) {
 	go informer.Run(stopChannel)
 
 	select {
-	case res := <-stopChannel:
-		fmt.Println(res)
+	case <-stopChannel:
 		msg := "All worker nodes have joined the EKS cluster"
 		fmt.Println(msg)
 	case <-time.After(5 * time.Minute):
