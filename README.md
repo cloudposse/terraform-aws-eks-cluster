@@ -145,13 +145,85 @@ Module usage examples:
     subnet_ids = module.subnets.public_subnet_ids
 
     kubernetes_version = var.kubernetes_version
+    kubeconfig_path    = var.kubeconfig_path
 
-    # `workers_security_group_count` is needed to prevent `count can't be computed` errors
     workers_security_group_ids   = [module.eks_workers.security_group_id]
-    workers_security_group_count = 1
+    workers_role_arns            = [module.eks_workers.workers_role_arn]
+  }
+```
 
-    workers_role_arns = [module.eks_workers.workers_role_arn]
-    kubeconfig_path   = var.kubeconfig_path
+Module usage with two worker groups:
+
+```hcl
+  {
+  ...
+
+  module "eks_workers" {
+    source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=master"
+    namespace                          = var.namespace
+    stage                              = var.stage
+    name                               = "small"
+    attributes                         = var.attributes
+    tags                               = var.tags
+    instance_type                      = "t3.small"
+    vpc_id                             = module.vpc.vpc_id
+    subnet_ids                         = module.subnets.public_subnet_ids
+    health_check_type                  = var.health_check_type
+    min_size                           = var.min_size
+    max_size                           = var.max_size
+    wait_for_capacity_timeout          = var.wait_for_capacity_timeout
+    cluster_name                       = module.label.id
+    cluster_endpoint                   = module.eks_cluster.eks_cluster_endpoint
+    cluster_certificate_authority_data = module.eks_cluster.eks_cluster_certificate_authority_data
+    cluster_security_group_id          = module.eks_cluster.security_group_id
+
+    # Auto-scaling policies and CloudWatch metric alarms
+    autoscaling_policies_enabled           = var.autoscaling_policies_enabled
+    cpu_utilization_high_threshold_percent = var.cpu_utilization_high_threshold_percent
+    cpu_utilization_low_threshold_percent  = var.cpu_utilization_low_threshold_percent
+  }
+
+  module "eks_workers" {
+    source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=master"
+    namespace                          = var.namespace
+    stage                              = var.stage
+    name                               = "medium"
+    attributes                         = var.attributes
+    tags                               = var.tags
+    instance_type                      = "t3.medium"
+    vpc_id                             = module.vpc.vpc_id
+    subnet_ids                         = module.subnets.public_subnet_ids
+    health_check_type                  = var.health_check_type
+    min_size                           = var.min_size
+    max_size                           = var.max_size
+    wait_for_capacity_timeout          = var.wait_for_capacity_timeout
+    cluster_name                       = module.label.id
+    cluster_endpoint                   = module.eks_cluster.eks_cluster_endpoint
+    cluster_certificate_authority_data = module.eks_cluster.eks_cluster_certificate_authority_data
+    cluster_security_group_id          = module.eks_cluster.security_group_id
+
+    # Auto-scaling policies and CloudWatch metric alarms
+    autoscaling_policies_enabled           = var.autoscaling_policies_enabled
+    cpu_utilization_high_threshold_percent = var.cpu_utilization_high_threshold_percent
+    cpu_utilization_low_threshold_percent  = var.cpu_utilization_low_threshold_percent
+  }
+
+  module "eks_cluster" {
+    source     = "git::https://github.com/cloudposse/terraform-aws-eks-cluster.git?ref=master"
+    namespace  = var.namespace
+    stage      = var.stage
+    name       = var.name
+    attributes = var.attributes
+    tags       = var.tags
+    vpc_id     = module.vpc.vpc_id
+    subnet_ids = module.subnets.public_subnet_ids
+
+    kubernetes_version = var.kubernetes_version
+    kubeconfig_path    = var.kubeconfig_path
+
+    workers_role_arns          = [module.eks_workers.workers_role_arn, module.eks_workers_2.workers_role_arn]
+    workers_security_group_ids = [module.eks_workers.security_group_id, module.eks_workers_2.security_group_id]
+    
   }
 ```
 
@@ -197,7 +269,6 @@ Available targets:
 | tags | Additional tags (e.g. `map('BusinessUnit`,`XYZ`) | map(string) | `<map>` | no |
 | vpc_id | VPC ID for the EKS cluster | string | - | yes |
 | workers_role_arns | List of Role ARNs of the worker nodes | list(string) | - | yes |
-| workers_security_group_count | Count of the worker Security Groups. Needed to prevent Terraform error `count can't be computed` | number | - | yes |
 | workers_security_group_ids | Security Group IDs of the worker nodes | list(string) | - | yes |
 
 ## Outputs
