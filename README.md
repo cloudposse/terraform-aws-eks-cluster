@@ -183,7 +183,7 @@ Module usage with two worker groups:
     cpu_utilization_low_threshold_percent  = var.cpu_utilization_low_threshold_percent
   }
 
-  module "eks_workers" {
+  module "eks_workers_2" {
     source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=master"
     namespace                          = var.namespace
     stage                              = var.stage
