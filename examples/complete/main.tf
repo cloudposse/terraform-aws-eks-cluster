@@ -81,11 +81,8 @@ module "eks_cluster" {
   vpc_id             = module.vpc.vpc_id
   subnet_ids         = module.subnets.public_subnet_ids
   kubernetes_version = var.kubernetes_version
+  kubeconfig_path    = var.kubeconfig_path
 
-  # `workers_security_group_count` is needed to prevent `count can't be computed` errors
+  workers_role_arns            = [module.eks_workers.workers_role_arn]
   workers_security_group_ids   = [module.eks_workers.security_group_id]
-  workers_security_group_count = 1
-
-  workers_role_arns = [module.eks_workers.workers_role_arn]
-  kubeconfig_path   = var.kubeconfig_path
 }
