@@ -83,6 +83,6 @@ module "eks_cluster" {
   kubernetes_version = var.kubernetes_version
   kubeconfig_path    = var.kubeconfig_path
 
-  workers_role_arns            = [module.eks_workers.workers_role_arn]
-  workers_security_group_ids   = [module.eks_workers.security_group_id]
+  workers_role_arns          = [module.eks_workers.workers_role_arn]
+  workers_security_group_ids = [module.eks_workers.security_group_id]
 }
