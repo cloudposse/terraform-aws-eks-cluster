@@ -28,7 +28,7 @@ locals {
   certificate_authority_data               = local.certificate_authority_data_map["data"]
 
   configmap_auth_template_file             = join("/", [path.module, "configmap-auth.yaml.tpl"])
-  config_auth_file                         = join("/", [path.module, "configmap-auth.yaml"])
+  configmap_auth_file                      = join("/", [path.module, "configmap-auth.yaml"])
 
   cluster_name = join("", aws_eks_cluster.default.*.id)
 
