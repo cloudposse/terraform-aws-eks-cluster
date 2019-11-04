@@ -82,11 +82,6 @@ variable "workers_security_group_ids" {
   description = "Security Group IDs of the worker nodes"
 }
 
-variable "workers_security_group_count" {
-  type        = number
-  description = "Count of the worker Security Groups. Needed to prevent Terraform error `count can't be computed`"
-}
-
 variable "kubernetes_version" {
   type        = string
   default     = "1.14"
