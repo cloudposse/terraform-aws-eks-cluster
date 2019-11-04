@@ -25,7 +25,6 @@
 | tags | Additional tags (e.g. `map('BusinessUnit`,`XYZ`) | map(string) | `<map>` | no |
 | vpc_id | VPC ID for the EKS cluster | string | - | yes |
 | workers_role_arns | List of Role ARNs of the worker nodes | list(string) | - | yes |
-| workers_security_group_count | Count of the worker Security Groups. Needed to prevent Terraform error `count can't be computed` | number | - | yes |
 | workers_security_group_ids | Security Group IDs of the worker nodes | list(string) | - | yes |
 
 ## Outputs

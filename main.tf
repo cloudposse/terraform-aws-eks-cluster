@@ -62,7 +62,7 @@ resource "aws_security_group_rule" "egress" {
 }
 
 resource "aws_security_group_rule" "ingress_workers" {
-  count                    = var.enabled ? var.workers_security_group_count : 0
+  count                    = var.enabled ? length(var.workers_security_group_ids) : 0
   description              = "Allow the cluster to receive communication from the worker nodes"
   from_port                = 0
   to_port                  = 65535
