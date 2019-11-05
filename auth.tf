@@ -82,7 +82,8 @@ resource "null_resource" "apply_configmap_auth" {
   depends_on = [aws_eks_cluster.default, local_file.configmap_auth]
 
   provisioner "local-exec" {
-    command = <<EOT
+    interpreter = [var.local_exec_interpreter, "-c"]
+    command     = <<EOT
       while [[ ! -e ${local.configmap_auth_file} ]] ; do sleep 1; done && \
       aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path} && \
       kubectl apply -f ${local.configmap_auth_file} --kubeconfig ${var.kubeconfig_path}
