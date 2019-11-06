@@ -147,3 +147,9 @@ variable "kubeconfig_path" {
   default     = "~/.kube/config"
   description = "The path to `kubeconfig` file"
 }
+
+variable "local_exec_interpreter" {
+  type        = string
+  default     = "/bin/sh"
+  description = "shell to use for local exec"
+}
