@@ -153,3 +153,15 @@ variable "local_exec_interpreter" {
   default     = "/bin/sh"
   description = "shell to use for local exec"
 }
+
+variable "configmap_auth_template_file" {
+  type        = string
+  default     = ""
+  description = "The path to `configmap` auth template file"
+}
+
+variable "configmap_auth_file" {
+  type        = string
+  default     = ""
+  description = "The path to `configmap` auth file"
+}
