@@ -68,7 +68,7 @@ Module usage examples:
   }
 
   module "label" {
-    source     = "git::https://github.com/cloudposse/terraform-null-label.git?ref=master"
+    source     = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.15.0"
     namespace  = var.namespace
     name       = var.name
     stage      = var.stage
@@ -81,11 +81,18 @@ Module usage examples:
     # The usage of the specific kubernetes.io/cluster/* resource tags below are required
     # for EKS and Kubernetes to discover and manage networking resources
     # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#base-vpc-networking
-    tags = merge(var.tags, map("kubernetes.io/cluster/${module.label.id}", "shared"))
+    tags = merge(module.label.tags, map("kubernetes.io/cluster/${module.label.id}", "shared"))
+
+    # Unfortunately, most_recent (https://github.com/cloudposse/terraform-aws-eks-workers/blob/34a43c25624a6efb3ba5d2770a601d7cb3c0d391/main.tf#L141)
+    # variable does not work as expected, if you are not going to use custom ami you should
+    # enforce usage of eks_worker_ami_name_filter variable to set the rigth kubernetes version for EKS workers,
+    # otherwise will be used the first version of Kubernetes supported by AWS (v1.11) for EKS workers but
+    # EKS control plane will use the version specified by kubernetes_version variable.
+    eks_worker_ami_name_filter = "amazon-eks-node-${var.kubernetes_version}*"
   }
 
   module "vpc" {
-    source     = "git::https://github.com/cloudposse/terraform-aws-vpc.git?ref=master"
+    source     = "git::https://github.com/cloudposse/terraform-aws-vpc.git?ref=tags/0.8.0"
     namespace  = var.namespace
     stage      = var.stage
     name       = var.name
@@ -95,7 +102,7 @@ Module usage examples:
   }
 
   module "subnets" {
-    source               = "git::https://github.com/cloudposse/terraform-aws-dynamic-subnets.git?ref=master"
+    source               = "git::https://github.com/cloudposse/terraform-aws-dynamic-subnets.git?ref=tags/0.16.0"
     availability_zones   = var.availability_zones
     namespace            = var.namespace
     stage                = var.stage
@@ -110,15 +117,17 @@ Module usage examples:
   }
 
   module "eks_workers" {
-    source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=master"
+    source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=tags/0.10.0"
     namespace                          = var.namespace
     stage                              = var.stage
     name                               = var.name
     attributes                         = var.attributes
     tags                               = var.tags
     instance_type                      = var.instance_type
+    eks_worker_ami_name_filter          = local.eks_worker_ami_name_filter
     vpc_id                             = module.vpc.vpc_id
     subnet_ids                         = module.subnets.public_subnet_ids
+    associate_public_ip_address        = var.associate_public_ip_address
     health_check_type                  = var.health_check_type
     min_size                           = var.min_size
     max_size                           = var.max_size
@@ -135,20 +144,20 @@ Module usage examples:
   }
 
   module "eks_cluster" {
-    source     = "git::https://github.com/cloudposse/terraform-aws-eks-cluster.git?ref=master"
-    namespace  = var.namespace
-    stage      = var.stage
-    name       = var.name
-    attributes = var.attributes
-    tags       = var.tags
-    vpc_id     = module.vpc.vpc_id
-    subnet_ids = module.subnets.public_subnet_ids
-
+    source             = "../../"
+    namespace          = var.namespace
+    stage              = var.stage
+    name               = var.name
+    attributes         = var.attributes
+    tags               = var.tags
+    region             = var.region
+    vpc_id             = module.vpc.vpc_id
+    subnet_ids         = module.subnets.public_subnet_ids
     kubernetes_version = var.kubernetes_version
-    kubeconfig_path    = var.kubeconfig_path
+    kubeconfig_path     = var.kubeconfig_path
 
-    workers_security_group_ids   = [module.eks_workers.security_group_id]
-    workers_role_arns            = [module.eks_workers.workers_role_arn]
+    workers_role_arns          = [module.eks_workers.workers_role_arn]
+    workers_security_group_ids = [module.eks_workers.security_group_id]
   }
 ```
 

@@ -17,6 +17,13 @@ locals {
   # for EKS and Kubernetes to discover and manage networking resources
   # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#base-vpc-networking
   tags = merge(module.label.tags, map("kubernetes.io/cluster/${module.label.id}", "shared"))
+
+  # Unfortunately, most_recent (https://github.com/cloudposse/terraform-aws-eks-workers/blob/34a43c25624a6efb3ba5d2770a601d7cb3c0d391/main.tf#L141)
+  # variable does not work as expected, if you are not going to use custom ami you should
+  # enforce usage of eks_worker_ami_name_filter variable to set the rigth kubernetes version for EKS workers,
+  # otherwise will be used the first version of Kubernetes supported by AWS (v1.11) for EKS workers but
+  # EKS control plane will use the version specified by kubernetes_version variable.
+  eks_worker_ami_name_filter = "amazon-eks-node-${var.kubernetes_version}*"
 }
 
 module "vpc" {
@@ -52,6 +59,7 @@ module "eks_workers" {
   attributes                         = var.attributes
   tags                               = var.tags
   instance_type                      = var.instance_type
+  eks_worker_ami_name_filter          = local.eks_worker_ami_name_filter
   vpc_id                             = module.vpc.vpc_id
   subnet_ids                         = module.subnets.public_subnet_ids
   associate_public_ip_address        = var.associate_public_ip_address
@@ -81,7 +89,7 @@ module "eks_cluster" {
   vpc_id             = module.vpc.vpc_id
   subnet_ids         = module.subnets.public_subnet_ids
   kubernetes_version = var.kubernetes_version
-  kubeconfig_path    = var.kubeconfig_path
+  kubeconfig_path     = var.kubeconfig_path
 
   workers_role_arns          = [module.eks_workers.workers_role_arn]
   workers_security_group_ids = [module.eks_workers.security_group_id]
