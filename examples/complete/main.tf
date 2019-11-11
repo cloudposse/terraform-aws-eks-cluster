@@ -59,7 +59,7 @@ module "eks_workers" {
   attributes                         = var.attributes
   tags                               = var.tags
   instance_type                      = var.instance_type
-  eks_worker_ami_name_filter          = local.eks_worker_ami_name_filter
+  eks_worker_ami_name_filter         = local.eks_worker_ami_name_filter
   vpc_id                             = module.vpc.vpc_id
   subnet_ids                         = module.subnets.public_subnet_ids
   associate_public_ip_address        = var.associate_public_ip_address
@@ -89,7 +89,7 @@ module "eks_cluster" {
   vpc_id             = module.vpc.vpc_id
   subnet_ids         = module.subnets.public_subnet_ids
   kubernetes_version = var.kubernetes_version
-  kubeconfig_path     = var.kubeconfig_path
+  kubeconfig_path    = var.kubeconfig_path
 
   workers_role_arns          = [module.eks_workers.workers_role_arn]
   workers_security_group_ids = [module.eks_workers.security_group_id]
