@@ -97,22 +97,23 @@ resource "null_resource" "apply_configmap_auth" {
       if [[ "$install_aws_cli" = true ]] ; then
           echo 'Installing AWS CLI...'
           mkdir -p ${local.external_packages_install_path}
-          curl -LO https://s3.amazonaws.com/aws-cli/awscli-bundle.zip -o ${local.external_packages_install_path}/awscli-bundle.zip
           cd ${local.external_packages_install_path}
-          unzip awscli-bundle.zip
+          curl -LO https://s3.amazonaws.com/aws-cli/awscli-bundle.zip
+          unzip ./awscli-bundle.zip
           ./awscli-bundle/install -i ${local.external_packages_install_path}
           export PATH=$PATH:${local.external_packages_install_path}
+          echo 'Installed AWS CLI'
       fi
 
       install_kubectl=${var.install_kubectl}
       if [[ "$install_kubectl" = true ]] ; then
           echo 'Installing kubectl...'
           mkdir -p ${local.external_packages_install_path}
-          kubectl_version=${local.kubectl_version}
-          curl -LO https://storage.googleapis.com/kubernetes-release/release/"$kubectl_version"/bin/linux/amd64/kubectl -o ${local.external_packages_install_path}
           cd ${local.external_packages_install_path}
-          chmod +x kubectl
+          curl -LO https://storage.googleapis.com/kubernetes-release/release/${local.kubectl_version}/bin/linux/amd64/kubectl
+          chmod +x ./kubectl
           export PATH=$PATH:${local.external_packages_install_path}
+          echo 'Installed kubectl'
       fi
 
       while [[ ! -e ${local.configmap_auth_file} ]] ; do sleep 1; done && \
