@@ -93,15 +93,10 @@ resource "null_resource" "apply_configmap_auth" {
     interpreter = [var.local_exec_interpreter, "-c"]
 
     command = <<EOT
-      # https://www.terraform.io/docs/cloud/run/install-software.html
-      # https://stackoverflow.com/questions/26123740/is-it-possible-to-install-aws-cli-package-without-root-permission
-      # https://stackoverflow.com/questions/58232731/kubectl-missing-form-terraform-cloud
-      # https://docs.aws.amazon.com/cli/latest/userguide/install-bundle.html
-      # https://docs.aws.amazon.com/cli/latest/userguide/install-cliv1.html
-
-      install_aws_cli = ${var.install_aws_cli}
+      install_aws_cli=${var.install_aws_cli}
       if [[ "$install_aws_cli" = true ]] ; then
           echo 'Installing AWS CLI...'
+          mkdir -p ${local.external_packages_install_path}
           curl -LO https://s3.amazonaws.com/aws-cli/awscli-bundle.zip -o ${local.external_packages_install_path}/awscli-bundle.zip
           cd ${local.external_packages_install_path}
           unzip awscli-bundle.zip
@@ -109,10 +104,11 @@ resource "null_resource" "apply_configmap_auth" {
           export PATH=$PATH:${local.external_packages_install_path}
       fi
 
-      install_kubectl = ${var.install_kubectl}
+      install_kubectl=${var.install_kubectl}
       if [[ "$install_kubectl" = true ]] ; then
           echo 'Installing kubectl...'
-          kubectl_version = ${local.kubectl_version}
+          mkdir -p ${local.external_packages_install_path}
+          kubectl_version=${local.kubectl_version}
           curl -LO https://storage.googleapis.com/kubernetes-release/release/"$kubectl_version"/bin/linux/amd64/kubectl -o ${local.external_packages_install_path}
           cd ${local.external_packages_install_path}
           chmod +x kubectl
