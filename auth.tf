@@ -80,11 +80,13 @@ resource "null_resource" "apply_configmap_auth" {
   count = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
 
   triggers = {
-    cluster_updated                 = join("", aws_eks_cluster.default.*.id)
-    worker_roles_updated            = local.map_worker_roles_yaml
-    additional_roles_updated        = local.map_additional_iam_roles_yaml
-    additional_users_updated        = local.map_additional_iam_users_yaml
-    additional_aws_accounts_updated = local.map_additional_aws_accounts_yaml
+    cluster_updated                     = join("", aws_eks_cluster.default.*.id)
+    worker_roles_updated                = local.map_worker_roles_yaml
+    additional_roles_updated            = local.map_additional_iam_roles_yaml
+    additional_users_updated            = local.map_additional_iam_users_yaml
+    additional_aws_accounts_updated     = local.map_additional_aws_accounts_yaml
+    configmap_auth_file_content_changed = join("", local_file.configmap_auth.*.content)
+    configmap_auth_file_id_changed      = join("", local_file.configmap_auth.*.id)
   }
 
   depends_on = [aws_eks_cluster.default, local_file.configmap_auth]
@@ -94,6 +96,7 @@ resource "null_resource" "apply_configmap_auth" {
 
     command = <<EOT
       install_aws_cli=${var.install_aws_cli}
+
       if [[ "$install_aws_cli" = true ]] ; then
           echo 'Installing AWS CLI...'
           mkdir -p ${local.external_packages_install_path}
@@ -108,6 +111,7 @@ resource "null_resource" "apply_configmap_auth" {
       fi
 
       install_kubectl=${var.install_kubectl}
+
       if [[ "$install_kubectl" = true ]] ; then
           echo 'Installing kubectl...'
           mkdir -p ${local.external_packages_install_path}
