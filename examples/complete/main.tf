@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 module "label" {
-  source     = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.15.0"
+  source     = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.16.0"
   namespace  = var.namespace
   name       = var.name
   stage      = var.stage
@@ -27,7 +27,7 @@ locals {
 }
 
 module "vpc" {
-  source     = "git::https://github.com/cloudposse/terraform-aws-vpc.git?ref=tags/0.8.0"
+  source     = "git::https://github.com/cloudposse/terraform-aws-vpc.git?ref=tags/0.8.1"
   namespace  = var.namespace
   stage      = var.stage
   name       = var.name
@@ -37,7 +37,7 @@ module "vpc" {
 }
 
 module "subnets" {
-  source               = "git::https://github.com/cloudposse/terraform-aws-dynamic-subnets.git?ref=tags/0.16.0"
+  source               = "git::https://github.com/cloudposse/terraform-aws-dynamic-subnets.git?ref=tags/0.16.1"
   availability_zones   = var.availability_zones
   namespace            = var.namespace
   stage                = var.stage
@@ -52,7 +52,7 @@ module "subnets" {
 }
 
 module "eks_workers" {
-  source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=tags/0.10.0"
+  source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=tags/0.11.0"
   namespace                          = var.namespace
   stage                              = var.stage
   name                               = var.name
@@ -79,17 +79,21 @@ module "eks_workers" {
 }
 
 module "eks_cluster" {
-  source             = "../../"
-  namespace          = var.namespace
-  stage              = var.stage
-  name               = var.name
-  attributes         = var.attributes
-  tags               = var.tags
-  region             = var.region
-  vpc_id             = module.vpc.vpc_id
-  subnet_ids         = module.subnets.public_subnet_ids
-  kubernetes_version = var.kubernetes_version
-  kubeconfig_path    = var.kubeconfig_path
+  source                         = "../../"
+  namespace                      = var.namespace
+  stage                          = var.stage
+  name                           = var.name
+  attributes                     = var.attributes
+  tags                           = var.tags
+  region                         = var.region
+  vpc_id                         = module.vpc.vpc_id
+  subnet_ids                     = module.subnets.public_subnet_ids
+  kubernetes_version             = var.kubernetes_version
+  kubeconfig_path                = var.kubeconfig_path
+  install_aws_cli                = var.install_aws_cli
+  install_kubectl                = var.install_kubectl
+  kubectl_version                = var.kubectl_version
+  external_packages_install_path = var.external_packages_install_path
 
   workers_role_arns          = [module.eks_workers.workers_role_arn]
   workers_security_group_ids = [module.eks_workers.security_group_id]

@@ -126,3 +126,27 @@ variable "kubeconfig_path" {
   type        = string
   description = "The path to `kubeconfig` file"
 }
+
+variable "install_aws_cli" {
+  type        = bool
+  default     = false
+  description = "Set to `true` to install AWS CLI if the module is provisioned on workstations where AWS CLI is not installed by default, e.g. Terraform Cloud workers"
+}
+
+variable "install_kubectl" {
+  type        = bool
+  default     = false
+  description = "Set to `true` to install `kubectl` if the module is provisioned on workstations where `kubectl` is not installed by default, e.g. Terraform Cloud workers"
+}
+
+variable "kubectl_version" {
+  type        = string
+  default     = ""
+  description = "`kubectl` version to install. If not specified, the latest version will be used"
+}
+
+variable "external_packages_install_path" {
+  type        = string
+  default     = ""
+  description = "Path to install external packages, e.g. AWS CLI and `kubectl`. Used when the module is provisioned on workstations where the external packages are not installed by default, e.g. Terraform Cloud workers"
+}

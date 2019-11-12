@@ -19,6 +19,11 @@
 # https://cloud.google.com/kubernetes-engine/docs/concepts/configmap
 # http://yaml-multiline.info
 # https://github.com/terraform-providers/terraform-provider-kubernetes/issues/216
+# https://www.terraform.io/docs/cloud/run/install-software.html
+# https://stackoverflow.com/questions/26123740/is-it-possible-to-install-aws-cli-package-without-root-permission
+# https://stackoverflow.com/questions/58232731/kubectl-missing-form-terraform-cloud
+# https://docs.aws.amazon.com/cli/latest/userguide/install-bundle.html
+# https://docs.aws.amazon.com/cli/latest/userguide/install-cliv1.html
 
 
 locals {
@@ -29,6 +34,9 @@ locals {
 
   configmap_auth_template_file = var.configmap_auth_template_file == "" ? join("/", [path.module, "configmap-auth.yaml.tpl"]) : var.configmap_auth_template_file
   configmap_auth_file          = var.configmap_auth_file == "" ? join("/", [path.module, "configmap-auth.yaml"]) : var.configmap_auth_file
+
+  external_packages_install_path = var.external_packages_install_path == "" ? join("/", [path.module, ".terraform/bin"]) : var.external_packages_install_path
+  kubectl_version                = var.kubectl_version == "" ? "$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)" : var.kubectl_version
 
   cluster_name = join("", aws_eks_cluster.default.*.id)
 
@@ -83,7 +91,34 @@ resource "null_resource" "apply_configmap_auth" {
 
   provisioner "local-exec" {
     interpreter = [var.local_exec_interpreter, "-c"]
-    command     = <<EOT
+
+    command = <<EOT
+      # https://www.terraform.io/docs/cloud/run/install-software.html
+      # https://stackoverflow.com/questions/26123740/is-it-possible-to-install-aws-cli-package-without-root-permission
+      # https://stackoverflow.com/questions/58232731/kubectl-missing-form-terraform-cloud
+      # https://docs.aws.amazon.com/cli/latest/userguide/install-bundle.html
+      # https://docs.aws.amazon.com/cli/latest/userguide/install-cliv1.html
+
+      install_aws_cli = ${var.install_aws_cli}
+      if [[ "$install_aws_cli" = true ]] ; then
+          echo 'Installing AWS CLI...'
+          curl -LO https://s3.amazonaws.com/aws-cli/awscli-bundle.zip -o ${local.external_packages_install_path}/awscli-bundle.zip
+          cd ${local.external_packages_install_path}
+          unzip awscli-bundle.zip
+          ./awscli-bundle/install -i ${local.external_packages_install_path}
+          export PATH=$PATH:${local.external_packages_install_path}
+      fi
+
+      install_kubectl = ${var.install_kubectl}
+      if [[ "$install_kubectl" = true ]] ; then
+          echo 'Installing kubectl...'
+          kubectl_version = ${local.kubectl_version}
+          curl -LO https://storage.googleapis.com/kubernetes-release/release/"$kubectl_version"/bin/linux/amd64/kubectl -o ${local.external_packages_install_path}
+          cd ${local.external_packages_install_path}
+          chmod +x kubectl
+          export PATH=$PATH:${local.external_packages_install_path}
+      fi
+
       while [[ ! -e ${local.configmap_auth_file} ]] ; do sleep 1; done && \
       aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path} && \
       kubectl apply -f ${local.configmap_auth_file} --kubeconfig ${var.kubeconfig_path}
