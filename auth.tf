@@ -101,7 +101,7 @@ resource "null_resource" "apply_configmap_auth" {
           curl -LO https://s3.amazonaws.com/aws-cli/awscli-bundle.zip
           unzip ./awscli-bundle.zip
           ./awscli-bundle/install -i ${local.external_packages_install_path}
-          export PATH=$PATH:${local.external_packages_install_path}
+          export PATH=$PATH:${local.external_packages_install_path}:${local.external_packages_install_path}/bin
           echo 'Installed AWS CLI'
           which aws
           aws --version
@@ -117,11 +117,11 @@ resource "null_resource" "apply_configmap_auth" {
           export PATH=$PATH:${local.external_packages_install_path}
           echo 'Installed kubectl'
           which kubectl
-          kubectl version
       fi
 
       echo 'Applying ConfigMap...'
       aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path}
+      kubectl version --kubeconfig ${var.kubeconfig_path}
       kubectl apply -f ${local.configmap_auth_file} --kubeconfig ${var.kubeconfig_path}
       echo 'Applied ConfigMap'
     EOT
