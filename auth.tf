@@ -123,11 +123,11 @@ resource "null_resource" "apply_configmap_auth" {
           which kubectl
       fi
 
-      echo 'Applying ConfigMap...'
-      aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path}
+      echo 'Applying configmap...'
+      aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path} ${var.aws_eks_update_kubeconfig_additional_arguments}
       kubectl version --kubeconfig ${var.kubeconfig_path}
       kubectl apply -f ${local.configmap_auth_file} --kubeconfig ${var.kubeconfig_path}
-      echo 'Applied ConfigMap'
+      echo 'Applied configmap'
     EOT
   }
 }

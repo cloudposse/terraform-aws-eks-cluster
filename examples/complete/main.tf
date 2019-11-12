@@ -79,21 +79,23 @@ module "eks_workers" {
 }
 
 module "eks_cluster" {
-  source                         = "../../"
-  namespace                      = var.namespace
-  stage                          = var.stage
-  name                           = var.name
-  attributes                     = var.attributes
-  tags                           = var.tags
-  region                         = var.region
-  vpc_id                         = module.vpc.vpc_id
-  subnet_ids                     = module.subnets.public_subnet_ids
-  kubernetes_version             = var.kubernetes_version
-  kubeconfig_path                = var.kubeconfig_path
-  install_aws_cli                = var.install_aws_cli
-  install_kubectl                = var.install_kubectl
-  kubectl_version                = var.kubectl_version
-  external_packages_install_path = var.external_packages_install_path
+  source             = "../../"
+  namespace          = var.namespace
+  stage              = var.stage
+  name               = var.name
+  attributes         = var.attributes
+  tags               = var.tags
+  region             = var.region
+  vpc_id             = module.vpc.vpc_id
+  subnet_ids         = module.subnets.public_subnet_ids
+  kubernetes_version = var.kubernetes_version
+  kubeconfig_path    = var.kubeconfig_path
+  install_aws_cli    = var.install_aws_cli
+
+  install_kubectl                                = var.install_kubectl
+  kubectl_version                                = var.kubectl_version
+  external_packages_install_path                 = var.external_packages_install_path
+  aws_eks_update_kubeconfig_additional_arguments = var.aws_eks_update_kubeconfig_additional_arguments
 
   workers_role_arns          = [module.eks_workers.workers_role_arn]
   workers_security_group_ids = [module.eks_workers.security_group_id]

@@ -298,6 +298,7 @@ Available targets:
 | apply_config_map_aws_auth | Whether to generate local files from `kubeconfig` and `config-map-aws-auth` templates and perform `kubectl apply` to apply the ConfigMap to allow worker nodes to join the EKS cluster | bool | `true` | no |
 | associate_public_ip_address | Associate a public IP address with an instance in a VPC | bool | `true` | no |
 | attributes | Additional attributes (e.g. `1`) | list(string) | `<list>` | no |
+| aws_eks_update_kubeconfig_additional_arguments | Additional arguments for `aws eks update-kubeconfig` command, e.g. `--role-arn xxxxxxxxx`. For more info, see https://docs.aws.amazon.com/cli/latest/reference/eks/update-kubeconfig.html | string | `` | no |
 | configmap_auth_file | Path to `configmap_auth_file` | string | `` | no |
 | configmap_auth_template_file | Path to `config_auth_template_file` | string | `` | no |
 | delimiter | Delimiter to be used between `name`, `namespace`, `stage`, etc. | string | `-` | no |

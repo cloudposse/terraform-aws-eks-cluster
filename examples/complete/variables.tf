@@ -150,3 +150,9 @@ variable "external_packages_install_path" {
   default     = ""
   description = "Path to install external packages, e.g. AWS CLI and `kubectl`. Used when the module is provisioned on workstations where the external packages are not installed by default, e.g. Terraform Cloud workers"
 }
+
+variable "aws_eks_update_kubeconfig_additional_arguments" {
+  type        = string
+  default     = ""
+  description = "Additional arguments for `aws eks update-kubeconfig` command, e.g. `--role-arn xxxxxxxxx`. For more info, see https://docs.aws.amazon.com/cli/latest/reference/eks/update-kubeconfig.html"
+}
