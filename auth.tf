@@ -103,6 +103,8 @@ resource "null_resource" "apply_configmap_auth" {
           ./awscli-bundle/install -i ${local.external_packages_install_path}
           export PATH=$PATH:${local.external_packages_install_path}
           echo 'Installed AWS CLI'
+          which aws
+          aws --version
       fi
 
       install_kubectl=${var.install_kubectl}
@@ -114,11 +116,14 @@ resource "null_resource" "apply_configmap_auth" {
           chmod +x ./kubectl
           export PATH=$PATH:${local.external_packages_install_path}
           echo 'Installed kubectl'
+          which kubectl
+          kubectl version
       fi
 
-      while [[ ! -e ${local.configmap_auth_file} ]] ; do sleep 1; done && \
-      aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path} && \
+      echo 'Applying ConfigMap...'
+      aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path}
       kubectl apply -f ${local.configmap_auth_file} --kubeconfig ${var.kubeconfig_path}
+      echo 'Applied ConfigMap'
     EOT
   }
 }
