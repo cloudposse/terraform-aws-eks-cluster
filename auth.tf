@@ -95,6 +95,8 @@ resource "null_resource" "apply_configmap_auth" {
     interpreter = [var.local_exec_interpreter, "-c"]
 
     command = <<EOT
+      set -e
+
       install_aws_cli=${var.install_aws_cli}
       if [[ "$install_aws_cli" = true ]] ; then
           echo 'Installing AWS CLI...'
@@ -133,11 +135,11 @@ resource "null_resource" "apply_configmap_auth" {
         echo 'Assumed role ${var.aws_cli_assume_role_arn}'
       fi
 
-      echo 'Applying configmap...'
-      aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path} ${var.aws_eks_update_kubeconfig_additional_arguments} && \
-      kubectl version --kubeconfig ${var.kubeconfig_path} && \
-      kubectl apply -f ${local.configmap_auth_file} --kubeconfig ${var.kubeconfig_path} && \
-      echo 'Applied configmap'
+      echo 'Applying Auth configmap with kubectl...'
+      aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path} ${var.aws_eks_update_kubeconfig_additional_arguments}
+      kubectl version --kubeconfig ${var.kubeconfig_path}
+      kubectl apply -f ${local.configmap_auth_file} --kubeconfig ${var.kubeconfig_path}
+      echo 'Applied Auth configmap with kubectl'
     EOT
   }
 }
