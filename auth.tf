@@ -138,6 +138,9 @@ resource "null_resource" "apply_configmap_auth" {
       kubectl version --kubeconfig ${var.kubeconfig_path} && \
       kubectl apply -f ${local.configmap_auth_file} --kubeconfig ${var.kubeconfig_path} && \
       echo 'Applied configmap'
+
+      kubectl get nodes --kubeconfig ${var.kubeconfig_path}
+      kubectl get pods --all-namespaces --kubeconfig ${var.kubeconfig_path}
     EOT
   }
 }
