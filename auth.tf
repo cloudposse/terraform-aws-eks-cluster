@@ -134,10 +134,9 @@ resource "null_resource" "apply_configmap_auth" {
         #aws sts assume-role --role-arn "$aws_cli_assume_role_arn" --role-session-name "$aws_cli_assume_role_session_name"
       fi
 
-      aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path} ${var.aws_eks_update_kubeconfig_additional_arguments}
-      kubectl version --kubeconfig ${var.kubeconfig_path}
-      kubectl apply -f ${local.configmap_auth_file} --kubeconfig ${var.kubeconfig_path}
-
+      aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path} ${var.aws_eks_update_kubeconfig_additional_arguments} && \
+      kubectl version --kubeconfig ${var.kubeconfig_path} && \
+      kubectl apply -f ${local.configmap_auth_file} --kubeconfig ${var.kubeconfig_path} && \
       echo 'Applied configmap'
     EOT
   }
