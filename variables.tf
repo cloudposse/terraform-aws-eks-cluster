@@ -195,3 +195,15 @@ variable "aws_eks_update_kubeconfig_additional_arguments" {
   default     = ""
   description = "Additional arguments for `aws eks update-kubeconfig` command, e.g. `--role-arn xxxxxxxxx`. For more info, see https://docs.aws.amazon.com/cli/latest/reference/eks/update-kubeconfig.html"
 }
+
+variable "aws_cli_assume_role_arn" {
+  type        = string
+  default     = ""
+  description = "IAM Role ARN for AWS CLI to assume before calling `aws eks` to update `kubeconfig`"
+}
+
+variable "aws_cli_assume_role_session_name" {
+  type        = string
+  default     = ""
+  description = "An identifier for the assumed role session when assuming the IAM Role for AWS CLI before calling `aws eks` to update `kubeconfig`"
+}

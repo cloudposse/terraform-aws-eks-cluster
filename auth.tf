@@ -96,7 +96,6 @@ resource "null_resource" "apply_configmap_auth" {
 
     command = <<EOT
       install_aws_cli=${var.install_aws_cli}
-
       if [[ "$install_aws_cli" = true ]] ; then
           echo 'Installing AWS CLI...'
           mkdir -p ${local.external_packages_install_path}
@@ -111,7 +110,6 @@ resource "null_resource" "apply_configmap_auth" {
       fi
 
       install_kubectl=${var.install_kubectl}
-
       if [[ "$install_kubectl" = true ]] ; then
           echo 'Installing kubectl...'
           mkdir -p ${local.external_packages_install_path}
@@ -124,9 +122,17 @@ resource "null_resource" "apply_configmap_auth" {
       fi
 
       echo 'Applying configmap...'
+
+      aws_cli_assume_role_arn=${var.aws_cli_assume_role_arn}
+      aws_cli_assume_role_session_name=${var.aws_cli_assume_role_session_name}
+      if [[ -n "$aws_cli_assume_role_arn" && -n "$aws_cli_assume_role_session_name" ]] ; then
+        aws sts assume-role --role-arn "$aws_cli_assume_role_arn" --role-session-name "$aws_cli_assume_role_session_name"
+      fi
+
       aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path} ${var.aws_eks_update_kubeconfig_additional_arguments}
       kubectl version --kubeconfig ${var.kubeconfig_path}
       kubectl apply -f ${local.configmap_auth_file} --kubeconfig ${var.kubeconfig_path}
+
       echo 'Applied configmap'
     EOT
   }

@@ -96,6 +96,8 @@ module "eks_cluster" {
   kubectl_version                                = var.kubectl_version
   external_packages_install_path                 = var.external_packages_install_path
   aws_eks_update_kubeconfig_additional_arguments = var.aws_eks_update_kubeconfig_additional_arguments
+  aws_cli_assume_role_arn                        = var.aws_cli_assume_role_arn
+  aws_cli_assume_role_session_name               = var.aws_cli_assume_role_session_name
 
   workers_role_arns          = [module.eks_workers.workers_role_arn]
   workers_security_group_ids = [module.eks_workers.security_group_id]
