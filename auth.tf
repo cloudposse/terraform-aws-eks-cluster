@@ -128,9 +128,9 @@ resource "null_resource" "apply_configmap_auth" {
       if [[ -n "$aws_cli_assume_role_arn" && -n "$aws_cli_assume_role_session_name" ]] ; then
         mkdir -p ${local.external_packages_install_path}
         cd ${local.external_packages_install_path}
-        curl -o jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+        curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o jq
         chmod +x ./jq
-        source <(aws sts assume-role --role-arn "$aws_cli_assume_role_arn" --role-session-name "$aws_cli_assume_role_session_name"  | jq -r  '.Credentials | @sh "export AWS_SESSION_TOKEN=\(.SessionToken)\nexport AWS_ACCESS_KEY_ID=\(.AccessKeyId)\nexport AWS_SECRET_ACCESS_KEY=\(.SecretAccessKey) "')
+        source <(aws --output json sts assume-role --role-arn "$aws_cli_assume_role_arn" --role-session-name "$aws_cli_assume_role_session_name"  | jq -r  '.Credentials | @sh "export AWS_SESSION_TOKEN=\(.SessionToken)\nexport AWS_ACCESS_KEY_ID=\(.AccessKeyId)\nexport AWS_SECRET_ACCESS_KEY=\(.SecretAccessKey) "')
         #aws sts assume-role --role-arn "$aws_cli_assume_role_arn" --role-session-name "$aws_cli_assume_role_session_name"
       fi
 
