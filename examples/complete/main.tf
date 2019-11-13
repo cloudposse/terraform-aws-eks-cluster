@@ -97,6 +97,7 @@ module "eks_cluster" {
   install_aws_cli                                = var.install_aws_cli
   install_kubectl                                = var.install_kubectl
   kubectl_version                                = var.kubectl_version
+  jq_version                                     = var.jq_version
   external_packages_install_path                 = var.external_packages_install_path
   aws_eks_update_kubeconfig_additional_arguments = var.aws_eks_update_kubeconfig_additional_arguments
   aws_cli_assume_role_arn                        = var.aws_cli_assume_role_arn

@@ -180,3 +180,9 @@ variable "aws_cli_assume_role_session_name" {
   default     = ""
   description = "An identifier for the assumed role session when assuming the IAM Role for AWS CLI before calling `aws eks` to update `kubeconfig`"
 }
+
+variable "jq_version" {
+  type        = string
+  default     = "1.6"
+  description = "Version of `jq` to download to extract temporaly credentials after running `aws sts assume-role` if AWS CLI needs to assume role to access the cluster (if variable `aws_cli_assume_role_arn` is set)"
+}

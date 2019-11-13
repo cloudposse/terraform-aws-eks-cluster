@@ -20,6 +20,7 @@
 | external_packages_install_path | Path to install external packages, e.g. AWS CLI and `kubectl`. Used when the module is provisioned on workstations where the external packages are not installed by default, e.g. Terraform Cloud workers | string | `` | no |
 | install_aws_cli | Set to `true` to install AWS CLI if the module is provisioned on workstations where AWS CLI is not installed by default, e.g. Terraform Cloud workers | bool | `false` | no |
 | install_kubectl | Set to `true` to install `kubectl` if the module is provisioned on workstations where `kubectl` is not installed by default, e.g. Terraform Cloud workers | bool | `false` | no |
+| jq_version | Version of `jq` to download to extract temporaly credentials after running `aws sts assume-role` if AWS CLI needs to assume role to access the cluster (if variable `aws_cli_assume_role_arn` is set) | string | `1.6` | no |
 | kubeconfig_path | The path to `kubeconfig` file | string | `~/.kube/config` | no |
 | kubectl_version | `kubectl` version to install. If not specified, the latest version will be used | string | `` | no |
 | kubernetes_version | Desired Kubernetes master version. If you do not specify a value, the latest available version is used | string | `1.14` | no |
