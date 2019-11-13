@@ -150,7 +150,7 @@ variable "kubeconfig_path" {
 
 variable "local_exec_interpreter" {
   type        = string
-  default     = "/bin/sh"
+  default     = "/bin/bash"
   description = "shell to use for local exec"
 }
 

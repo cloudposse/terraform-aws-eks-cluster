@@ -127,6 +127,12 @@ variable "kubeconfig_path" {
   description = "The path to `kubeconfig` file"
 }
 
+variable "local_exec_interpreter" {
+  type        = string
+  default     = "/bin/bash"
+  description = "shell to use for local exec"
+}
+
 variable "configmap_auth_template_file" {
   type        = string
   default     = ""

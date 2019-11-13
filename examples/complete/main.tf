@@ -79,17 +79,18 @@ module "eks_workers" {
 }
 
 module "eks_cluster" {
-  source             = "../../"
-  namespace          = var.namespace
-  stage              = var.stage
-  name               = var.name
-  attributes         = var.attributes
-  tags               = var.tags
-  region             = var.region
-  vpc_id             = module.vpc.vpc_id
-  subnet_ids         = module.subnets.public_subnet_ids
-  kubernetes_version = var.kubernetes_version
-  kubeconfig_path    = var.kubeconfig_path
+  source                 = "../../"
+  namespace              = var.namespace
+  stage                  = var.stage
+  name                   = var.name
+  attributes             = var.attributes
+  tags                   = var.tags
+  region                 = var.region
+  vpc_id                 = module.vpc.vpc_id
+  subnet_ids             = module.subnets.public_subnet_ids
+  kubernetes_version     = var.kubernetes_version
+  kubeconfig_path        = var.kubeconfig_path
+  local_exec_interpreter = var.local_exec_interpreter
 
   configmap_auth_template_file = var.configmap_auth_template_file
   configmap_auth_file          = var.configmap_auth_file

@@ -24,7 +24,7 @@
 | kubeconfig_path | The path to `kubeconfig` file | string | `~/.kube/config` | no |
 | kubectl_version | `kubectl` version to install. If not specified, the latest version will be used | string | `` | no |
 | kubernetes_version | Desired Kubernetes master version. If you do not specify a value, the latest available version is used | string | `1.14` | no |
-| local_exec_interpreter | shell to use for local exec | string | `/bin/sh` | no |
+| local_exec_interpreter | shell to use for local exec | string | `/bin/bash` | no |
 | map_additional_aws_accounts | Additional AWS account numbers to add to `config-map-aws-auth` ConfigMap | list(string) | `<list>` | no |
 | map_additional_iam_roles | Additional IAM roles to add to `config-map-aws-auth` ConfigMap | object | `<list>` | no |
 | map_additional_iam_users | Additional IAM users to add to `config-map-aws-auth` ConfigMap | object | `<list>` | no |
