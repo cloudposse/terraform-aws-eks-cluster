@@ -90,8 +90,11 @@ module "eks_cluster" {
   subnet_ids         = module.subnets.public_subnet_ids
   kubernetes_version = var.kubernetes_version
   kubeconfig_path    = var.kubeconfig_path
-  install_aws_cli    = var.install_aws_cli
 
+  configmap_auth_template_file = var.configmap_auth_template_file
+  configmap_auth_file          = var.configmap_auth_file
+
+  install_aws_cli                                = var.install_aws_cli
   install_kubectl                                = var.install_kubectl
   kubectl_version                                = var.kubectl_version
   external_packages_install_path                 = var.external_packages_install_path
