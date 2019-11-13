@@ -124,13 +124,13 @@ resource "null_resource" "apply_configmap_auth" {
       aws_cli_assume_role_arn=${var.aws_cli_assume_role_arn}
       aws_cli_assume_role_session_name=${var.aws_cli_assume_role_session_name}
       if [[ -n "$aws_cli_assume_role_arn" && -n "$aws_cli_assume_role_session_name" ]] ; then
-        echo 'Assuming role "$aws_cli_assume_role_arn" ...'
+        echo 'Assuming role ${var.aws_cli_assume_role_arn} ...'
         mkdir -p ${local.external_packages_install_path}
         cd ${local.external_packages_install_path}
         curl -L https://github.com/stedolan/jq/releases/download/jq-${var.jq_version}/jq-linux64 -o jq
         chmod +x ./jq
         source <(aws --output json sts assume-role --role-arn "$aws_cli_assume_role_arn" --role-session-name "$aws_cli_assume_role_session_name"  | jq -r  '.Credentials | @sh "export AWS_SESSION_TOKEN=\(.SessionToken)\nexport AWS_ACCESS_KEY_ID=\(.AccessKeyId)\nexport AWS_SECRET_ACCESS_KEY=\(.SecretAccessKey) "')
-        echo 'Assumed role "$aws_cli_assume_role_arn"'
+        echo 'Assumed role ${var.aws_cli_assume_role_arn}'
       fi
 
       echo 'Applying configmap...'
