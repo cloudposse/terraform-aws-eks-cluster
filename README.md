@@ -605,6 +605,7 @@ Check out [our other projects][github], [follow us on twitter][twitter], [apply 
   [email]: https://cpco.io/email?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-eks-cluster&utm_content=email
   [commercial_support]: https://cpco.io/commercial-support?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-eks-cluster&utm_content=commercial_support
   [we_love_open_source]: https://cpco.io/we-love-open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-eks-cluster&utm_content=we_love_open_source
+  [terraform_modules]: https://cpco.io/terraform-modules?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-eks-cluster&utm_content=terraform_modules
   [readme_header_img]: https://cloudposse.com/readme/header/img
   [readme_header_link]: https://cloudposse.com/readme/header/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-eks-cluster&utm_content=readme_header_link
   [readme_footer_img]: https://cloudposse.com/readme/footer/img
