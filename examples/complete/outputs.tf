@@ -48,6 +48,11 @@ output "eks_cluster_version" {
   value       = module.eks_cluster.eks_cluster_version
 }
 
+output "eks_cluster_identity_oidc_issuer" {
+  description = "The OIDC Identity issuer for the cluster"
+  value       = module.eks_cluster.eks_cluster_identity_oidc_issuer
+}
+
 output "workers_launch_template_id" {
   description = "ID of the launch template"
   value       = module.eks_workers.launch_template_id
