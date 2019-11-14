@@ -33,6 +33,11 @@ output "eks_cluster_version" {
   value       = join("", aws_eks_cluster.default.*.version)
 }
 
+output "eks_cluster_identity_oidc_issuer" {
+  description = "The OIDC Identity issuer for the cluster"
+  value       = join("", aws_eks_cluster.default.*.identity.0.oidc.0.issuer)
+}
+
 output "eks_cluster_certificate_authority_data" {
   description = "The Kubernetes cluster certificate authority data"
   value       = local.certificate_authority_data
