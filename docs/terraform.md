@@ -46,6 +46,7 @@
 | eks_cluster_certificate_authority_data | The Kubernetes cluster certificate authority data |
 | eks_cluster_endpoint | The endpoint for the Kubernetes API server |
 | eks_cluster_id | The name of the cluster |
+| eks_cluster_identity_oidc_issuer | The OIDC Identity issuer for the cluster |
 | eks_cluster_version | The Kubernetes server version of the cluster |
 | security_group_arn | ARN of the EKS cluster Security Group |
 | security_group_id | ID of the EKS cluster Security Group |
