@@ -214,6 +214,8 @@ usage: |-
       kubernetes_version = var.kubernetes_version
       kubeconfig_path    = var.kubeconfig_path
 
+      oidc_provider_enabled = false
+
       workers_security_group_ids   = [module.eks_workers.security_group_id]
       workers_role_arns            = [module.eks_workers.workers_role_arn]
     }
@@ -284,6 +286,8 @@ usage: |-
 
       kubernetes_version = var.kubernetes_version
       kubeconfig_path    = var.kubeconfig_path
+
+      oidc_provider_enabled = false
 
       workers_role_arns          = [module.eks_workers.workers_role_arn, module.eks_workers_2.workers_role_arn]
       workers_security_group_ids = [module.eks_workers.security_group_id, module.eks_workers_2.security_group_id]
