@@ -114,7 +114,7 @@ resource "aws_eks_cluster" "default" {
   ]
 }
 
-# Enabling IAM Roles for Service Accounts on your Cluster
+# Enabling IAM Roles for Service Accounts in Kubernetes cluster
 #
 # From official docs:
 # The IAM roles for service accounts feature is available on new Amazon EKS Kubernetes version 1.14 clusters,
