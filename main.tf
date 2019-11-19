@@ -94,6 +94,13 @@ resource "aws_security_group_rule" "ingress_cidr_blocks" {
   type              = "ingress"
 }
 
+resource "aws_cloudwatch_log_group" "default" {
+  count             = var.enabled && length(var.enabled_cluster_log_types) ? 1 : 0
+  name              = "/aws/eks/${module.label.id}/cluster"
+  retention_in_days = var.cluster_log_retention_period
+  tags              = module.label.tags
+}
+
 resource "aws_eks_cluster" "default" {
   count                     = var.enabled ? 1 : 0
   name                      = module.label.id
@@ -110,7 +117,8 @@ resource "aws_eks_cluster" "default" {
 
   depends_on = [
     aws_iam_role_policy_attachment.amazon_eks_cluster_policy,
-    aws_iam_role_policy_attachment.amazon_eks_service_policy
+    aws_iam_role_policy_attachment.amazon_eks_service_policy,
+    aws_cloudwatch_log_group.default
   ]
 }
 
