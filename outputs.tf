@@ -39,7 +39,7 @@ output "eks_cluster_identity_oidc_issuer" {
 }
 
 output "eks_cluster_identity_oidc_issuer_arn" {
-  description = "The OIDC Identity ARN issuer for the cluster, that can be used to associate IAM roles with a service accounts"
+  description = "The OIDC Identity issuer ARN for the cluster that can be used to associate IAM roles with a service account"
   value       = join("", aws_iam_openid_connect_provider.default.*.arn)
 }
 
