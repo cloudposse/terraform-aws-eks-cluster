@@ -95,7 +95,7 @@ resource "null_resource" "apply_configmap_auth" {
     interpreter = [var.local_exec_interpreter, "-c"]
 
     command = <<EOT
-      set -e
+      set -x
 
       install_aws_cli=${var.install_aws_cli}
       if [[ "$install_aws_cli" = true ]] ; then
@@ -121,6 +121,7 @@ resource "null_resource" "apply_configmap_auth" {
           export PATH=$PATH:${local.external_packages_install_path}
           echo 'Installed kubectl'
           which kubectl
+          echo 'which kubectl'
       fi
 
       aws_cli_assume_role_arn=${var.aws_cli_assume_role_arn}
