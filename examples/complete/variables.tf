@@ -92,6 +92,18 @@ variable "cpu_utilization_low_threshold_percent" {
   description = "Worker nodes AutoScaling Group CPU utilization low threshold percent"
 }
 
+variable "enabled_cluster_log_types" {
+  type        = list(string)
+  default     = []
+  description = "A list of the desired control plane logging to enable. For more information, see https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. Possible values [`api`, `audit`, `authenticator`, `controllerManager`, `scheduler`]"
+}
+
+variable "cluster_log_retention_period" {
+  type        = number
+  default     = 0
+  description = "Number of days to retain cluster logs. Requires `enabled_cluster_log_types` to be set. See https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html."
+}
+
 variable "map_additional_aws_accounts" {
   description = "Additional AWS account numbers to add to `config-map-aws-auth` ConfigMap"
   type        = list(string)
