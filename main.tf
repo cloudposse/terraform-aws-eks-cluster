@@ -97,6 +97,7 @@ resource "aws_security_group_rule" "ingress_cidr_blocks" {
 resource "aws_eks_cluster" "default" {
   count                     = var.enabled ? 1 : 0
   name                      = module.label.id
+  tags                      = module.label.tags
   role_arn                  = join("", aws_iam_role.default.*.arn)
   version                   = var.kubernetes_version
   enabled_cluster_log_types = var.enabled_cluster_log_types
