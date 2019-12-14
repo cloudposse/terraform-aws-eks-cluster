@@ -53,7 +53,7 @@ variable "kubernetes_version" {
 }
 
 variable "health_check_type" {
-  type        = "string"
+  type        = string
   description = "Controls how health checking is done. Valid values are `EC2` or `ELB`"
 }
 
