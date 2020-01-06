@@ -1,12 +1,13 @@
 module "label" {
-  source     = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.16.0"
-  namespace  = var.namespace
-  stage      = var.stage
-  name       = var.name
-  delimiter  = var.delimiter
-  attributes = compact(concat(var.attributes, ["cluster"]))
-  tags       = var.tags
-  enabled    = var.enabled
+  source      = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.16.0"
+  namespace   = var.namespace
+  stage       = var.stage
+  environment = var.environment
+  name        = var.name
+  delimiter   = var.delimiter
+  attributes  = compact(concat(var.attributes, ["cluster"]))
+  tags        = var.tags
+  enabled     = var.enabled
 }
 
 data "aws_iam_policy_document" "assume_role" {
