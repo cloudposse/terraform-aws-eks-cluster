@@ -1,29 +1,37 @@
-variable "region" {
-  type        = string
-  description = "AWS Region"
-}
-
 variable "namespace" {
   type        = string
-  description = "Namespace, which could be your organization name, e.g. 'eg' or 'cp'"
   default     = ""
+  description = "Namespace, which could be your organization name or abbreviation, e.g. 'eg' or 'cp'"
+}
+
+variable "environment" {
+  type        = string
+  default     = ""
+  description = "Environment, e.g. 'prod', 'staging', 'dev', 'pre-prod', 'UAT'"
 }
 
 variable "stage" {
   type        = string
-  description = "Stage, e.g. 'prod', 'staging', 'dev', or 'test'"
   default     = ""
+  description = "Stage, e.g. 'prod', 'staging', 'dev', OR 'source', 'build', 'test', 'deploy', 'release'"
 }
 
 variable "name" {
   type        = string
-  description = "Solution name, e.g. 'app' or 'cluster'"
+  default     = ""
+  description = "Solution name, e.g. 'app' or 'jenkins'"
+}
+
+variable "enabled" {
+  type        = bool
+  default     = true
+  description = "Set to false to prevent the module from creating any resources"
 }
 
 variable "delimiter" {
   type        = string
   default     = "-"
-  description = "Delimiter to be used between `name`, `namespace`, `stage`, etc."
+  description = "Delimiter to be used between `namespace`, `environment`, `stage`, `name` and `attributes`"
 }
 
 variable "attributes" {
@@ -35,13 +43,12 @@ variable "attributes" {
 variable "tags" {
   type        = map(string)
   default     = {}
-  description = "Additional tags (e.g. `map('BusinessUnit`,`XYZ`)"
+  description = "Additional tags (e.g. `map('BusinessUnit','XYZ')`"
 }
 
-variable "enabled" {
-  type        = bool
-  description = "Whether to create the resources. Set to `false` to prevent the module from creating any resources"
-  default     = true
+variable "region" {
+  type        = string
+  description = "AWS Region"
 }
 
 variable "vpc_id" {
