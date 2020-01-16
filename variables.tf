@@ -122,7 +122,7 @@ variable "enabled_cluster_log_types" {
 variable "apply_config_map_aws_auth" {
   type        = bool
   default     = true
-  description = "Whether to perform `kubectl apply` to apply the ConfigMap to allow worker nodes to join the EKS cluster"
+  description = "Whether to execute `kubectl apply` to apply the ConfigMap to allow worker nodes to join the EKS cluster"
 }
 
 variable "map_additional_aws_accounts" {
