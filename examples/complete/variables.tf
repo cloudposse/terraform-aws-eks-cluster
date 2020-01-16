@@ -53,7 +53,7 @@ variable "kubernetes_version" {
 }
 
 variable "health_check_type" {
-  type        = "string"
+  type        = string
   description = "Controls how health checking is done. Valid values are `EC2` or `ELB`"
 }
 
@@ -125,7 +125,7 @@ variable "map_additional_iam_users" {
 variable "oidc_provider_enabled" {
   type        = bool
   default     = false
-  description = "Create an IAM OIDC identity provider for the cluster, then you can create IAM roles to associate with a service account in the cluster, instead of using kiam or kube2iam. For more information, see https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html"
+  description = "Create an IAM OIDC identity provider for the cluster, then you can create IAM roles to associate with a service account in the cluster, instead of using `kiam` or `kube2iam`. For more information, see https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html"
 }
 
 variable "kubeconfig_path" {
