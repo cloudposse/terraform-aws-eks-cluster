@@ -128,7 +128,7 @@ variable "cluster_log_retention_period" {
 variable "apply_config_map_aws_auth" {
   type        = bool
   default     = true
-  description = "Whether to generate local files from `kubeconfig` and `config-map-aws-auth` templates and perform `kubectl apply` to apply the ConfigMap to allow worker nodes to join the EKS cluster"
+  description = "Whether to execute `kubectl apply` to apply the ConfigMap to allow worker nodes to join the EKS cluster"
 }
 
 variable "map_additional_aws_accounts" {
