@@ -137,8 +137,8 @@ resource "null_resource" "apply_configmap_auth" {
 
       echo 'Applying Auth ConfigMap with kubectl...'
       aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path} ${var.aws_eks_update_kubeconfig_additional_arguments}
-      command='kubectl version --kubeconfig ${var.kubeconfig_path}'
-      for i in $(seq 1 10); do command && s=0 && break || s=$? && sleep 5; done; (exit $s)
+      until kubectl version --kubeconfig ${var.kubeconfig_path} >/dev/null; do sleep 5; done
+      kubectl version --kubeconfig ${var.kubeconfig_path}
       kubectl apply -f ${local.configmap_auth_file} --kubeconfig ${var.kubeconfig_path}
       echo 'Applied Auth ConfigMap with kubectl'
     EOT
