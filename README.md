@@ -375,7 +375,7 @@ Available targets:
 |------|-------------|:----:|:-----:|:-----:|
 | allowed_cidr_blocks | List of CIDR blocks to be allowed to connect to the EKS cluster | list(string) | `<list>` | no |
 | allowed_security_groups | List of Security Group IDs to be allowed to connect to the EKS cluster | list(string) | `<list>` | no |
-| apply_config_map_aws_auth | Whether to generate local files from `kubeconfig` and `config-map-aws-auth` templates and perform `kubectl apply` to apply the ConfigMap to allow worker nodes to join the EKS cluster | bool | `true` | no |
+| apply_config_map_aws_auth | Whether to execute `kubectl apply` to apply the ConfigMap to allow worker nodes to join the EKS cluster | bool | `true` | no |
 | associate_public_ip_address | Associate a public IP address with an instance in a VPC | bool | `true` | no |
 | attributes | Additional attributes (e.g. `1`) | list(string) | `<list>` | no |
 | aws_cli_assume_role_arn | IAM Role ARN for AWS CLI to assume before calling `aws eks` to update `kubeconfig` | string | `` | no |
