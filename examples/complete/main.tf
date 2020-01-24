@@ -105,6 +105,9 @@ module "eks_cluster" {
   aws_cli_assume_role_arn                        = var.aws_cli_assume_role_arn
   aws_cli_assume_role_session_name               = var.aws_cli_assume_role_session_name
 
+  enabled_cluster_log_types    = var.enabled_cluster_log_types
+  cluster_log_retention_period = var.cluster_log_retention_period
+
   workers_role_arns          = [module.eks_workers.workers_role_arn]
   workers_security_group_ids = [module.eks_workers.security_group_id]
 }
