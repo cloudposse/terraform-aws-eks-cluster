@@ -37,7 +37,7 @@ module "vpc" {
 }
 
 module "subnets" {
-  source               = "git::https://github.com/cloudposse/terraform-aws-dynamic-subnets.git?ref=tags/0.16.1"
+  source               = "git::https://github.com/cloudposse/terraform-aws-dynamic-subnets.git?ref=tags/0.19.0"
   availability_zones   = var.availability_zones
   namespace            = var.namespace
   stage                = var.stage
@@ -52,7 +52,7 @@ module "subnets" {
 }
 
 module "eks_workers" {
-  source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=tags/0.11.0"
+  source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=tags/0.12.0"
   namespace                          = var.namespace
   stage                              = var.stage
   name                               = var.name

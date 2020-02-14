@@ -132,3 +132,8 @@ output "workers_role_name" {
   description = "Name of the worker nodes IAM role"
   value       = module.eks_workers.workers_role_name
 }
+
+output "eks_cluster_managed_security_group_id" {
+  description = "Security Group ID that was created by EKS for the cluster. EKS creates a Security Group and applies it to ENI that is attached to EKS Control Plane master nodes and to any managed workloads"
+  value       = module.eks_cluster.eks_cluster_managed_security_group_id
+}
