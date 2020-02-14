@@ -423,6 +423,7 @@ Available targets:
 | eks_cluster_id | The name of the cluster |
 | eks_cluster_identity_oidc_issuer | The OIDC Identity issuer for the cluster |
 | eks_cluster_identity_oidc_issuer_arn | The OIDC Identity issuer ARN for the cluster that can be used to associate IAM roles with a service account |
+| eks_cluster_managed_security_group_id | Security Group ID that was created by EKS for the cluster. EKS creates a Security Group and applies it to ENI that is attached to EKS Control Plane master nodes and to any managed workloads |
 | eks_cluster_version | The Kubernetes server version of the cluster |
 | security_group_arn | ARN of the EKS cluster Security Group |
 | security_group_id | ID of the EKS cluster Security Group |
