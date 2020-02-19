@@ -61,12 +61,6 @@ variable "subnet_ids" {
   type        = list(string)
 }
 
-variable "associate_public_ip_address" {
-  type        = bool
-  description = "Associate a public IP address with an instance in a VPC"
-  default     = true
-}
-
 variable "allowed_security_groups" {
   type        = list(string)
   default     = []
