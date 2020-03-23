@@ -151,18 +151,6 @@ variable "local_exec_interpreter" {
   description = "shell to use for local exec"
 }
 
-variable "configmap_auth_template_file" {
-  type        = string
-  default     = ""
-  description = "Path to `config_auth_template_file`"
-}
-
-variable "configmap_auth_file" {
-  type        = string
-  default     = ""
-  description = "Path to `configmap_auth_file`"
-}
-
 variable "install_aws_cli" {
   type        = bool
   default     = false

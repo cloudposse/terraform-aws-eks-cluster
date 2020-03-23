@@ -32,13 +32,9 @@ locals {
   certificate_authority_data_map           = local.certificate_authority_data_list_internal[0]
   certificate_authority_data               = local.certificate_authority_data_map["data"]
 
-  configmap_auth_template_file = var.configmap_auth_template_file == "" ? join("/", [path.module, "configmap-auth.yaml.tpl"]) : var.configmap_auth_template_file
-  configmap_auth_file          = var.configmap_auth_file == "" ? join("/", [path.module, "configmap-auth.yaml"]) : var.configmap_auth_file
-
   external_packages_install_path = var.external_packages_install_path == "" ? join("/", [path.module, ".terraform/bin"]) : var.external_packages_install_path
   kubectl_version                = var.kubectl_version == "" ? "$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)" : var.kubectl_version
-
-  cluster_name = join("", aws_eks_cluster.default.*.id)
+  cluster_name                   = join("", aws_eks_cluster.default.*.id)
 
   # Add worker nodes role ARNs (could be from many worker groups) to the ConfigMap
   map_worker_roles = [
@@ -51,45 +47,11 @@ locals {
       ]
     }
   ]
-
-  map_worker_roles_yaml            = trimspace(yamlencode(local.map_worker_roles))
-  map_additional_iam_roles_yaml    = trimspace(yamlencode(var.map_additional_iam_roles))
-  map_additional_iam_users_yaml    = trimspace(yamlencode(var.map_additional_iam_users))
-  map_additional_aws_accounts_yaml = trimspace(yamlencode(var.map_additional_aws_accounts))
 }
 
-data "template_file" "configmap_auth" {
-  count    = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
-  template = file(local.configmap_auth_template_file)
-
-  vars = {
-    map_worker_roles_yaml            = local.map_worker_roles_yaml
-    map_additional_iam_roles_yaml    = local.map_additional_iam_roles_yaml
-    map_additional_iam_users_yaml    = local.map_additional_iam_users_yaml
-    map_additional_aws_accounts_yaml = local.map_additional_aws_accounts_yaml
-  }
-}
-
-resource "local_file" "configmap_auth" {
-  count    = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
-  content  = join("", data.template_file.configmap_auth.*.rendered)
-  filename = local.configmap_auth_file
-}
-
-resource "null_resource" "apply_configmap_auth" {
-  count = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
-
-  triggers = {
-    cluster_updated                     = join("", aws_eks_cluster.default.*.id)
-    worker_roles_updated                = local.map_worker_roles_yaml
-    additional_roles_updated            = local.map_additional_iam_roles_yaml
-    additional_users_updated            = local.map_additional_iam_users_yaml
-    additional_aws_accounts_updated     = local.map_additional_aws_accounts_yaml
-    configmap_auth_file_content_changed = join("", local_file.configmap_auth.*.content)
-    configmap_auth_file_id_changed      = join("", local_file.configmap_auth.*.id)
-  }
-
-  depends_on = [aws_eks_cluster.default, local_file.configmap_auth]
+resource "null_resource" "wait_for_cluster" {
+  count      = var.enabled ? 1 : 0
+  depends_on = [aws_eks_cluster.default[0]]
 
   provisioner "local-exec" {
     interpreter = [var.local_exec_interpreter, "-c"]
@@ -135,12 +97,49 @@ resource "null_resource" "apply_configmap_auth" {
         echo 'Assumed role ${var.aws_cli_assume_role_arn}'
       fi
 
-      echo 'Applying Auth ConfigMap with kubectl...'
+      echo 'Waiting for cluster to become available...'
       aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path} ${var.aws_eks_update_kubeconfig_additional_arguments}
       until kubectl version --kubeconfig ${var.kubeconfig_path} >/dev/null; do sleep 5; done
       kubectl version --kubeconfig ${var.kubeconfig_path}
-      kubectl apply -f ${local.configmap_auth_file} --kubeconfig ${var.kubeconfig_path}
-      echo 'Applied Auth ConfigMap with kubectl'
+      echo 'EKS cluster available'
     EOT
+  }
+}
+
+data "aws_eks_cluster" "eks" {
+  count = var.enabled ? 1 : 0
+  name  = join("", aws_eks_cluster.default.*.id)
+}
+
+# Get an authentication token to communicate with the EKS cluster.
+# By default (before other roles are added to the Auth ConfigMap), you can authenticate to EKS cluster only by assuming the role that created the cluster.
+# `aws_eks_cluster_auth` uses IAM credentials from the AWS provider to generate a temporary token.
+# If the AWS provider assumes an IAM role, `aws_eks_cluster_auth` will use the same IAM role to get the auth token.
+# https://www.terraform.io/docs/providers/aws/d/eks_cluster_auth.html
+data "aws_eks_cluster_auth" "eks" {
+  count = var.enabled ? 1 : 0
+  name  = join("", aws_eks_cluster.default.*.id)
+}
+
+provider "kubernetes" {
+  token                  = join("", data.aws_eks_cluster_auth.eks.*.token)
+  host                   = join("", data.aws_eks_cluster.eks.*.endpoint)
+  cluster_ca_certificate = base64decode(join("", data.aws_eks_cluster.eks.*.certificate_authority.0.data))
+  load_config_file       = false
+}
+
+resource "kubernetes_config_map" "aws_auth" {
+  count      = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
+  depends_on = [null_resource.wait_for_cluster[0]]
+
+  metadata {
+    name      = "aws-auth"
+    namespace = "kube-system"
+  }
+
+  data = {
+    mapRoles    = yamlencode(distinct(concat(local.map_worker_roles, var.map_additional_iam_roles)))
+    mapUsers    = yamlencode(var.map_additional_iam_users)
+    mapAccounts = yamlencode(var.map_additional_aws_accounts)
   }
 }

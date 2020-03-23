@@ -128,7 +128,7 @@ variable "cluster_log_retention_period" {
 variable "apply_config_map_aws_auth" {
   type        = bool
   default     = true
-  description = "Whether to execute `kubectl apply` to apply the ConfigMap to allow worker nodes to join the EKS cluster"
+  description = "Whether to apply the ConfigMap to allow worker nodes to join the EKS cluster and allow additional users, accounts and roles to access the cluster"
 }
 
 variable "map_additional_aws_accounts" {
@@ -171,18 +171,6 @@ variable "local_exec_interpreter" {
   type        = string
   default     = "/bin/bash"
   description = "shell to use for local exec"
-}
-
-variable "configmap_auth_template_file" {
-  type        = string
-  default     = ""
-  description = "Path to `config_auth_template_file`"
-}
-
-variable "configmap_auth_file" {
-  type        = string
-  default     = ""
-  description = "Path to `configmap_auth_file`"
 }
 
 variable "install_aws_cli" {

@@ -91,10 +91,7 @@ module "eks_cluster" {
   kubernetes_version     = var.kubernetes_version
   kubeconfig_path        = var.kubeconfig_path
   local_exec_interpreter = var.local_exec_interpreter
-
-  configmap_auth_template_file = var.configmap_auth_template_file
-  configmap_auth_file          = var.configmap_auth_file
-  oidc_provider_enabled        = var.oidc_provider_enabled
+  oidc_provider_enabled  = var.oidc_provider_enabled
 
   install_aws_cli                                = var.install_aws_cli
   install_kubectl                                = var.install_kubectl
