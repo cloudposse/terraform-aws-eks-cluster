@@ -136,7 +136,7 @@ variable "map_additional_iam_users" {
 
 variable "oidc_provider_enabled" {
   type        = bool
-  default     = false
+  default     = true
   description = "Create an IAM OIDC identity provider for the cluster, then you can create IAM roles to associate with a service account in the cluster, instead of using `kiam` or `kube2iam`. For more information, see https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html"
 }
 
@@ -146,55 +146,13 @@ variable "kubeconfig_path" {
 }
 
 variable "local_exec_interpreter" {
-  type        = string
-  default     = "/bin/bash"
-  description = "shell to use for local exec"
-}
-
-variable "install_aws_cli" {
-  type        = bool
-  default     = false
-  description = "Set to `true` to install AWS CLI if the module is provisioned on workstations where AWS CLI is not installed by default, e.g. Terraform Cloud workers"
-}
-
-variable "install_kubectl" {
-  type        = bool
-  default     = false
-  description = "Set to `true` to install `kubectl` if the module is provisioned on workstations where `kubectl` is not installed by default, e.g. Terraform Cloud workers"
+  type        = list(string)
+  default     = ["/bin/sh", "-c"]
+  description = "shell to use for local_exec"
 }
 
 variable "kubectl_version" {
   type        = string
   default     = ""
   description = "`kubectl` version to install. If not specified, the latest version will be used"
-}
-
-variable "external_packages_install_path" {
-  type        = string
-  default     = ""
-  description = "Path to install external packages, e.g. AWS CLI and `kubectl`. Used when the module is provisioned on workstations where the external packages are not installed by default, e.g. Terraform Cloud workers"
-}
-
-variable "aws_eks_update_kubeconfig_additional_arguments" {
-  type        = string
-  default     = ""
-  description = "Additional arguments for `aws eks update-kubeconfig` command, e.g. `--role-arn xxxxxxxxx`. For more info, see https://docs.aws.amazon.com/cli/latest/reference/eks/update-kubeconfig.html"
-}
-
-variable "aws_cli_assume_role_arn" {
-  type        = string
-  default     = ""
-  description = "IAM Role ARN for AWS CLI to assume before calling `aws eks` to update kubeconfig"
-}
-
-variable "aws_cli_assume_role_session_name" {
-  type        = string
-  default     = ""
-  description = "An identifier for the assumed role session when assuming the IAM Role for AWS CLI before calling `aws eks` to update `kubeconfig`"
-}
-
-variable "jq_version" {
-  type        = string
-  default     = "1.6"
-  description = "Version of `jq` to download to extract temporaly credentials after running `aws sts assume-role` if AWS CLI needs to assume role to access the cluster (if variable `aws_cli_assume_role_arn` is set)"
 }
