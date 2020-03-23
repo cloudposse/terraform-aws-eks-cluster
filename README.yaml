@@ -317,7 +317,7 @@ usage: |-
       subnet_ids             = module.subnets.public_subnet_ids
 
       local_exec_interpreter = "/bin/bash"
-      kubernetes_version     = "1.14"
+      kubernetes_version     = "1.15"
 
       workers_role_arns          = [module.eks_workers.workers_role_arn]
       workers_security_group_ids = [module.eks_workers.security_group_id]

@@ -26,7 +26,7 @@ cpu_utilization_low_threshold_percent = 20
 
 associate_public_ip_address = true
 
-kubernetes_version = "1.14"
+kubernetes_version = "1.15"
 
 kubeconfig_path = "/.kube/config"
 
