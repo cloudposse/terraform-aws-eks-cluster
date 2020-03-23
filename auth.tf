@@ -32,9 +32,8 @@ locals {
   certificate_authority_data_map           = local.certificate_authority_data_list_internal[0]
   certificate_authority_data               = local.certificate_authority_data_map["data"]
 
-  external_packages_install_path = var.external_packages_install_path == "" ? join("/", [path.module, ".terraform/bin"]) : var.external_packages_install_path
-  kubectl_version                = var.kubectl_version == "" ? "$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)" : var.kubectl_version
-  cluster_name                   = join("", aws_eks_cluster.default.*.id)
+  kubectl_version = var.kubectl_version == "" ? "$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)" : var.kubectl_version
+  cluster_name    = join("", aws_eks_cluster.default.*.id)
 
   # Add worker nodes role ARNs (could be from many worker groups) to the ConfigMap
   map_worker_roles = [
@@ -50,64 +49,20 @@ locals {
 }
 
 resource "null_resource" "wait_for_cluster" {
-  count      = var.enabled ? 1 : 0
+  count      = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
   depends_on = [aws_eks_cluster.default[0]]
 
   provisioner "local-exec" {
-    interpreter = [var.local_exec_interpreter, "-c"]
-
-    command = <<EOT
-      set -e
-
-      install_aws_cli=${var.install_aws_cli}
-      if [[ "$install_aws_cli" = true ]] ; then
-          echo 'Installing AWS CLI...'
-          mkdir -p ${local.external_packages_install_path}
-          cd ${local.external_packages_install_path}
-          curl -LO https://s3.amazonaws.com/aws-cli/awscli-bundle.zip
-          unzip ./awscli-bundle.zip
-          ./awscli-bundle/install -i ${local.external_packages_install_path}
-          export PATH=$PATH:${local.external_packages_install_path}:${local.external_packages_install_path}/bin
-          echo 'Installed AWS CLI'
-          which aws
-          aws --version
-      fi
-
-      install_kubectl=${var.install_kubectl}
-      if [[ "$install_kubectl" = true ]] ; then
-          echo 'Installing kubectl...'
-          mkdir -p ${local.external_packages_install_path}
-          cd ${local.external_packages_install_path}
-          curl -LO https://storage.googleapis.com/kubernetes-release/release/${local.kubectl_version}/bin/linux/amd64/kubectl
-          chmod +x ./kubectl
-          export PATH=$PATH:${local.external_packages_install_path}
-          echo 'Installed kubectl'
-          which kubectl
-      fi
-
-      aws_cli_assume_role_arn=${var.aws_cli_assume_role_arn}
-      aws_cli_assume_role_session_name=${var.aws_cli_assume_role_session_name}
-      if [[ -n "$aws_cli_assume_role_arn" && -n "$aws_cli_assume_role_session_name" ]] ; then
-        echo 'Assuming role ${var.aws_cli_assume_role_arn} ...'
-        mkdir -p ${local.external_packages_install_path}
-        cd ${local.external_packages_install_path}
-        curl -L https://github.com/stedolan/jq/releases/download/jq-${var.jq_version}/jq-linux64 -o jq
-        chmod +x ./jq
-        source <(aws --output json sts assume-role --role-arn "$aws_cli_assume_role_arn" --role-session-name "$aws_cli_assume_role_session_name"  | jq -r  '.Credentials | @sh "export AWS_SESSION_TOKEN=\(.SessionToken)\nexport AWS_ACCESS_KEY_ID=\(.AccessKeyId)\nexport AWS_SECRET_ACCESS_KEY=\(.SecretAccessKey) "')
-        echo 'Assumed role ${var.aws_cli_assume_role_arn}'
-      fi
-
-      echo 'Waiting for cluster to become available...'
-      aws eks update-kubeconfig --name=${local.cluster_name} --region=${var.region} --kubeconfig=${var.kubeconfig_path} ${var.aws_eks_update_kubeconfig_additional_arguments}
-      until kubectl version --kubeconfig ${var.kubeconfig_path} >/dev/null; do sleep 5; done
-      kubectl version --kubeconfig ${var.kubeconfig_path}
-      echo 'EKS cluster available'
-    EOT
+    command     = var.wait_for_cluster_command
+    interpreter = var.local_exec_interpreter
+    environment = {
+      ENDPOINT = aws_eks_cluster.default[0].endpoint
+    }
   }
 }
 
 data "aws_eks_cluster" "eks" {
-  count = var.enabled ? 1 : 0
+  count = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
   name  = join("", aws_eks_cluster.default.*.id)
 }
 
@@ -117,7 +72,7 @@ data "aws_eks_cluster" "eks" {
 # If the AWS provider assumes an IAM role, `aws_eks_cluster_auth` will use the same IAM role to get the auth token.
 # https://www.terraform.io/docs/providers/aws/d/eks_cluster_auth.html
 data "aws_eks_cluster_auth" "eks" {
-  count = var.enabled ? 1 : 0
+  count = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
   name  = join("", aws_eks_cluster.default.*.id)
 }
 
