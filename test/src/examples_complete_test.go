@@ -1,6 +1,7 @@
 package test
 
 import (
+	"encoding/base64"
 	"fmt"
 	"sync/atomic"
 	"testing"
@@ -8,12 +9,49 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/clientcmd"
+	"sigs.k8s.io/aws-iam-authenticator/pkg/token"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/eks"
 )
+
+func newClientset(cluster *eks.Cluster) (*kubernetes.Clientset, error) {
+	gen, err := token.NewGenerator(true, false)
+	if err != nil {
+		return nil, err
+	}
+	opts := &token.GetTokenOptions{
+		ClusterID: aws.StringValue(cluster.Name),
+	}
+	tok, err := gen.GetWithOptions(opts)
+	if err != nil {
+		return nil, err
+	}
+	ca, err := base64.StdEncoding.DecodeString(aws.StringValue(cluster.CertificateAuthority.Data))
+	if err != nil {
+		return nil, err
+	}
+	clientset, err := kubernetes.NewForConfig(
+		&rest.Config{
+			Host:        aws.StringValue(cluster.Endpoint),
+			BearerToken: tok.Token,
+			TLSClientConfig: rest.TLSClientConfig{
+				CAData: ca,
+			},
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return clientset, nil
+}
 
 // Test the Terraform module in examples/complete using Terratest.
 func TestExamplesComplete(t *testing.T) {
@@ -83,13 +121,26 @@ func TestExamplesComplete(t *testing.T) {
 	// https://www.rushtehrani.com/post/using-kubernetes-api
 	// https://rancher.com/using-kubernetes-api-go-kubecon-2017-session-recap
 	// https://gianarb.it/blog/kubernetes-shared-informer
+	// https://stackoverflow.com/questions/60547409/unable-to-obtain-kubeconfig-of-an-aws-eks-cluster-in-go-code/60573982#60573982
 	fmt.Println("Waiting for worker nodes to join the EKS cluster")
 
-	kubeconfigPath := "/.kube/config"
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
+	clusterName := "eg-test-eks-cluster"
+	region := "us-east-2"
+
+	sess := session.Must(session.NewSession(&aws.Config{
+		Region: aws.String(region),
+	}))
+
+	eksSvc := eks.New(sess)
+
+	input := &eks.DescribeClusterInput{
+		Name: aws.String(clusterName),
+	}
+
+	result, err := eksSvc.DescribeCluster(input)
 	assert.NoError(t, err)
 
-	clientset, err := kubernetes.NewForConfig(config)
+	clientset, err := newClientset(result.Cluster)
 	assert.NoError(t, err)
 
 	factory := informers.NewSharedInformerFactory(clientset, 0)
