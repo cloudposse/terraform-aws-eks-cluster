@@ -67,47 +67,15 @@ description: |-
 introduction: |-
   The module provisions the following resources:
 
-  - EKS cluster of master nodes that can be used together with the [terraform-aws-eks-workers](https://github.com/cloudposse/terraform-aws-eks-workers) module to create a full-blown cluster
+  - EKS cluster of master nodes that can be used together with the [terraform-aws-eks-workers](https://github.com/cloudposse/terraform-aws-eks-workers),
+    [terraform-aws-eks-node-group](https://github.com/cloudposse/terraform-aws-eks-node-group) and
+    [terraform-aws-eks-fargate-profile](https://github.com/cloudposse/terraform-aws-eks-fargate-profile)
+    modules to create a full-blown cluster
   - IAM Role to allow the cluster to access other AWS services
-  - Security Group which is used by EKS workers to connect to the cluster and kubelets and pods to receive communication from the cluster control plane (see [terraform-aws-eks-workers](https://github.com/cloudposse/terraform-aws-eks-workers))
-  - The module creates and automatically applies (via `kubectl apply`) an authentication ConfigMap to allow the wrokers nodes to join the cluster and to add additional users/roles/accounts
+  - Security Group which is used by EKS workers to connect to the cluster and kubelets and pods to receive communication from the cluster control plane
+  - The module creates and automatically applies an authentication ConfigMap to allow the wrokers nodes to join the cluster and to add additional users/roles/accounts
 
-  ### Works with [Terraform Cloud](https://www.terraform.io/docs/cloud/index.html)
-
-  To run on Terraform Cloud, set the following variables:
-
-    ```hcl
-        install_aws_cli                                = true
-        install_kubectl                                = true
-        external_packages_install_path                 = "~/.terraform/bin"
-        kubeconfig_path                                = "~/.kube/config"
-        configmap_auth_file                            = "/home/terraform/.terraform/configmap-auth.yaml"
-
-        # Optional
-        aws_eks_update_kubeconfig_additional_arguments = "--verbose"
-        aws_cli_assume_role_arn                        = "arn:aws:iam::xxxxxxxxxxx:role/OrganizationAccountAccessRole"
-        aws_cli_assume_role_session_name               = "eks_cluster_example_session"
-    ```
-
-    Terraform Cloud executes `terraform plan/apply` on workers running Ubuntu.
-    For the module to provision the authentication ConfigMap (to allow the EKS worker nodes to join the EKS cluster and to add additional users/roles/accounts),
-    AWS CLI and `kubectl` need to be installed on Terraform Cloud workers.
-
-    To install the required external packages, set the variables `install_aws_cli` and `install_kubectl` to `true` and specify `external_packages_install_path`, `kubeconfig_path` and `configmap_auth_file`.
-
-    See [auth.tf](auth.tf) and [Installing Software in the Run Environment](https://www.terraform.io/docs/cloud/run/install-software.html) for more details.
-
-    In a multi-account architecture, we might have a separate identity account where we provision all IAM users, and other accounts (e.g. `prod`, `staging`, `dev`, `audit`, `testing`)
-    where all other AWS resources are provisioned. The IAM Users from the identity account can assume IAM roles to access the other accounts.
-
-    In this case, we provide Terraform Cloud with access keys (`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`) for an IAM User from the identity account
-    and allow it to assume an IAM Role into the AWS account where the module gets provisioned.
-
-    To support this, the module can assume an IAM role before executing the command `aws eks update-kubeconfig` when applying the auth ConfigMap.
-
-    Set variable `aws_cli_assume_role_arn` to the Amazon Resource Name (ARN) of the role to assume and variable `aws_cli_assume_role_session_name` to the identifier for the assumed role session.
-
-    See [auth.tf](auth.tf) and [assume-role](https://docs.aws.amazon.com/cli/latest/reference/sts/assume-role.html) for more details.
+  __NOTE:__ The module works with [Terraform Cloud](https://www.terraform.io/docs/cloud/index.html).
 
 # How to use this project
 usage: |-
@@ -211,9 +179,7 @@ usage: |-
       vpc_id     = module.vpc.vpc_id
       subnet_ids = module.subnets.public_subnet_ids
 
-      kubernetes_version = var.kubernetes_version
-      kubeconfig_path    = var.kubeconfig_path
-
+      kubernetes_version    = var.kubernetes_version
       oidc_provider_enabled = false
 
       workers_security_group_ids   = [module.eks_workers.security_group_id]
@@ -284,53 +250,11 @@ usage: |-
       vpc_id     = module.vpc.vpc_id
       subnet_ids = module.subnets.public_subnet_ids
 
-      kubernetes_version = var.kubernetes_version
-      kubeconfig_path    = var.kubeconfig_path
-
+      kubernetes_version    = var.kubernetes_version
       oidc_provider_enabled = false
 
       workers_role_arns          = [module.eks_workers.workers_role_arn, module.eks_workers_2.workers_role_arn]
       workers_security_group_ids = [module.eks_workers.security_group_id, module.eks_workers_2.security_group_id]
-    }
-  ```
-
-  Module usage on [Terraform Cloud](https://www.terraform.io/docs/cloud/index.html):
-
-  ```hcl
-    provider "aws" {
-      region = "us-east-2"
-
-      assume_role {
-        role_arn = "arn:aws:iam::xxxxxxxxxxx:role/OrganizationAccountAccessRole"
-      }
-    }
-
-    module "eks_cluster" {
-      source                 = "git::https://github.com/cloudposse/terraform-aws-eks-cluster.git?ref=master"
-      namespace              = var.namespace
-      stage                  = var.stage
-      name                   = var.name
-      attributes             = var.attributes
-      tags                   = var.tags
-      region                 = "us-east-2"
-      vpc_id                 = module.vpc.vpc_id
-      subnet_ids             = module.subnets.public_subnet_ids
-
-      local_exec_interpreter = "/bin/bash"
-      kubernetes_version     = "1.15"
-
-      workers_role_arns          = [module.eks_workers.workers_role_arn]
-      workers_security_group_ids = [module.eks_workers.security_group_id]
-
-      # Terraform Cloud configurations
-      kubeconfig_path                                = "~/.kube/config"
-      configmap_auth_file                            = "/home/terraform/.terraform/configmap-auth.yaml"
-      install_aws_cli                                = true
-      install_kubectl                                = true
-      external_packages_install_path                 = "~/.terraform/bin"
-      aws_eks_update_kubeconfig_additional_arguments = "--verbose"
-      aws_cli_assume_role_arn                        = "arn:aws:iam::xxxxxxxxxxx:role/OrganizationAccountAccessRole"
-      aws_cli_assume_role_session_name               = "eks_cluster_example_session"
     }
   ```
 

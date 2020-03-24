@@ -28,8 +28,6 @@ associate_public_ip_address = true
 
 kubernetes_version = "1.15"
 
-kubeconfig_path = "/.kube/config"
-
 oidc_provider_enabled = true
 
 enabled_cluster_log_types = ["audit"]

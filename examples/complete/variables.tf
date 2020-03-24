@@ -140,19 +140,8 @@ variable "oidc_provider_enabled" {
   description = "Create an IAM OIDC identity provider for the cluster, then you can create IAM roles to associate with a service account in the cluster, instead of using `kiam` or `kube2iam`. For more information, see https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html"
 }
 
-variable "kubeconfig_path" {
-  type        = string
-  description = "The path to `kubeconfig` file"
-}
-
 variable "local_exec_interpreter" {
   type        = list(string)
   default     = ["/bin/sh", "-c"]
   description = "shell to use for local_exec"
-}
-
-variable "kubectl_version" {
-  type        = string
-  default     = ""
-  description = "`kubectl` version to install. If not specified, the latest version will be used"
 }

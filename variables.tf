@@ -161,22 +161,10 @@ variable "map_additional_iam_users" {
   default = []
 }
 
-variable "kubeconfig_path" {
-  type        = string
-  default     = "~/.kube/config"
-  description = "The path to `kubeconfig` file"
-}
-
 variable "local_exec_interpreter" {
   type        = list(string)
   default     = ["/bin/sh", "-c"]
   description = "shell to use for local_exec"
-}
-
-variable "kubectl_version" {
-  type        = string
-  default     = ""
-  description = "`kubectl` version to install. If not specified, the latest version will be used"
 }
 
 variable "wait_for_cluster_command" {

@@ -32,9 +32,6 @@ locals {
   certificate_authority_data_map           = local.certificate_authority_data_list_internal[0]
   certificate_authority_data               = local.certificate_authority_data_map["data"]
 
-  kubectl_version = var.kubectl_version == "" ? "$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)" : var.kubectl_version
-  cluster_name    = join("", aws_eks_cluster.default.*.id)
-
   # Add worker nodes role ARNs (could be from many worker groups) to the ConfigMap
   map_worker_roles = [
     for role_arn in var.workers_role_arns : {
