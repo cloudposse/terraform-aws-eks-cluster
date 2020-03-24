@@ -29,7 +29,7 @@
 | subnet_ids | A list of subnet IDs to launch the cluster in | list(string) | - | yes |
 | tags | Additional tags (e.g. `map('BusinessUnit','XYZ')` | map(string) | `<map>` | no |
 | vpc_id | VPC ID for the EKS cluster | string | - | yes |
-| wait_for_cluster_command | `local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint are available as environment variable `ENDPOINT` | string | `echo 'Waiting for cluster to become available...'; for i in `seq 1 60`; do wget --no-check-certificate -O - -q $ENDPOINT/healthz >/dev/null && echo 'Cluster available' && exit 0 || true; sleep 5; done; echo Timeout && exit 1` | no |
+| wait_for_cluster_command | `local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint are available as environment variable `ENDPOINT` | string | `curl --silent --fail --retry 60 --retry-delay 5 --retry-connrefused --insecure --output /dev/null $ENDPOINT/healthz` | no |
 | workers_role_arns | List of Role ARNs of the worker nodes | list(string) | - | yes |
 | workers_security_group_ids | Security Group IDs of the worker nodes | list(string) | - | yes |
 
