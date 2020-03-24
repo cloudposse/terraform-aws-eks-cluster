@@ -181,6 +181,6 @@ variable "kubectl_version" {
 
 variable "wait_for_cluster_command" {
   type        = string
-  default     = "echo 'Waiting for cluster to become available...'; for i in `seq 1 60`; do wget --no-check-certificate -O - -q $ENDPOINT/healthz >/dev/null && echo 'Cluster available' && exit 0 || true; sleep 5; done; echo Timeout && exit 1"
+  default     = "curl --silent --fail --retry 60 --retry-delay 5 --retry-connrefused --insecure --output /dev/null $ENDPOINT/healthz"
   description = "`local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint are available as environment variable `ENDPOINT`"
 }
