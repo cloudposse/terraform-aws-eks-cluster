@@ -26,9 +26,7 @@ cpu_utilization_low_threshold_percent = 20
 
 associate_public_ip_address = true
 
-kubernetes_version = "1.14"
-
-kubeconfig_path = "/.kube/config"
+kubernetes_version = "1.15"
 
 oidc_provider_enabled = true
 

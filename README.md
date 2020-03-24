@@ -82,47 +82,15 @@ We literally have [*hundreds of terraform modules*][terraform_modules] that are 
 
 The module provisions the following resources:
 
-- EKS cluster of master nodes that can be used together with the [terraform-aws-eks-workers](https://github.com/cloudposse/terraform-aws-eks-workers) module to create a full-blown cluster
+- EKS cluster of master nodes that can be used together with the [terraform-aws-eks-workers](https://github.com/cloudposse/terraform-aws-eks-workers),
+  [terraform-aws-eks-node-group](https://github.com/cloudposse/terraform-aws-eks-node-group) and
+  [terraform-aws-eks-fargate-profile](https://github.com/cloudposse/terraform-aws-eks-fargate-profile)
+  modules to create a full-blown cluster
 - IAM Role to allow the cluster to access other AWS services
-- Security Group which is used by EKS workers to connect to the cluster and kubelets and pods to receive communication from the cluster control plane (see [terraform-aws-eks-workers](https://github.com/cloudposse/terraform-aws-eks-workers))
-- The module creates and automatically applies (via `kubectl apply`) an authentication ConfigMap to allow the wrokers nodes to join the cluster and to add additional users/roles/accounts
+- Security Group which is used by EKS workers to connect to the cluster and kubelets and pods to receive communication from the cluster control plane
+- The module creates and automatically applies an authentication ConfigMap to allow the wrokers nodes to join the cluster and to add additional users/roles/accounts
 
-### Works with [Terraform Cloud](https://www.terraform.io/docs/cloud/index.html)
-
-To run on Terraform Cloud, set the following variables:
-
-  ```hcl
-      install_aws_cli                                = true
-      install_kubectl                                = true
-      external_packages_install_path                 = "~/.terraform/bin"
-      kubeconfig_path                                = "~/.kube/config"
-      configmap_auth_file                            = "/home/terraform/.terraform/configmap-auth.yaml"
-
-      # Optional
-      aws_eks_update_kubeconfig_additional_arguments = "--verbose"
-      aws_cli_assume_role_arn                        = "arn:aws:iam::xxxxxxxxxxx:role/OrganizationAccountAccessRole"
-      aws_cli_assume_role_session_name               = "eks_cluster_example_session"
-  ```
-
-  Terraform Cloud executes `terraform plan/apply` on workers running Ubuntu.
-  For the module to provision the authentication ConfigMap (to allow the EKS worker nodes to join the EKS cluster and to add additional users/roles/accounts),
-  AWS CLI and `kubectl` need to be installed on Terraform Cloud workers.
-
-  To install the required external packages, set the variables `install_aws_cli` and `install_kubectl` to `true` and specify `external_packages_install_path`, `kubeconfig_path` and `configmap_auth_file`.
-
-  See [auth.tf](auth.tf) and [Installing Software in the Run Environment](https://www.terraform.io/docs/cloud/run/install-software.html) for more details.
-
-  In a multi-account architecture, we might have a separate identity account where we provision all IAM users, and other accounts (e.g. `prod`, `staging`, `dev`, `audit`, `testing`)
-  where all other AWS resources are provisioned. The IAM Users from the identity account can assume IAM roles to access the other accounts.
-
-  In this case, we provide Terraform Cloud with access keys (`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`) for an IAM User from the identity account
-  and allow it to assume an IAM Role into the AWS account where the module gets provisioned.
-
-  To support this, the module can assume an IAM role before executing the command `aws eks update-kubeconfig` when applying the auth ConfigMap.
-
-  Set variable `aws_cli_assume_role_arn` to the Amazon Resource Name (ARN) of the role to assume and variable `aws_cli_assume_role_session_name` to the identifier for the assumed role session.
-
-  See [auth.tf](auth.tf) and [assume-role](https://docs.aws.amazon.com/cli/latest/reference/sts/assume-role.html) for more details.
+__NOTE:__ The module works with [Terraform Cloud](https://www.terraform.io/docs/cloud/index.html).
 
 ## Usage
 
@@ -231,9 +199,7 @@ Other examples:
     vpc_id     = module.vpc.vpc_id
     subnet_ids = module.subnets.public_subnet_ids
 
-    kubernetes_version = var.kubernetes_version
-    kubeconfig_path    = var.kubeconfig_path
-
+    kubernetes_version    = var.kubernetes_version
     oidc_provider_enabled = false
 
     workers_security_group_ids   = [module.eks_workers.security_group_id]
@@ -304,53 +270,11 @@ Module usage with two worker groups:
     vpc_id     = module.vpc.vpc_id
     subnet_ids = module.subnets.public_subnet_ids
 
-    kubernetes_version = var.kubernetes_version
-    kubeconfig_path    = var.kubeconfig_path
-
+    kubernetes_version    = var.kubernetes_version
     oidc_provider_enabled = false
 
     workers_role_arns          = [module.eks_workers.workers_role_arn, module.eks_workers_2.workers_role_arn]
     workers_security_group_ids = [module.eks_workers.security_group_id, module.eks_workers_2.security_group_id]
-  }
-```
-
-Module usage on [Terraform Cloud](https://www.terraform.io/docs/cloud/index.html):
-
-```hcl
-  provider "aws" {
-    region = "us-east-2"
-
-    assume_role {
-      role_arn = "arn:aws:iam::xxxxxxxxxxx:role/OrganizationAccountAccessRole"
-    }
-  }
-
-  module "eks_cluster" {
-    source                 = "git::https://github.com/cloudposse/terraform-aws-eks-cluster.git?ref=master"
-    namespace              = var.namespace
-    stage                  = var.stage
-    name                   = var.name
-    attributes             = var.attributes
-    tags                   = var.tags
-    region                 = "us-east-2"
-    vpc_id                 = module.vpc.vpc_id
-    subnet_ids             = module.subnets.public_subnet_ids
-
-    local_exec_interpreter = "/bin/bash"
-    kubernetes_version     = "1.14"
-
-    workers_role_arns          = [module.eks_workers.workers_role_arn]
-    workers_security_group_ids = [module.eks_workers.security_group_id]
-
-    # Terraform Cloud configurations
-    kubeconfig_path                                = "~/.kube/config"
-    configmap_auth_file                            = "/home/terraform/.terraform/configmap-auth.yaml"
-    install_aws_cli                                = true
-    install_kubectl                                = true
-    external_packages_install_path                 = "~/.terraform/bin"
-    aws_eks_update_kubeconfig_additional_arguments = "--verbose"
-    aws_cli_assume_role_arn                        = "arn:aws:iam::xxxxxxxxxxx:role/OrganizationAccountAccessRole"
-    aws_cli_assume_role_session_name               = "eks_cluster_example_session"
   }
 ```
 
@@ -375,28 +299,17 @@ Available targets:
 |------|-------------|:----:|:-----:|:-----:|
 | allowed_cidr_blocks | List of CIDR blocks to be allowed to connect to the EKS cluster | list(string) | `<list>` | no |
 | allowed_security_groups | List of Security Group IDs to be allowed to connect to the EKS cluster | list(string) | `<list>` | no |
-| apply_config_map_aws_auth | Whether to execute `kubectl apply` to apply the ConfigMap to allow worker nodes to join the EKS cluster | bool | `true` | no |
+| apply_config_map_aws_auth | Whether to apply the ConfigMap to allow worker nodes to join the EKS cluster and allow additional users, accounts and roles to acces the cluster | bool | `true` | no |
 | attributes | Additional attributes (e.g. `1`) | list(string) | `<list>` | no |
-| aws_cli_assume_role_arn | IAM Role ARN for AWS CLI to assume before calling `aws eks` to update `kubeconfig` | string | `` | no |
-| aws_cli_assume_role_session_name | An identifier for the assumed role session when assuming the IAM Role for AWS CLI before calling `aws eks` to update `kubeconfig` | string | `` | no |
-| aws_eks_update_kubeconfig_additional_arguments | Additional arguments for `aws eks update-kubeconfig` command, e.g. `--role-arn xxxxxxxxx`. For more info, see https://docs.aws.amazon.com/cli/latest/reference/eks/update-kubeconfig.html | string | `` | no |
 | cluster_log_retention_period | Number of days to retain cluster logs. Requires `enabled_cluster_log_types` to be set. See https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. | number | `0` | no |
-| configmap_auth_file | Path to `configmap_auth_file` | string | `` | no |
-| configmap_auth_template_file | Path to `config_auth_template_file` | string | `` | no |
 | delimiter | Delimiter to be used between `namespace`, `environment`, `stage`, `name` and `attributes` | string | `-` | no |
 | enabled | Set to false to prevent the module from creating any resources | bool | `true` | no |
 | enabled_cluster_log_types | A list of the desired control plane logging to enable. For more information, see https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. Possible values [`api`, `audit`, `authenticator`, `controllerManager`, `scheduler`] | list(string) | `<list>` | no |
 | endpoint_private_access | Indicates whether or not the Amazon EKS private API server endpoint is enabled. Default to AWS EKS resource and it is false | bool | `false` | no |
 | endpoint_public_access | Indicates whether or not the Amazon EKS public API server endpoint is enabled. Default to AWS EKS resource and it is true | bool | `true` | no |
 | environment | Environment, e.g. 'prod', 'staging', 'dev', 'pre-prod', 'UAT' | string | `` | no |
-| external_packages_install_path | Path to install external packages, e.g. AWS CLI and `kubectl`. Used when the module is provisioned on workstations where the external packages are not installed by default, e.g. Terraform Cloud workers | string | `` | no |
-| install_aws_cli | Set to `true` to install AWS CLI if the module is provisioned on workstations where AWS CLI is not installed by default, e.g. Terraform Cloud workers | bool | `false` | no |
-| install_kubectl | Set to `true` to install `kubectl` if the module is provisioned on workstations where `kubectl` is not installed by default, e.g. Terraform Cloud workers | bool | `false` | no |
-| jq_version | Version of `jq` to download to extract temporaly credentials after running `aws sts assume-role` if AWS CLI needs to assume role to access the cluster (if variable `aws_cli_assume_role_arn` is set) | string | `1.6` | no |
-| kubeconfig_path | The path to `kubeconfig` file | string | `~/.kube/config` | no |
-| kubectl_version | `kubectl` version to install. If not specified, the latest version will be used | string | `` | no |
-| kubernetes_version | Desired Kubernetes master version. If you do not specify a value, the latest available version is used | string | `1.14` | no |
-| local_exec_interpreter | shell to use for local exec | string | `/bin/bash` | no |
+| kubernetes_version | Desired Kubernetes master version. If you do not specify a value, the latest available version is used | string | `1.15` | no |
+| local_exec_interpreter | shell to use for local_exec | list(string) | `<list>` | no |
 | map_additional_aws_accounts | Additional AWS account numbers to add to `config-map-aws-auth` ConfigMap | list(string) | `<list>` | no |
 | map_additional_iam_roles | Additional IAM roles to add to `config-map-aws-auth` ConfigMap | object | `<list>` | no |
 | map_additional_iam_users | Additional IAM users to add to `config-map-aws-auth` ConfigMap | object | `<list>` | no |
@@ -409,6 +322,7 @@ Available targets:
 | subnet_ids | A list of subnet IDs to launch the cluster in | list(string) | - | yes |
 | tags | Additional tags (e.g. `map('BusinessUnit','XYZ')` | map(string) | `<map>` | no |
 | vpc_id | VPC ID for the EKS cluster | string | - | yes |
+| wait_for_cluster_command | `local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint are available as environment variable `ENDPOINT` | string | `curl --silent --fail --retry 60 --retry-delay 5 --retry-connrefused --insecure --output /dev/null $ENDPOINT/healthz` | no |
 | workers_role_arns | List of Role ARNs of the worker nodes | list(string) | - | yes |
 | workers_security_group_ids | Security Group IDs of the worker nodes | list(string) | - | yes |
 
