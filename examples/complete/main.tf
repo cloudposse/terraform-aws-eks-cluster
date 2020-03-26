@@ -51,33 +51,6 @@ module "subnets" {
   tags                 = local.tags
 }
 
-module "eks_workers" {
-  source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=tags/0.12.0"
-  namespace                          = var.namespace
-  stage                              = var.stage
-  name                               = var.name
-  attributes                         = var.attributes
-  tags                               = var.tags
-  instance_type                      = var.instance_type
-  eks_worker_ami_name_filter         = local.eks_worker_ami_name_filter
-  vpc_id                             = module.vpc.vpc_id
-  subnet_ids                         = module.subnets.public_subnet_ids
-  associate_public_ip_address        = var.associate_public_ip_address
-  health_check_type                  = var.health_check_type
-  min_size                           = var.min_size
-  max_size                           = var.max_size
-  wait_for_capacity_timeout          = var.wait_for_capacity_timeout
-  cluster_name                       = module.label.id
-  cluster_endpoint                   = module.eks_cluster.eks_cluster_endpoint
-  cluster_certificate_authority_data = module.eks_cluster.eks_cluster_certificate_authority_data
-  cluster_security_group_id          = module.eks_cluster.security_group_id
-
-  # Auto-scaling policies and CloudWatch metric alarms
-  autoscaling_policies_enabled           = var.autoscaling_policies_enabled
-  cpu_utilization_high_threshold_percent = var.cpu_utilization_high_threshold_percent
-  cpu_utilization_low_threshold_percent  = var.cpu_utilization_low_threshold_percent
-}
-
 module "eks_cluster" {
   source                       = "../../"
   namespace                    = var.namespace
@@ -94,6 +67,23 @@ module "eks_cluster" {
   enabled_cluster_log_types    = var.enabled_cluster_log_types
   cluster_log_retention_period = var.cluster_log_retention_period
 
-  workers_role_arns          = [module.eks_workers.workers_role_arn]
-  workers_security_group_ids = [module.eks_workers.security_group_id]
+  workers_role_arns          = [module.eks_node_group.eks_node_group_role_arn]
+  workers_security_group_ids = []
+}
+
+module "eks_node_group" {
+  source            = "git::https://github.com/cloudposse/terraform-aws-eks-node-group.git?ref=tags/0.4.0"
+  namespace         = var.namespace
+  stage             = var.stage
+  name              = var.name
+  attributes        = var.attributes
+  tags              = var.tags
+  subnet_ids        = module.subnets.public_subnet_ids
+  cluster_name      = module.eks_cluster.eks_cluster_id
+  instance_types    = var.instance_types
+  desired_size      = var.desired_size
+  min_size          = var.min_size
+  max_size          = var.max_size
+  kubernetes_labels = var.kubernetes_labels
+  disk_size         = var.disk_size
 }
