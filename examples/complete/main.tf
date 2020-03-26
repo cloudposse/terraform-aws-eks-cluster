@@ -66,9 +66,6 @@ module "eks_cluster" {
   oidc_provider_enabled        = var.oidc_provider_enabled
   enabled_cluster_log_types    = var.enabled_cluster_log_types
   cluster_log_retention_period = var.cluster_log_retention_period
-
-  workers_role_arns          = [module.eks_node_group.eks_node_group_role_arn]
-  workers_security_group_ids = []
 }
 
 module "eks_node_group" {

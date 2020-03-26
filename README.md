@@ -323,8 +323,8 @@ Available targets:
 | tags | Additional tags (e.g. `map('BusinessUnit','XYZ')` | map(string) | `<map>` | no |
 | vpc_id | VPC ID for the EKS cluster | string | - | yes |
 | wait_for_cluster_command | `local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint are available as environment variable `ENDPOINT` | string | `curl --silent --fail --retry 60 --retry-delay 5 --retry-connrefused --insecure --output /dev/null $ENDPOINT/healthz` | no |
-| workers_role_arns | List of Role ARNs of the worker nodes | list(string) | - | yes |
-| workers_security_group_ids | Security Group IDs of the worker nodes | list(string) | - | yes |
+| workers_role_arns | List of Role ARNs of the worker nodes | list(string) | `<list>` | no |
+| workers_security_group_ids | Security Group IDs of the worker nodes | list(string) | `<list>` | no |
 
 ## Outputs
 

@@ -76,11 +76,13 @@ variable "allowed_cidr_blocks" {
 variable "workers_role_arns" {
   type        = list(string)
   description = "List of Role ARNs of the worker nodes"
+  default     = []
 }
 
 variable "workers_security_group_ids" {
   type        = list(string)
   description = "Security Group IDs of the worker nodes"
+  default     = []
 }
 
 variable "kubernetes_version" {

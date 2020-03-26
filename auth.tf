@@ -32,7 +32,8 @@ locals {
   certificate_authority_data_map           = local.certificate_authority_data_list_internal[0]
   certificate_authority_data               = local.certificate_authority_data_map["data"]
 
-  # Add worker nodes role ARNs (could be from many worker groups) to the ConfigMap
+  # Add worker nodes role ARNs (could be from many un-managed worker groups) to the ConfigMap
+  # Note that we don't need to do this for managed Node Groups since EKS adds their roles to the ConfigMap automatically
   map_worker_roles = [
     for role_arn in var.workers_role_arns : {
       rolearn : role_arn
