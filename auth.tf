@@ -95,4 +95,8 @@ resource "kubernetes_config_map" "aws_auth" {
     mapUsers    = yamlencode(var.map_additional_iam_users)
     mapAccounts = yamlencode(var.map_additional_aws_accounts)
   }
+
+  lifecycle {
+    ignore_changes = [data["mapRoles"]]
+  }
 }

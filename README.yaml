@@ -77,6 +77,15 @@ introduction: |-
 
   __NOTE:__ The module works with [Terraform Cloud](https://www.terraform.io/docs/cloud/index.html).
 
+  __NOTE:__ In `auth.tf`, we added `ignore_changes = [data["mapRoles"]]` to the `kubernetes_config_map` for the following reason:
+  - We provision the EKS cluster and then the Kubernetes Auth ConfigMap to map additional roles/users/accounts to Kubernetes groups
+  - Then we wait for the cluster to become available and for the ConfigMap to get provisioned (see `data "null_data_source" "wait_for_cluster_and_kubernetes_configmap"` in `examples/complete/main.tf`)
+  - Then we provision a managed Node Group
+  - Then EKS updates the Auth ConfigMap and adds worker roles to it (for the worker nodes to join the cluster)
+  - Since the ConfigMap is modified outside of Terraform state, Terraform wants to update it (remove the roles that EKS added) on each `plan/apply`
+
+  If you want to modify the Node Group (e.g. add more Node Groups to the cluster) or need to map other IAM roles to Kubernetes groups, comment out the `ignore_changes` attribute and re-provision.
+
 # How to use this project
 usage: |-
 
