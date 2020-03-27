@@ -13,6 +13,7 @@
 | endpoint_private_access | Indicates whether or not the Amazon EKS private API server endpoint is enabled. Default to AWS EKS resource and it is false | bool | `false` | no |
 | endpoint_public_access | Indicates whether or not the Amazon EKS public API server endpoint is enabled. Default to AWS EKS resource and it is true | bool | `true` | no |
 | environment | Environment, e.g. 'prod', 'staging', 'dev', 'pre-prod', 'UAT' | string | `` | no |
+| kubernetes_config_map_ignore_role_changes | Set to `true` to ignore IAM role changes in the Kubernetes Auth ConfigMap | bool | `true` | no |
 | kubernetes_version | Desired Kubernetes master version. If you do not specify a value, the latest available version is used | string | `1.15` | no |
 | local_exec_interpreter | shell to use for local_exec | list(string) | `<list>` | no |
 | map_additional_aws_accounts | Additional AWS account numbers to add to `config-map-aws-auth` ConfigMap | list(string) | `<list>` | no |
@@ -28,8 +29,8 @@
 | tags | Additional tags (e.g. `map('BusinessUnit','XYZ')` | map(string) | `<map>` | no |
 | vpc_id | VPC ID for the EKS cluster | string | - | yes |
 | wait_for_cluster_command | `local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint are available as environment variable `ENDPOINT` | string | `curl --silent --fail --retry 60 --retry-delay 5 --retry-connrefused --insecure --output /dev/null $ENDPOINT/healthz` | no |
-| workers_role_arns | List of Role ARNs of the worker nodes | list(string) | - | yes |
-| workers_security_group_ids | Security Group IDs of the worker nodes | list(string) | - | yes |
+| workers_role_arns | List of Role ARNs of the worker nodes | list(string) | `<list>` | no |
+| workers_security_group_ids | Security Group IDs of the worker nodes | list(string) | `<list>` | no |
 
 ## Outputs
 
@@ -42,7 +43,9 @@
 | eks_cluster_identity_oidc_issuer | The OIDC Identity issuer for the cluster |
 | eks_cluster_identity_oidc_issuer_arn | The OIDC Identity issuer ARN for the cluster that can be used to associate IAM roles with a service account |
 | eks_cluster_managed_security_group_id | Security Group ID that was created by EKS for the cluster. EKS creates a Security Group and applies it to ENI that is attached to EKS Control Plane master nodes and to any managed workloads |
+| eks_cluster_role_arn | ARN of the EKS cluster IAM role |
 | eks_cluster_version | The Kubernetes server version of the cluster |
+| kubernetes_config_map_id | ID of `aws-auth` Kubernetes ConfigMap |
 | security_group_arn | ARN of the EKS cluster Security Group |
 | security_group_id | ID of the EKS cluster Security Group |
 | security_group_name | Name of the EKS cluster Security Group |

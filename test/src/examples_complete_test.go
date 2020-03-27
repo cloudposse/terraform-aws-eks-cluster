@@ -87,26 +87,6 @@ func TestExamplesComplete(t *testing.T) {
 	assert.Equal(t, []string{"172.16.96.0/19", "172.16.128.0/19"}, publicSubnetCidrs)
 
 	// Run `terraform output` to get the value of an output variable
-	workersAutoscalingGroupName := terraform.Output(t, terraformOptions, "workers_autoscaling_group_name")
-	// Verify we're getting back the outputs we expect
-	assert.Contains(t, workersAutoscalingGroupName, "eg-test-eks")
-
-	// Run `terraform output` to get the value of an output variable
-	workersLaunchTemplateArn := terraform.Output(t, terraformOptions, "workers_launch_template_arn")
-	// Verify we're getting back the outputs we expect
-	assert.Contains(t, workersLaunchTemplateArn, "arn:aws:ec2:us-east-2:126450723953:launch-template")
-
-	// Run `terraform output` to get the value of an output variable
-	workersSecurityGroupName := terraform.Output(t, terraformOptions, "workers_security_group_name")
-	// Verify we're getting back the outputs we expect
-	assert.Equal(t, "eg-test-eks-workers", workersSecurityGroupName)
-
-	// Run `terraform output` to get the value of an output variable
-	workerRoleName := terraform.Output(t, terraformOptions, "workers_role_name")
-	// Verify we're getting back the outputs we expect
-	assert.Equal(t, "eg-test-eks-workers", workerRoleName)
-
-	// Run `terraform output` to get the value of an output variable
 	eksClusterId := terraform.Output(t, terraformOptions, "eks_cluster_id")
 	// Verify we're getting back the outputs we expect
 	assert.Equal(t, "eg-test-eks-cluster", eksClusterId)
@@ -115,6 +95,21 @@ func TestExamplesComplete(t *testing.T) {
 	eksClusterSecurityGroupName := terraform.Output(t, terraformOptions, "eks_cluster_security_group_name")
 	// Verify we're getting back the outputs we expect
 	assert.Equal(t, "eg-test-eks-cluster", eksClusterSecurityGroupName)
+
+	// Run `terraform output` to get the value of an output variable
+	eksNodeGroupId := terraform.Output(t, terraformOptions, "eks_node_group_id")
+	// Verify we're getting back the outputs we expect
+	assert.Equal(t, "eg-test-eks-cluster:eg-test-eks-workers", eksNodeGroupId)
+
+	// Run `terraform output` to get the value of an output variable
+	eksNodeGroupRoleName := terraform.Output(t, terraformOptions, "eks_node_group_role_name")
+	// Verify we're getting back the outputs we expect
+	assert.Equal(t, "eg-test-eks-workers", eksNodeGroupRoleName)
+
+	// Run `terraform output` to get the value of an output variable
+	eksNodeGroupStatus := terraform.Output(t, terraformOptions, "eks_node_group_status")
+	// Verify we're getting back the outputs we expect
+	assert.Equal(t, "ACTIVE", eksNodeGroupStatus)
 
 	// Wait for the worker nodes to join the cluster
 	// https://github.com/kubernetes/client-go

@@ -32,7 +32,8 @@ locals {
   certificate_authority_data_map           = local.certificate_authority_data_list_internal[0]
   certificate_authority_data               = local.certificate_authority_data_map["data"]
 
-  # Add worker nodes role ARNs (could be from many worker groups) to the ConfigMap
+  # Add worker nodes role ARNs (could be from many un-managed worker groups) to the ConfigMap
+  # Note that we don't need to do this for managed Node Groups since EKS adds their roles to the ConfigMap automatically
   map_worker_roles = [
     for role_arn in var.workers_role_arns : {
       rolearn : role_arn
@@ -80,8 +81,28 @@ provider "kubernetes" {
   load_config_file       = false
 }
 
+resource "kubernetes_config_map" "aws_auth_ignore_changes" {
+  count      = var.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes ? 1 : 0
+  depends_on = [null_resource.wait_for_cluster[0]]
+
+  metadata {
+    name      = "aws-auth"
+    namespace = "kube-system"
+  }
+
+  data = {
+    mapRoles    = yamlencode(distinct(concat(local.map_worker_roles, var.map_additional_iam_roles)))
+    mapUsers    = yamlencode(var.map_additional_iam_users)
+    mapAccounts = yamlencode(var.map_additional_aws_accounts)
+  }
+
+  lifecycle {
+    ignore_changes = [data["mapRoles"]]
+  }
+}
+
 resource "kubernetes_config_map" "aws_auth" {
-  count      = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
+  count      = var.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes == false ? 1 : 0
   depends_on = [null_resource.wait_for_cluster[0]]
 
   metadata {

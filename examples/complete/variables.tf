@@ -41,55 +41,10 @@ variable "tags" {
   description = "Additional tags (e.g. `map('BusinessUnit`,`XYZ`)"
 }
 
-variable "instance_type" {
-  type        = string
-  description = "Instance type to launch"
-}
-
 variable "kubernetes_version" {
   type        = string
-  default     = ""
+  default     = "1.15"
   description = "Desired Kubernetes master version. If you do not specify a value, the latest available version is used"
-}
-
-variable "health_check_type" {
-  type        = string
-  description = "Controls how health checking is done. Valid values are `EC2` or `ELB`"
-}
-
-variable "associate_public_ip_address" {
-  type        = bool
-  description = "Associate a public IP address with an instance in a VPC"
-}
-
-variable "max_size" {
-  type        = number
-  description = "The maximum size of the AutoScaling Group"
-}
-
-variable "min_size" {
-  type        = number
-  description = "The minimum size of the AutoScaling Group"
-}
-
-variable "wait_for_capacity_timeout" {
-  type        = string
-  description = "A maximum duration that Terraform should wait for ASG instances to be healthy before timing out. Setting this to '0' causes Terraform to skip all Capacity Waiting behavior"
-}
-
-variable "autoscaling_policies_enabled" {
-  type        = bool
-  description = "Whether to create `aws_autoscaling_policy` and `aws_cloudwatch_metric_alarm` resources to control Auto Scaling"
-}
-
-variable "cpu_utilization_high_threshold_percent" {
-  type        = number
-  description = "Worker nodes AutoScaling Group CPU utilization high threshold percent"
-}
-
-variable "cpu_utilization_low_threshold_percent" {
-  type        = number
-  description = "Worker nodes AutoScaling Group CPU utilization low threshold percent"
 }
 
 variable "enabled_cluster_log_types" {
@@ -144,4 +99,35 @@ variable "local_exec_interpreter" {
   type        = list(string)
   default     = ["/bin/sh", "-c"]
   description = "shell to use for local_exec"
+}
+
+variable "disk_size" {
+  type        = number
+  description = "Disk size in GiB for worker nodes. Defaults to 20. Terraform will only perform drift detection if a configuration value is provided"
+}
+
+variable "instance_types" {
+  type        = list(string)
+  description = "Set of instance types associated with the EKS Node Group. Defaults to [\"t3.medium\"]. Terraform will only perform drift detection if a configuration value is provided"
+}
+
+variable "kubernetes_labels" {
+  type        = map(string)
+  description = "Key-value mapping of Kubernetes labels. Only labels that are applied with the EKS API are managed by this argument. Other Kubernetes labels applied to the EKS Node Group will not be managed"
+  default     = {}
+}
+
+variable "desired_size" {
+  type        = number
+  description = "Desired number of worker nodes"
+}
+
+variable "max_size" {
+  type        = number
+  description = "The maximum size of the AutoScaling Group"
+}
+
+variable "min_size" {
+  type        = number
+  description = "The minimum size of the AutoScaling Group"
 }

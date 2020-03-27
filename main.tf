@@ -139,7 +139,8 @@ resource "aws_iam_openid_connect_provider" "default" {
   url   = join("", aws_eks_cluster.default.*.identity.0.oidc.0.issuer)
 
   client_id_list = ["sts.amazonaws.com"]
-  # it's thumbprint won't change for many years :)
+
+  # it's thumbprint won't change for many years
   # https://github.com/terraform-providers/terraform-provider-aws/issues/10104
   thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da2b0ab7280"]
 }

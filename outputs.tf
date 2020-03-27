@@ -52,3 +52,13 @@ output "eks_cluster_managed_security_group_id" {
   description = "Security Group ID that was created by EKS for the cluster. EKS creates a Security Group and applies it to ENI that is attached to EKS Control Plane master nodes and to any managed workloads"
   value       = join("", aws_eks_cluster.default.*.vpc_config.0.cluster_security_group_id)
 }
+
+output "eks_cluster_role_arn" {
+  description = "ARN of the EKS cluster IAM role"
+  value       = join("", aws_iam_role.default.*.arn)
+}
+
+output "kubernetes_config_map_id" {
+  description = "ID of `aws-auth` Kubernetes ConfigMap"
+  value       = var.kubernetes_config_map_ignore_role_changes ? join("", kubernetes_config_map.aws_auth_ignore_changes.*.id) : join("", kubernetes_config_map.aws_auth.*.id)
+}

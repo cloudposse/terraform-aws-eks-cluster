@@ -76,11 +76,13 @@ variable "allowed_cidr_blocks" {
 variable "workers_role_arns" {
   type        = list(string)
   description = "List of Role ARNs of the worker nodes"
+  default     = []
 }
 
 variable "workers_security_group_ids" {
   type        = list(string)
   description = "Security Group IDs of the worker nodes"
+  default     = []
 }
 
 variable "kubernetes_version" {
@@ -171,4 +173,10 @@ variable "wait_for_cluster_command" {
   type        = string
   default     = "curl --silent --fail --retry 60 --retry-delay 5 --retry-connrefused --insecure --output /dev/null $ENDPOINT/healthz"
   description = "`local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint are available as environment variable `ENDPOINT`"
+}
+
+variable "kubernetes_config_map_ignore_role_changes" {
+  type        = bool
+  default     = true
+  description = "Set to `true` to ignore IAM role changes in the Kubernetes Auth ConfigMap"
 }
