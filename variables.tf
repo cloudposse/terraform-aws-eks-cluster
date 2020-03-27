@@ -174,3 +174,9 @@ variable "wait_for_cluster_command" {
   default     = "curl --silent --fail --retry 60 --retry-delay 5 --retry-connrefused --insecure --output /dev/null $ENDPOINT/healthz"
   description = "`local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint are available as environment variable `ENDPOINT`"
 }
+
+variable "kubernetes_config_map_ignore_role_changes" {
+  type        = bool
+  default     = true
+  description = "Set to `true` to ignore IAM role changes in the Kubernetes Auth ConfigMap"
+}

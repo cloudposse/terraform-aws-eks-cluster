@@ -99,7 +99,8 @@ __NOTE:__ In `auth.tf`, we added `ignore_changes = [data["mapRoles"]]` to the `k
 - Then EKS updates the Auth ConfigMap and adds worker roles to it (for the worker nodes to join the cluster)
 - Since the ConfigMap is modified outside of Terraform state, Terraform wants to update it (remove the roles that EKS added) on each `plan/apply`
 
-If you want to modify the Node Group (e.g. add more Node Groups to the cluster) or need to map other IAM roles to Kubernetes groups, comment out the `ignore_changes` attribute and re-provision.
+If you want to modify the Node Group (e.g. add more Node Groups to the cluster) or need to map other IAM roles to Kubernetes groups,
+set the variable `kubernetes_config_map_ignore_role_changes` to `false` and re-provision the module. Then set `kubernetes_config_map_ignore_role_changes` back to `true`.
 
 ## Usage
 
@@ -317,6 +318,7 @@ Available targets:
 | endpoint_private_access | Indicates whether or not the Amazon EKS private API server endpoint is enabled. Default to AWS EKS resource and it is false | bool | `false` | no |
 | endpoint_public_access | Indicates whether or not the Amazon EKS public API server endpoint is enabled. Default to AWS EKS resource and it is true | bool | `true` | no |
 | environment | Environment, e.g. 'prod', 'staging', 'dev', 'pre-prod', 'UAT' | string | `` | no |
+| kubernetes_config_map_ignore_role_changes | Set to `true` to ignore IAM role changes in the Kubernetes Auth ConfigMap | bool | `true` | no |
 | kubernetes_version | Desired Kubernetes master version. If you do not specify a value, the latest available version is used | string | `1.15` | no |
 | local_exec_interpreter | shell to use for local_exec | list(string) | `<list>` | no |
 | map_additional_aws_accounts | Additional AWS account numbers to add to `config-map-aws-auth` ConfigMap | list(string) | `<list>` | no |

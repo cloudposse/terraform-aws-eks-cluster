@@ -84,7 +84,8 @@ introduction: |-
   - Then EKS updates the Auth ConfigMap and adds worker roles to it (for the worker nodes to join the cluster)
   - Since the ConfigMap is modified outside of Terraform state, Terraform wants to update it (remove the roles that EKS added) on each `plan/apply`
 
-  If you want to modify the Node Group (e.g. add more Node Groups to the cluster) or need to map other IAM roles to Kubernetes groups, comment out the `ignore_changes` attribute and re-provision.
+  If you want to modify the Node Group (e.g. add more Node Groups to the cluster) or need to map other IAM roles to Kubernetes groups,
+  set the variable `kubernetes_config_map_ignore_role_changes` to `false` and re-provision the module. Then set `kubernetes_config_map_ignore_role_changes` back to `true`.
 
 # How to use this project
 usage: |-
