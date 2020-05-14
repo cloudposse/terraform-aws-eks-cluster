@@ -10,6 +10,8 @@ module "label" {
   enabled     = var.enabled
 }
 
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "assume_role" {
   count = var.enabled ? 1 : 0
 
@@ -33,13 +35,13 @@ resource "aws_iam_role" "default" {
 
 resource "aws_iam_role_policy_attachment" "amazon_eks_cluster_policy" {
   count      = var.enabled ? 1 : 0
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  policy_arn = format("arn:%s:iam::aws:policy/AmazonEKSClusterPolicy", data.aws_partition.current.partition)
   role       = join("", aws_iam_role.default.*.name)
 }
 
 resource "aws_iam_role_policy_attachment" "amazon_eks_service_policy" {
   count      = var.enabled ? 1 : 0
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
+  policy_arn = format("arn:%s:iam::aws:policy/AmazonEKSServicePolicy", data.aws_partition.current.partition)
   role       = join("", aws_iam_role.default.*.name)
 }
 
