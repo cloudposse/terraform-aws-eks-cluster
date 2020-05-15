@@ -37,7 +37,7 @@ resource "aws_iam_role" "default" {
 
 resource "aws_iam_role_policy_attachment" "amazon_eks_cluster_policy" {
   count      = var.enabled ? 1 : 0
-  policy_arn = format("arn:%s:iam::aws:policy/mazonEKSClusterPolicy", join("", data.aws_partition.current.*.partition))
+  policy_arn = format("arn:%s:iam::aws:policy/AmazonEKSClusterPolicy", join("", data.aws_partition.current.*.partition))
   role       = join("", aws_iam_role.default.*.name)
 }
 
