@@ -1,7 +1,7 @@
 locals {
   cluster_encryption_config = {
     resources         = var.cluster_encryption_config_resources
-    provider_key_arn  = var.enabled && var.enable_cluster_encryption_config && var.cluster_encryption_config_kms_key_id == "" ? aws_kms_key.cluster.0.arn : var.cluster_encryption_config_kms_key_id
+    provider_key_arn  = var.enabled && var.enable_cluster_encryption_config && var.cluster_encryption_config_kms_key_id == "" ? join("", aws_kms_key.cluster.*.arn) : var.cluster_encryption_config_kms_key_id
   }
 }
 
@@ -116,6 +116,12 @@ resource "aws_kms_key" "cluster" {
   deletion_window_in_days = var.cluster_encryption_config_kms_key_deletion_window_in_days
   policy                  = var.cluster_encryption_config_kms_key_policy
   tags                    = module.label.tags
+}
+
+resource "aws_kms_alias" "cluster" {
+  count         = var.enabled && var.enable_cluster_encryption_config && var.cluster_encryption_config_kms_key_id == "" ? 1 : 0
+  name          = format("alias/%v", module.label.id)
+  target_key_id = join("", aws_kms_key.cluster.*.key_id)
 }
 
 resource "aws_eks_cluster" "default" {

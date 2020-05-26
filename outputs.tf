@@ -77,3 +77,8 @@ output "cluster_encryption_config_provider_key_arn" {
   description = "Cluster Encryption Config KMS Key ARN"
   value       = local.cluster_encryption_config.provider_key_arn
 }
+
+output "cluster_encryption_config_provider_key_alias" {
+  description = "Cluster Encryption Config KMS Key Alias ARN"
+  value       = join("", aws_kms_alias.cluster.*.arn)
+}

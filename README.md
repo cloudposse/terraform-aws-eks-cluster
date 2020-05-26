@@ -347,6 +347,7 @@ Available targets:
 
 | Name | Description |
 |------|-------------|
+| cluster_encryption_config_provider_key_alias | Cluster Encryption Config KMS Key Alias ARN |
 | cluster_encryption_config_provider_key_arn | Cluster Encryption Config KMS Key ARN |
 | cluster_encryption_config_resources | Cluster Encryption Config Resources |
 | eks_cluster_arn | The Amazon Resource Name (ARN) of the cluster |
