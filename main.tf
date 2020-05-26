@@ -1,3 +1,10 @@
+locals {
+  cluster_encryption_config = {
+    resources         = var.cluster_encryption_config_resources
+    provider_key_arn  = var.enabled && var.enable_cluster_encryption_config && var.cluster_encryption_config_kms_key_id == "" ? aws_kms_key.cluster.0.arn : var.cluster_encryption_config_kms_key_id
+  }
+}
+
 module "label" {
   source      = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.16.0"
   namespace   = var.namespace
@@ -102,6 +109,15 @@ resource "aws_cloudwatch_log_group" "default" {
   tags              = module.label.tags
 }
 
+resource "aws_kms_key" "cluster" {
+  count                   = var.enabled && var.enable_cluster_encryption_config && var.cluster_encryption_config_kms_key_id == "" ? 1 : 0
+  description             = "EKS Cluster ${module.label.id} Encryption Config KMS Key"
+  enable_key_rotation     = var.cluster_encryption_config_kms_key_enable_key_rotation
+  deletion_window_in_days = var.cluster_encryption_config_kms_key_deletion_window_in_days
+  policy                  = var.cluster_encryption_config_kms_key_policy
+  tags                    = module.label.tags
+}
+
 resource "aws_eks_cluster" "default" {
   count                     = var.enabled ? 1 : 0
   name                      = module.label.id
@@ -109,6 +125,16 @@ resource "aws_eks_cluster" "default" {
   role_arn                  = join("", aws_iam_role.default.*.arn)
   version                   = var.kubernetes_version
   enabled_cluster_log_types = var.enabled_cluster_log_types
+
+  dynamic "encryption_config" {
+    for_each = var.enable_cluster_encryption_config ? [local.cluster_encryption_config] : []
+    content {
+      resources = lookup(encryption_config.value, "resources")
+      provider {
+        key_arn = lookup(encryption_config.value, "provider_key_arn")
+      }
+    }
+  }
 
   vpc_config {
     security_group_ids      = [join("", aws_security_group.default.*.id)]
