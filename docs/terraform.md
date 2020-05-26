@@ -6,8 +6,14 @@
 | allowed_security_groups | List of Security Group IDs to be allowed to connect to the EKS cluster | list(string) | `<list>` | no |
 | apply_config_map_aws_auth | Whether to apply the ConfigMap to allow worker nodes to join the EKS cluster and allow additional users, accounts and roles to acces the cluster | bool | `true` | no |
 | attributes | Additional attributes (e.g. `1`) | list(string) | `<list>` | no |
+| cluster_encryption_config_kms_key_deletion_window_in_days | Cluster Encryption Config KMS Key Resource argument - key deletion windows in days post destruction | number | `10` | no |
+| cluster_encryption_config_kms_key_enable_key_rotation | Cluster Encryption Config KMS Key Resource argument - enable kms key rotation | bool | `true` | no |
+| cluster_encryption_config_kms_key_id | Specify KMS Key Id ARN to use for cluster encryption config | string | `` | no |
+| cluster_encryption_config_kms_key_policy | Cluster Encryption Config KMS Key Resource argument - key policy | string | `null` | no |
+| cluster_encryption_config_resources | Cluster Encryption Config Resources to encrypt, e.g. ['secrets'] | list | `<list>` | no |
 | cluster_log_retention_period | Number of days to retain cluster logs. Requires `enabled_cluster_log_types` to be set. See https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. | number | `0` | no |
 | delimiter | Delimiter to be used between `namespace`, `environment`, `stage`, `name` and `attributes` | string | `-` | no |
+| enable_cluster_encryption_config | Set to `true` to enable Cluster Encryption Configuration | bool | `false` | no |
 | enabled | Set to false to prevent the module from creating any resources | bool | `true` | no |
 | enabled_cluster_log_types | A list of the desired control plane logging to enable. For more information, see https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. Possible values [`api`, `audit`, `authenticator`, `controllerManager`, `scheduler`] | list(string) | `<list>` | no |
 | endpoint_private_access | Indicates whether or not the Amazon EKS private API server endpoint is enabled. Default to AWS EKS resource and it is false | bool | `false` | no |
@@ -36,6 +42,8 @@
 
 | Name | Description |
 |------|-------------|
+| cluster_encryption_config_provider_key_arn | Cluster Encryption Config KMS Key ARN |
+| cluster_encryption_config_resources | Cluster Encryption Config Resources |
 | eks_cluster_arn | The Amazon Resource Name (ARN) of the cluster |
 | eks_cluster_certificate_authority_data | The Kubernetes cluster certificate authority data |
 | eks_cluster_endpoint | The endpoint for the Kubernetes API server |
@@ -45,6 +53,7 @@
 | eks_cluster_managed_security_group_id | Security Group ID that was created by EKS for the cluster. EKS creates a Security Group and applies it to ENI that is attached to EKS Control Plane master nodes and to any managed workloads |
 | eks_cluster_role_arn | ARN of the EKS cluster IAM role |
 | eks_cluster_version | The Kubernetes server version of the cluster |
+| enable_cluster_encryption_config | If true, Cluster Encryption Configuration is enabled |
 | kubernetes_config_map_id | ID of `aws-auth` Kubernetes ConfigMap |
 | security_group_arn | ARN of the EKS cluster Security Group |
 | security_group_id | ID of the EKS cluster Security Group |

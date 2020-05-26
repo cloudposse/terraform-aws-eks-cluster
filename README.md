@@ -311,8 +311,14 @@ Available targets:
 | allowed_security_groups | List of Security Group IDs to be allowed to connect to the EKS cluster | list(string) | `<list>` | no |
 | apply_config_map_aws_auth | Whether to apply the ConfigMap to allow worker nodes to join the EKS cluster and allow additional users, accounts and roles to acces the cluster | bool | `true` | no |
 | attributes | Additional attributes (e.g. `1`) | list(string) | `<list>` | no |
+| cluster_encryption_config_kms_key_deletion_window_in_days | Cluster Encryption Config KMS Key Resource argument - key deletion windows in days post destruction | number | `10` | no |
+| cluster_encryption_config_kms_key_enable_key_rotation | Cluster Encryption Config KMS Key Resource argument - enable kms key rotation | bool | `true` | no |
+| cluster_encryption_config_kms_key_id | Specify KMS Key Id ARN to use for cluster encryption config | string | `` | no |
+| cluster_encryption_config_kms_key_policy | Cluster Encryption Config KMS Key Resource argument - key policy | string | `null` | no |
+| cluster_encryption_config_resources | Cluster Encryption Config Resources to encrypt, e.g. ['secrets'] | list | `<list>` | no |
 | cluster_log_retention_period | Number of days to retain cluster logs. Requires `enabled_cluster_log_types` to be set. See https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. | number | `0` | no |
 | delimiter | Delimiter to be used between `namespace`, `environment`, `stage`, `name` and `attributes` | string | `-` | no |
+| enable_cluster_encryption_config | Set to `true` to enable Cluster Encryption Configuration | bool | `false` | no |
 | enabled | Set to false to prevent the module from creating any resources | bool | `true` | no |
 | enabled_cluster_log_types | A list of the desired control plane logging to enable. For more information, see https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. Possible values [`api`, `audit`, `authenticator`, `controllerManager`, `scheduler`] | list(string) | `<list>` | no |
 | endpoint_private_access | Indicates whether or not the Amazon EKS private API server endpoint is enabled. Default to AWS EKS resource and it is false | bool | `false` | no |
@@ -341,6 +347,8 @@ Available targets:
 
 | Name | Description |
 |------|-------------|
+| cluster_encryption_config_provider_key_arn | Cluster Encryption Config KMS Key ARN |
+| cluster_encryption_config_resources | Cluster Encryption Config Resources |
 | eks_cluster_arn | The Amazon Resource Name (ARN) of the cluster |
 | eks_cluster_certificate_authority_data | The Kubernetes cluster certificate authority data |
 | eks_cluster_endpoint | The endpoint for the Kubernetes API server |
@@ -350,6 +358,7 @@ Available targets:
 | eks_cluster_managed_security_group_id | Security Group ID that was created by EKS for the cluster. EKS creates a Security Group and applies it to ENI that is attached to EKS Control Plane master nodes and to any managed workloads |
 | eks_cluster_role_arn | ARN of the EKS cluster IAM role |
 | eks_cluster_version | The Kubernetes server version of the cluster |
+| enable_cluster_encryption_config | If true, Cluster Encryption Configuration is enabled |
 | kubernetes_config_map_id | ID of `aws-auth` Kubernetes ConfigMap |
 | security_group_arn | ARN of the EKS cluster Security Group |
 | security_group_id | ID of the EKS cluster Security Group |
@@ -415,6 +424,10 @@ We deliver 10x the value for a fraction of the cost of a full-time engineer. Our
 ## Slack Community
 
 Join our [Open Source Community][slack] on Slack. It's **FREE** for everyone! Our "SweetOps" community is where you get to talk with others who share a similar vision for how to rollout and manage infrastructure. This is the best place to talk shop, ask questions, solicit feedback, and work together as a community to build totally *sweet* infrastructure.
+
+## Discourse Forums
+
+Participate in our [Discourse Forums][discourse]. Here you'll find answers to commonly asked questions. Most questions will be related to the enormous number of projects we support on our GitHub. Come here to collaborate on answers, find solutions, and get ideas about the products and services we value. It only takes a minute to get started! Just sign in with SSO using your GitHub account.
 
 ## Newsletter
 
@@ -539,6 +552,7 @@ Check out [our other projects][github], [follow us on twitter][twitter], [apply 
   [testimonial]: https://cpco.io/leave-testimonial?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-eks-cluster&utm_content=testimonial
   [office_hours]: https://cloudposse.com/office-hours?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-eks-cluster&utm_content=office_hours
   [newsletter]: https://cpco.io/newsletter?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-eks-cluster&utm_content=newsletter
+  [discourse]: https://ask.sweetops.com/?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-eks-cluster&utm_content=discourse
   [email]: https://cpco.io/email?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-eks-cluster&utm_content=email
   [commercial_support]: https://cpco.io/commercial-support?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-eks-cluster&utm_content=commercial_support
   [we_love_open_source]: https://cpco.io/we-love-open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-eks-cluster&utm_content=we_love_open_source
