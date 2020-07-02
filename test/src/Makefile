@@ -17,10 +17,10 @@ endif
 .PHONY : test
 ## Run tests
 test: $(GOEXE)
-	go mod download
-	go test -v -timeout 60m -run TestExamplesComplete
+	$(GOEXE) mod download
+	$(GOEXE) test -v -timeout 60m -run TestExamplesComplete
 
 .PHONY : clean
 ## Clean up files
 clean:
-	rm -rf $(GOEXE) $(TF_DATA_DIR)
+	rm -rf $(TF_DATA_DIR)
