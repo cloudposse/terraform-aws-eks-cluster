@@ -1,3 +1,6 @@
+GOBIN    = $(GOPATH)/bin
+PATH    := $(PATH):$(GOBIN)
+
 export TF_DATA_DIR ?= $(CURDIR)/.terraform
 export TF_CLI_ARGS_init ?= -get-plugins=true
 
@@ -9,7 +12,7 @@ all: test
 
 .PHONY : init
 ## Initialize tests
-init: $(GOEXE)
+init:
 	@exit 0
 
 .PHONY : test
