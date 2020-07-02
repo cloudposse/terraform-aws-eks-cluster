@@ -1,18 +1,11 @@
-PACKAGE  = terraform-aws-eks-cluster
-GOEXE   ?= $(shell which go)
-
 export TF_DATA_DIR ?= $(CURDIR)/.terraform
 export TF_CLI_ARGS_init ?= -get-plugins=true
+
+.DEFAULT_GOAL : all
 
 .PHONY: all
 ## Default target
 all: test
-
-ifneq (,$(wildcard /sbin/apk))
-## Install go, if not installed
-$(GOEXE):
-	apk add --update go
-endif
 
 .PHONY : init
 ## Initialize tests
@@ -22,8 +15,8 @@ init: $(GOEXE)
 .PHONY : test
 ## Run tests
 test: init
-	$(GOEXE) mod download
-	$(GOEXE) test -v -timeout 60m -run TestExamplesComplete
+	go mod download
+	go test -v -timeout 60m -run TestExamplesComplete
 
 ## Run tests in docker container
 docker/test:
