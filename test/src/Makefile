@@ -14,9 +14,14 @@ $(GOEXE):
 	apk add --update go
 endif
 
+.PHONY : init
+## Initialize tests
+init: $(GOEXE)
+	@exit 0
+
 .PHONY : test
 ## Run tests
-test: $(GOEXE)
+test: init
 	$(GOEXE) mod download
 	$(GOEXE) test -v -timeout 60m -run TestExamplesComplete
 
