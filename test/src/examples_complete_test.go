@@ -3,6 +3,8 @@ package test
 import (
 	"encoding/base64"
 	"fmt"
+	"math/rand"
+	"strconv"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -57,12 +59,19 @@ func newClientset(cluster *eks.Cluster) (*kubernetes.Clientset, error) {
 func TestExamplesComplete(t *testing.T) {
 	t.Parallel()
 
+	rand.Seed(time.Now().UnixNano())
+
+	attributes := []string{strconv.Itoa(rand.Intn(100000))}
+
 	terraformOptions := &terraform.Options{
 		// The path to where our Terraform code is located
 		TerraformDir: "../../examples/complete",
 		Upgrade:      true,
 		// Variables to pass to our Terraform code using -var-file options
 		VarFiles: []string{"fixtures.us-east-2.tfvars"},
+		Vars: map[string]interface{}{
+			"attributes": attributes,
+		},
 	}
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created

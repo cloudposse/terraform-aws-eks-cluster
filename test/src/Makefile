@@ -27,4 +27,4 @@ docker/test:
 .PHONY : clean
 ## Clean up files
 clean:
-	rm -rf $(TF_DATA_DIR)
+	rm -rf $(TF_DATA_DIR) ../../examples/complete/*.tfstate*
