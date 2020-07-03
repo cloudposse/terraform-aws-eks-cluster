@@ -1,7 +1,7 @@
 locals {
   cluster_encryption_config = {
     resources         = var.cluster_encryption_config_resources
-    provider_key_arn  = var.enabled && var.enable_cluster_encryption_config && var.cluster_encryption_config_kms_key_id == "" ? join("", aws_kms_key.cluster.*.arn) : var.cluster_encryption_config_kms_key_id
+    provider_key_arn  = var.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? join("", aws_kms_key.cluster.*.arn) : var.cluster_encryption_config_kms_key_id
   }
 }
 
