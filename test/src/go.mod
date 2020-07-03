@@ -8,6 +8,6 @@ require (
 	github.com/pquerna/otp v1.2.0 // indirect
 	github.com/stretchr/testify v1.5.1
 	k8s.io/api v0.18.5
-	k8s.io/client-go v11.0.0+incompatible
+	k8s.io/client-go v0.17.0
 	sigs.k8s.io/aws-iam-authenticator v0.5.1
 )
