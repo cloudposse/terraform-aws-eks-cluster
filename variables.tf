@@ -180,3 +180,39 @@ variable "kubernetes_config_map_ignore_role_changes" {
   default     = true
   description = "Set to `true` to ignore IAM role changes in the Kubernetes Auth ConfigMap"
 }
+
+variable "cluster_encryption_config_enabled" {
+  type        = bool
+  default     = false
+  description = "Set to `true` to enable Cluster Encryption Configuration"
+}
+
+variable "cluster_encryption_config_kms_key_id" {
+  type        = string
+  default     = ""
+  description = "Specify KMS Key Id ARN to use for cluster encryption config"
+}
+
+variable "cluster_encryption_config_kms_key_enable_key_rotation" {
+  type        = bool
+  default     = true
+  description = "Cluster Encryption Config KMS Key Resource argument - enable kms key rotation"
+}
+
+variable "cluster_encryption_config_kms_key_deletion_window_in_days" {
+  type        = number
+  default     = 10
+  description = "Cluster Encryption Config KMS Key Resource argument - key deletion windows in days post destruction"
+}
+
+variable "cluster_encryption_config_kms_key_policy" {
+  type        = string
+  default     = null
+  description = "Cluster Encryption Config KMS Key Resource argument - key policy"
+}
+
+variable "cluster_encryption_config_resources" {
+  type        = list
+  default     = ["secrets"]
+  description = "Cluster Encryption Config Resources to encrypt, e.g. ['secrets']"
+}

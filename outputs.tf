@@ -62,3 +62,23 @@ output "kubernetes_config_map_id" {
   description = "ID of `aws-auth` Kubernetes ConfigMap"
   value       = var.kubernetes_config_map_ignore_role_changes ? join("", kubernetes_config_map.aws_auth_ignore_changes.*.id) : join("", kubernetes_config_map.aws_auth.*.id)
 }
+
+output "cluster_encryption_config_enabled" {
+  description = "If true, Cluster Encryption Configuration is enabled"
+  value       = var.cluster_encryption_config_enabled
+}
+
+output "cluster_encryption_config_resources" {
+  description = "Cluster Encryption Config Resources"
+  value       = var.cluster_encryption_config_resources
+}
+
+output "cluster_encryption_config_provider_key_arn" {
+  description = "Cluster Encryption Config KMS Key ARN"
+  value       = local.cluster_encryption_config.provider_key_arn
+}
+
+output "cluster_encryption_config_provider_key_alias" {
+  description = "Cluster Encryption Config KMS Key Alias ARN"
+  value       = join("", aws_kms_alias.cluster.*.arn)
+}
