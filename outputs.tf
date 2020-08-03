@@ -63,7 +63,7 @@ output "kubernetes_config_map_id" {
   value       = var.kubernetes_config_map_ignore_role_changes ? join("", kubernetes_config_map.aws_auth_ignore_changes.*.id) : join("", kubernetes_config_map.aws_auth.*.id)
 }
 
-output "enable_cluster_encryption_config" {
+output "cluster_encryption_config_enabled" {
   description = "If true, Cluster Encryption Configuration is enabled"
   value       = var.cluster_encryption_config_enabled
 }
