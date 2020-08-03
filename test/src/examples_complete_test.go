@@ -3,6 +3,8 @@ package test
 import (
 	"encoding/base64"
 	"fmt"
+	"math/rand"
+	"strconv"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -57,12 +59,20 @@ func newClientset(cluster *eks.Cluster) (*kubernetes.Clientset, error) {
 func TestExamplesComplete(t *testing.T) {
 	t.Parallel()
 
+	rand.Seed(time.Now().UnixNano())
+
+	randId := strconv.Itoa(rand.Intn(100000))
+	attributes := []string{randId}
+
 	terraformOptions := &terraform.Options{
 		// The path to where our Terraform code is located
 		TerraformDir: "../../examples/complete",
 		Upgrade:      true,
 		// Variables to pass to our Terraform code using -var-file options
 		VarFiles: []string{"fixtures.us-east-2.tfvars"},
+		Vars: map[string]interface{}{
+			"attributes": attributes,
+		},
 	}
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
@@ -89,22 +99,22 @@ func TestExamplesComplete(t *testing.T) {
 	// Run `terraform output` to get the value of an output variable
 	eksClusterId := terraform.Output(t, terraformOptions, "eks_cluster_id")
 	// Verify we're getting back the outputs we expect
-	assert.Equal(t, "eg-test-eks-cluster", eksClusterId)
+	assert.Equal(t, "eg-test-eks-"+randId+"-cluster", eksClusterId)
 
 	// Run `terraform output` to get the value of an output variable
 	eksClusterSecurityGroupName := terraform.Output(t, terraformOptions, "eks_cluster_security_group_name")
 	// Verify we're getting back the outputs we expect
-	assert.Equal(t, "eg-test-eks-cluster", eksClusterSecurityGroupName)
+	assert.Equal(t, "eg-test-eks-"+randId+"-cluster", eksClusterSecurityGroupName)
 
 	// Run `terraform output` to get the value of an output variable
 	eksNodeGroupId := terraform.Output(t, terraformOptions, "eks_node_group_id")
 	// Verify we're getting back the outputs we expect
-	assert.Equal(t, "eg-test-eks-cluster:eg-test-eks-workers", eksNodeGroupId)
+	assert.Equal(t, "eg-test-eks-"+randId+"-cluster:eg-test-eks-"+randId+"-workers", eksNodeGroupId)
 
 	// Run `terraform output` to get the value of an output variable
 	eksNodeGroupRoleName := terraform.Output(t, terraformOptions, "eks_node_group_role_name")
 	// Verify we're getting back the outputs we expect
-	assert.Equal(t, "eg-test-eks-workers", eksNodeGroupRoleName)
+	assert.Equal(t, "eg-test-eks-"+randId+"-workers", eksNodeGroupRoleName)
 
 	// Run `terraform output` to get the value of an output variable
 	eksNodeGroupStatus := terraform.Output(t, terraformOptions, "eks_node_group_status")
@@ -119,7 +129,7 @@ func TestExamplesComplete(t *testing.T) {
 	// https://stackoverflow.com/questions/60547409/unable-to-obtain-kubeconfig-of-an-aws-eks-cluster-in-go-code/60573982#60573982
 	fmt.Println("Waiting for worker nodes to join the EKS cluster")
 
-	clusterName := "eg-test-eks-cluster"
+	clusterName := "eg-test-eks-" + randId + "-cluster"
 	region := "us-east-2"
 
 	sess := session.Must(session.NewSession(&aws.Config{

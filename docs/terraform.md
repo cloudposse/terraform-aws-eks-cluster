@@ -78,4 +78,3 @@
 | security\_group\_arn | ARN of the EKS cluster Security Group |
 | security\_group\_id | ID of the EKS cluster Security Group |
 | security\_group\_name | Name of the EKS cluster Security Group |
-
