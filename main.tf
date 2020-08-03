@@ -1,7 +1,7 @@
 locals {
   cluster_encryption_config = {
-    resources         = var.cluster_encryption_config_resources
-    provider_key_arn  = var.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? join("", aws_kms_key.cluster.*.arn) : var.cluster_encryption_config_kms_key_id
+    resources        = var.cluster_encryption_config_resources
+    provider_key_arn = var.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? join("", aws_kms_key.cluster.*.arn) : var.cluster_encryption_config_kms_key_id
   }
 }
 
@@ -123,7 +123,7 @@ resource "aws_kms_key" "cluster" {
 }
 
 resource "aws_kms_alias" "cluster" {
-  count         = var.enabled && var. cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? 1 : 0
+  count         = var.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? 1 : 0
   name          = format("alias/%v", module.label.id)
   target_key_id = join("", aws_kms_key.cluster.*.key_id)
 }
