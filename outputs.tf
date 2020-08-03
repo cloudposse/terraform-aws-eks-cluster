@@ -65,7 +65,7 @@ output "kubernetes_config_map_id" {
 
 output "enable_cluster_encryption_config" {
   description = "If true, Cluster Encryption Configuration is enabled"
-  value       = var.enable_cluster_encryption_config
+  value       = var.cluster_encryption_config_enabled
 }
 
 output "cluster_encryption_config_resources" {
