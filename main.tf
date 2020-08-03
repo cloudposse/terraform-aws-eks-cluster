@@ -114,7 +114,7 @@ resource "aws_cloudwatch_log_group" "default" {
 }
 
 resource "aws_kms_key" "cluster" {
-  count                   = var.enabled && var.enable_cluster_encryption_config && var.cluster_encryption_config_kms_key_id == "" ? 1 : 0
+  count                   = var.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? 1 : 0
   description             = "EKS Cluster ${module.label.id} Encryption Config KMS Key"
   enable_key_rotation     = var.cluster_encryption_config_kms_key_enable_key_rotation
   deletion_window_in_days = var.cluster_encryption_config_kms_key_deletion_window_in_days
