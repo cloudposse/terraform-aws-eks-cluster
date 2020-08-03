@@ -137,7 +137,7 @@ resource "aws_eks_cluster" "default" {
   enabled_cluster_log_types = var.enabled_cluster_log_types
 
   dynamic "encryption_config" {
-    for_each = var.enable_cluster_encryption_config ? [local.cluster_encryption_config] : []
+    for_each = var.cluster_encryption_config_enabled ? [local.cluster_encryption_config] : []
     content {
       resources = lookup(encryption_config.value, "resources")
       provider {
