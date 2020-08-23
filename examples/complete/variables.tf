@@ -43,7 +43,7 @@ variable "tags" {
 
 variable "kubernetes_version" {
   type        = string
-  default     = "1.15"
+  default     = "1.17"
   description = "Desired Kubernetes master version. If you do not specify a value, the latest available version is used"
 }
 

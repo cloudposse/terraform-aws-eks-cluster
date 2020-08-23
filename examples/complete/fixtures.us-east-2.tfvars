@@ -8,7 +8,7 @@ stage = "test"
 
 name = "eks"
 
-kubernetes_version = "1.15"
+kubernetes_version = "1.17"
 
 oidc_provider_enabled = true
 

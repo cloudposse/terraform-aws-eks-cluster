@@ -11,5 +11,7 @@
 **/.build-harness
 **/build-harness
 
+**/pkg
+
 # Rendered yaml config
 **/configmap-auth.yaml
