@@ -42,7 +42,10 @@ data "aws_iam_policy_document" "cluster_elb_service_role" {
     effect = "Allow"
     actions = [
       "ec2:DescribeAccountAttributes",
-      "ec2:DescribeInternetGateways"
+      "ec2:DescribeAddresses",
+      "ec2:DescribeInternetGateways",
+      "elasticloadbalancing:SetIpAddressType",
+      "elasticloadbalancing:SetSubnets"
     ]
     resources = ["*"]
   }
