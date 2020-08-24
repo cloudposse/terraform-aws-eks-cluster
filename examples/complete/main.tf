@@ -24,6 +24,15 @@ locals {
   # otherwise will be used the first version of Kubernetes supported by AWS (v1.11) for EKS workers but
   # EKS control plane will use the version specified by kubernetes_version variable.
   eks_worker_ami_name_filter = "amazon-eks-node-${var.kubernetes_version}*"
+
+  # required tags to make ALB ingress work https://docs.aws.amazon.com/eks/latest/userguide/alb-ingress.html
+  public_subnets_additional_tags = {
+    "kubernetes.io/role/elb" : 1
+  }
+  private_subnets_additional_tags = {
+    "kubernetes.io/role/internal-elb" : 1
+  }
+
 }
 
 module "vpc" {
@@ -46,9 +55,11 @@ module "subnets" {
   vpc_id               = module.vpc.vpc_id
   igw_id               = module.vpc.igw_id
   cidr_block           = module.vpc.vpc_cidr_block
-  nat_gateway_enabled  = false
+  nat_gateway_enabled  = true
   nat_instance_enabled = false
   tags                 = local.tags
+  public_subnets_additional_tags  = local.public_subnets_additional_tags
+  private_subnets_additional_tags = local.private_subnets_additional_tags
 }
 
 module "eks_cluster" {
@@ -60,7 +71,7 @@ module "eks_cluster" {
   tags                         = var.tags
   region                       = var.region
   vpc_id                       = module.vpc.vpc_id
-  subnet_ids                   = module.subnets.public_subnet_ids
+  subnet_ids                   = concat(module.subnets.private_subnet_ids,module.subnets.public_subnet_ids)
   kubernetes_version           = var.kubernetes_version
   local_exec_interpreter       = var.local_exec_interpreter
   oidc_provider_enabled        = var.oidc_provider_enabled
@@ -87,7 +98,7 @@ module "eks_node_group" {
   name              = var.name
   attributes        = var.attributes
   tags              = var.tags
-  subnet_ids        = module.subnets.public_subnet_ids
+  subnet_ids        = module.subnets.private_subnet_ids
   cluster_name      = data.null_data_source.wait_for_cluster_and_kubernetes_configmap.outputs["cluster_name"]
   instance_types    = var.instance_types
   desired_size      = var.desired_size
