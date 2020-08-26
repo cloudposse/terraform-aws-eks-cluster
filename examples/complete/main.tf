@@ -46,18 +46,18 @@ module "vpc" {
 }
 
 module "subnets" {
-  source               = "git::https://github.com/cloudposse/terraform-aws-dynamic-subnets.git?ref=tags/0.27.0"
-  availability_zones   = var.availability_zones
-  namespace            = var.namespace
-  stage                = var.stage
-  name                 = var.name
-  attributes           = var.attributes
-  vpc_id               = module.vpc.vpc_id
-  igw_id               = module.vpc.igw_id
-  cidr_block           = module.vpc.vpc_cidr_block
-  nat_gateway_enabled  = true
-  nat_instance_enabled = false
-  tags                 = local.tags
+  source                          = "git::https://github.com/cloudposse/terraform-aws-dynamic-subnets.git?ref=tags/0.27.0"
+  availability_zones              = var.availability_zones
+  namespace                       = var.namespace
+  stage                           = var.stage
+  name                            = var.name
+  attributes                      = var.attributes
+  vpc_id                          = module.vpc.vpc_id
+  igw_id                          = module.vpc.igw_id
+  cidr_block                      = module.vpc.vpc_cidr_block
+  nat_gateway_enabled             = true
+  nat_instance_enabled            = false
+  tags                            = local.tags
   public_subnets_additional_tags  = local.public_subnets_additional_tags
   private_subnets_additional_tags = local.private_subnets_additional_tags
 }
@@ -71,7 +71,7 @@ module "eks_cluster" {
   tags                         = var.tags
   region                       = var.region
   vpc_id                       = module.vpc.vpc_id
-  subnet_ids                   = concat(module.subnets.private_subnet_ids,module.subnets.public_subnet_ids)
+  subnet_ids                   = concat(module.subnets.private_subnet_ids, module.subnets.public_subnet_ids)
   kubernetes_version           = var.kubernetes_version
   local_exec_interpreter       = var.local_exec_interpreter
   oidc_provider_enabled        = var.oidc_provider_enabled
