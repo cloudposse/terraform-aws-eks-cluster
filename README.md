@@ -290,7 +290,7 @@ Available targets:
 | Name | Version |
 |------|---------|
 | terraform | >= 0.12.0, < 0.14.0 |
-| aws | ~> 2.0 |
+| aws | ~> 3.0 |
 | kubernetes | ~> 1.11 |
 | local | ~> 1.3 |
 | null | ~> 2.0 |
@@ -300,7 +300,7 @@ Available targets:
 
 | Name | Version |
 |------|---------|
-| aws | ~> 2.0 |
+| aws | ~> 3.0 |
 | kubernetes | ~> 1.11 |
 | null | ~> 2.0 |
 
