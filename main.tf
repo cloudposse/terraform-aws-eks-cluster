@@ -1,35 +1,32 @@
 locals {
+  enabled = module.this.enabled
+
   cluster_encryption_config = {
     resources        = var.cluster_encryption_config_resources
-    provider_key_arn = var.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? join("", aws_kms_key.cluster.*.arn) : var.cluster_encryption_config_kms_key_id
+    provider_key_arn = local.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? join("", aws_kms_key.cluster.*.arn) : var.cluster_encryption_config_kms_key_id
   }
 }
 
 module "label" {
-  source      = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.17.0"
-  namespace   = var.namespace
-  stage       = var.stage
-  environment = var.environment
-  name        = var.name
-  delimiter   = var.delimiter
-  attributes  = compact(concat(var.attributes, ["cluster"]))
-  tags        = var.tags
-  enabled     = var.enabled
+  source      = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.19.2"
+  attributes  = ["cluster"]
+
+  context = module.this.context
 }
 
 data "aws_partition" "current" {
-  count = var.enabled ? 1 : 0
+  count = local.enabled ? 1 : 0
 }
 
 resource "aws_cloudwatch_log_group" "default" {
-  count             = var.enabled && length(var.enabled_cluster_log_types) > 0 ? 1 : 0
+  count             = local.enabled && length(var.enabled_cluster_log_types) > 0 ? 1 : 0
   name              = "/aws/eks/${module.label.id}/cluster"
   retention_in_days = var.cluster_log_retention_period
   tags              = module.label.tags
 }
 
 resource "aws_kms_key" "cluster" {
-  count                   = var.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? 1 : 0
+  count                   = local.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? 1 : 0
   description             = "EKS Cluster ${module.label.id} Encryption Config KMS Key"
   enable_key_rotation     = var.cluster_encryption_config_kms_key_enable_key_rotation
   deletion_window_in_days = var.cluster_encryption_config_kms_key_deletion_window_in_days
@@ -38,13 +35,13 @@ resource "aws_kms_key" "cluster" {
 }
 
 resource "aws_kms_alias" "cluster" {
-  count         = var.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? 1 : 0
+  count         = local.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? 1 : 0
   name          = format("alias/%v", module.label.id)
   target_key_id = join("", aws_kms_key.cluster.*.key_id)
 }
 
 resource "aws_eks_cluster" "default" {
-  count                     = var.enabled ? 1 : 0
+  count                     = local.enabled ? 1 : 0
   name                      = module.label.id
   tags                      = module.label.tags
   role_arn                  = join("", aws_iam_role.default.*.arn)
@@ -86,7 +83,7 @@ resource "aws_eks_cluster" "default" {
 # https://medium.com/@marcincuber/amazon-eks-with-oidc-provider-iam-roles-for-kubernetes-services-accounts-59015d15cb0c
 #
 resource "aws_iam_openid_connect_provider" "default" {
-  count = (var.enabled && var.oidc_provider_enabled) ? 1 : 0
+  count = (local.enabled && var.oidc_provider_enabled) ? 1 : 0
   url   = join("", aws_eks_cluster.default.*.identity.0.oidc.0.issuer)
 
   client_id_list = ["sts.amazonaws.com"]
