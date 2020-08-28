@@ -33,7 +33,7 @@ locals {
 }
 
 module "vpc" {
-  source     = "git::https://github.com/cloudposse/terraform-aws-vpc.git?ref=tags/0.17.0"
+  source = "git::https://github.com/cloudposse/terraform-aws-vpc.git?ref=tags/0.17.0"
 
   cidr_block = "172.16.0.0/16"
   tags       = local.tags
@@ -42,7 +42,7 @@ module "vpc" {
 }
 
 module "subnets" {
-  source                          = "git::https://github.com/cloudposse/terraform-aws-dynamic-subnets.git?ref=tags/0.28.0"
+  source = "git::https://github.com/cloudposse/terraform-aws-dynamic-subnets.git?ref=tags/0.28.0"
 
   availability_zones              = var.availability_zones
   vpc_id                          = module.vpc.vpc_id
@@ -59,7 +59,7 @@ module "subnets" {
 
 
 module "eks_cluster" {
-  source                       = "../../"
+  source = "../../"
 
   vpc_id                       = module.vpc.vpc_id
   subnet_ids                   = concat(module.subnets.private_subnet_ids, module.subnets.public_subnet_ids)
@@ -85,7 +85,7 @@ data "null_data_source" "wait_for_cluster_and_kubernetes_configmap" {
 }
 
 module "eks_node_group" {
-  source            = "git::https://github.com/cloudposse/terraform-aws-eks-node-group.git?ref=tags/0.8.0"
+  source = "git::https://github.com/cloudposse/terraform-aws-eks-node-group.git?ref=tags/0.8.0"
 
   subnet_ids        = module.subnets.private_subnet_ids
   cluster_name      = data.null_data_source.wait_for_cluster_and_kubernetes_configmap.outputs["cluster_name"]

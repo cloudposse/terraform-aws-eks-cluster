@@ -8,8 +8,8 @@ locals {
 }
 
 module "label" {
-  source      = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.19.2"
-  attributes  = ["cluster"]
+  source     = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.19.2"
+  attributes = ["cluster"]
 
   context = module.this.context
 }
