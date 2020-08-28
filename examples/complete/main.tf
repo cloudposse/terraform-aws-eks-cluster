@@ -3,13 +3,10 @@ provider "aws" {
 }
 
 module "label" {
-  source     = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.17.0"
-  namespace  = var.namespace
-  name       = var.name
-  stage      = var.stage
-  delimiter  = var.delimiter
-  attributes = compact(concat(var.attributes, list("cluster")))
-  tags       = var.tags
+  source     = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.19.2"
+  attributes = ["cluster"]
+
+  context = module.this.context
 }
 
 locals {
@@ -36,22 +33,18 @@ locals {
 }
 
 module "vpc" {
-  source     = "git::https://github.com/cloudposse/terraform-aws-vpc.git?ref=tags/0.16.1"
-  namespace  = var.namespace
-  stage      = var.stage
-  name       = var.name
-  attributes = var.attributes
+  source = "git::https://github.com/cloudposse/terraform-aws-vpc.git?ref=tags/0.17.0"
+
   cidr_block = "172.16.0.0/16"
   tags       = local.tags
+
+  context = module.this.context
 }
 
 module "subnets" {
-  source                          = "git::https://github.com/cloudposse/terraform-aws-dynamic-subnets.git?ref=tags/0.27.0"
+  source = "git::https://github.com/cloudposse/terraform-aws-dynamic-subnets.git?ref=tags/0.28.0"
+
   availability_zones              = var.availability_zones
-  namespace                       = var.namespace
-  stage                           = var.stage
-  name                            = var.name
-  attributes                      = var.attributes
   vpc_id                          = module.vpc.vpc_id
   igw_id                          = module.vpc.igw_id
   cidr_block                      = module.vpc.vpc_cidr_block
@@ -60,15 +53,14 @@ module "subnets" {
   tags                            = local.tags
   public_subnets_additional_tags  = local.public_subnets_additional_tags
   private_subnets_additional_tags = local.private_subnets_additional_tags
+
+  context = module.this.context
 }
 
+
 module "eks_cluster" {
-  source                       = "../../"
-  namespace                    = var.namespace
-  stage                        = var.stage
-  name                         = var.name
-  attributes                   = var.attributes
-  tags                         = var.tags
+  source = "../../"
+
   region                       = var.region
   vpc_id                       = module.vpc.vpc_id
   subnet_ids                   = concat(module.subnets.private_subnet_ids, module.subnets.public_subnet_ids)
@@ -77,6 +69,8 @@ module "eks_cluster" {
   oidc_provider_enabled        = var.oidc_provider_enabled
   enabled_cluster_log_types    = var.enabled_cluster_log_types
   cluster_log_retention_period = var.cluster_log_retention_period
+
+  context = module.this.context
 }
 
 # Ensure ordering of resource creation to eliminate the race conditions when applying the Kubernetes Auth ConfigMap.
@@ -92,12 +86,8 @@ data "null_data_source" "wait_for_cluster_and_kubernetes_configmap" {
 }
 
 module "eks_node_group" {
-  source            = "git::https://github.com/cloudposse/terraform-aws-eks-node-group.git?ref=tags/0.7.1"
-  namespace         = var.namespace
-  stage             = var.stage
-  name              = var.name
-  attributes        = var.attributes
-  tags              = var.tags
+  source = "git::https://github.com/cloudposse/terraform-aws-eks-node-group.git?ref=tags/0.8.0"
+
   subnet_ids        = module.subnets.private_subnet_ids
   cluster_name      = data.null_data_source.wait_for_cluster_and_kubernetes_configmap.outputs["cluster_name"]
   instance_types    = var.instance_types
@@ -106,4 +96,6 @@ module "eks_node_group" {
   max_size          = var.max_size
   kubernetes_labels = var.kubernetes_labels
   disk_size         = var.disk_size
+
+  context = module.this.context
 }

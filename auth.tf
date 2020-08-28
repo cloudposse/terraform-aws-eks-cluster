@@ -47,7 +47,7 @@ locals {
 }
 
 resource "null_resource" "wait_for_cluster" {
-  count      = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
+  count      = local.enabled && var.apply_config_map_aws_auth ? 1 : 0
   depends_on = [aws_eks_cluster.default[0]]
 
   provisioner "local-exec" {
@@ -60,7 +60,7 @@ resource "null_resource" "wait_for_cluster" {
 }
 
 data "aws_eks_cluster" "eks" {
-  count = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
+  count = local.enabled && var.apply_config_map_aws_auth ? 1 : 0
   name  = join("", aws_eks_cluster.default.*.id)
 }
 
@@ -70,7 +70,7 @@ data "aws_eks_cluster" "eks" {
 # If the AWS provider assumes an IAM role, `aws_eks_cluster_auth` will use the same IAM role to get the auth token.
 # https://www.terraform.io/docs/providers/aws/d/eks_cluster_auth.html
 data "aws_eks_cluster_auth" "eks" {
-  count = var.enabled && var.apply_config_map_aws_auth ? 1 : 0
+  count = local.enabled && var.apply_config_map_aws_auth ? 1 : 0
   name  = join("", aws_eks_cluster.default.*.id)
 }
 
@@ -82,7 +82,7 @@ provider "kubernetes" {
 }
 
 resource "kubernetes_config_map" "aws_auth_ignore_changes" {
-  count      = var.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes ? 1 : 0
+  count      = local.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes ? 1 : 0
   depends_on = [null_resource.wait_for_cluster[0]]
 
   metadata {
@@ -102,7 +102,7 @@ resource "kubernetes_config_map" "aws_auth_ignore_changes" {
 }
 
 resource "kubernetes_config_map" "aws_auth" {
-  count      = var.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes == false ? 1 : 0
+  count      = local.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes == false ? 1 : 0
   depends_on = [null_resource.wait_for_cluster[0]]
 
   metadata {
