@@ -82,3 +82,8 @@ output "cluster_encryption_config_provider_key_alias" {
   description = "Cluster Encryption Config KMS Key Alias ARN"
   value       = join("", aws_kms_alias.cluster.*.arn)
 }
+
+output "cluster_auth_token" {
+  description = "Cluster Authentication Token"
+  value       = var.auth_token_output_enabled == true ? join("", data.aws_eks_cluster_auth.eks.*.token) : ""
+}

@@ -168,3 +168,9 @@ variable "cluster_encryption_config_resources" {
   default     = ["secrets"]
   description = "Cluster Encryption Config Resources to encrypt, e.g. ['secrets']"
 }
+
+variable "auth_token_output_enabled" {
+  type        = bool
+  default     = false
+  description = "Set to `true` to output the Kubernetes authentication token"
+}
