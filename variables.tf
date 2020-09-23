@@ -43,9 +43,15 @@ variable "kubernetes_version" {
   description = "Desired Kubernetes master version. If you do not specify a value, the latest available version is used"
 }
 
+variable "kubernetes_config_path" {
+  type        = string
+  default     = "~/.kube/config"
+  description = "Path to the kube config file. Defaults to `~/.kube/config`"
+}
+
 variable "kubernetes_load_config_file" {
-  type = bool
-  default = false
+  type        = bool
+  default     = false
   description = "Loads the default local config of ~/.kube/config for the provider, which is useful for resolving migration issues like `Error: configmaps \"aws-auth\" already exists`"
 }
 
