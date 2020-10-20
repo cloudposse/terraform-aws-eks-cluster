@@ -31,6 +31,12 @@ variable "workers_role_arns" {
   default     = []
 }
 
+variable "eks_cluster_service_role" {
+  type        = string
+  description = "The entire output map of aws_iam_role for the eks service role, or leave blank to create one"
+  default     = null
+}
+
 variable "workers_security_group_ids" {
   type        = list(string)
   description = "Security Group IDs of the worker nodes"
