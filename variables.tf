@@ -31,7 +31,7 @@ variable "workers_role_arns" {
   default     = []
 }
 
-variable "eks_cluster_service_role" {
+variable "eks_cluster_service_role_arn" {
   type        = string
   description = "The entire output map of aws_iam_role for the eks service role, or leave blank to create one"
   default     = null
