@@ -49,7 +49,7 @@ resource "aws_eks_cluster" "default" {
   count                     = local.enabled ? 1 : 0
   name                      = module.label.id
   tags                      = module.label.tags
-  role_arn                  = local.eks_service_role.arn
+  role_arn                  = local.eks_service_role
   version                   = var.kubernetes_version
   enabled_cluster_log_types = var.enabled_cluster_log_types
 
