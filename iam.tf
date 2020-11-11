@@ -12,7 +12,7 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 locals {
-  eks_service_role = var.eks_cluster_service_role != null ? var.eks_cluster_service_role : aws_iam_role.default
+  eks_service_role = var.eks_cluster_service_role_arn != null ? var.eks_cluster_service_role_arn : aws_iam_role.default.arn
 }
 resource "aws_iam_role" "default" {
   count              = var.eks_cluster_service_role != null && local.enabled ? 1 : 0
