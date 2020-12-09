@@ -4,7 +4,7 @@ provider "aws" {
 
 module "label" {
   source     = "cloudposse/label/null"
-  version    = "0.19.2"
+  version    = "0.22.0"
   attributes = ["cluster"]
 
   context = module.this.context
