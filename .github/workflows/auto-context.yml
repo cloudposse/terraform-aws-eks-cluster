@@ -23,8 +23,9 @@ jobs:
           if git diff --no-patch --exit-code context.tf; then
             echo "No changes detected! Exiting the job..."
           else
-            echo "context.tf file was updated. Need to rebuild README.md."
+            echo "context.tf file has changed. Update examples and rebuild README.md."
             make init
+            make github/init/context.tf
             make readme/build
             echo "::set-output name=create_pull_request=true"
           fi
@@ -34,7 +35,7 @@ jobs:
 
     - name: Create Pull Request
       if: {{ steps.update.outputs.create_pull_request == 'true' }}
-      uses: cloudposse/actions/github/create-pull-request@0.20.0
+      uses: cloudposse/actions/github/create-pull-request@0.22.0
       with:
         token: ${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}
         commit-message: Update context.tf from origin source
