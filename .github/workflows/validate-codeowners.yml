@@ -1,9 +1,6 @@
 name: Validate Codeowners
 on:
   pull_request:
-    paths:
-    - '**/CODEOWNERS'
-    - '.github/workflows/validate-codeowners.yml'
 
 jobs:
   validate-codeowners:
