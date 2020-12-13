@@ -1,4 +1,6 @@
+<!-- markdownlint-disable -->
 # terraform-aws-eks-cluster [![Latest Release](https://img.shields.io/github/release/cloudposse/terraform-aws-eks-cluster.svg)](https://github.com/cloudposse/terraform-aws-eks-cluster/releases/latest) [![Slack Community](https://slack.cloudposse.com/badge.svg)](https://slack.cloudposse.com)
+<!-- markdownlint-restore -->
 
 [![README Header][readme_header_img]][readme_header_link]
 
@@ -290,20 +292,20 @@ Available targets:
 
 | Name | Version |
 |------|---------|
-| terraform | >= 0.12.0, < 0.14.0 |
-| aws | >= 2.0, < 4.0 |
-| kubernetes | ~> 1.11 |
-| local | ~> 1.3 |
-| null | ~> 2.0 |
-| template | ~> 2.0 |
+| terraform | >= 0.12.0 |
+| aws | >= 2.0 |
+| kubernetes | >= 1.11 |
+| local | >= 1.3 |
+| null | >= 2.0 |
+| template | >= 2.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| aws | >= 2.0, < 4.0 |
-| kubernetes | ~> 1.11 |
-| null | ~> 2.0 |
+| aws | >= 2.0 |
+| kubernetes | >= 1.11 |
+| null | >= 2.0 |
 
 ## Inputs
 
@@ -530,8 +532,10 @@ Check out [our other projects][github], [follow us on twitter][twitter], [apply 
 
 ### Contributors
 
+<!-- markdownlint-disable -->
 |  [![Erik Osterman][osterman_avatar]][osterman_homepage]<br/>[Erik Osterman][osterman_homepage] | [![Andriy Knysh][aknysh_avatar]][aknysh_homepage]<br/>[Andriy Knysh][aknysh_homepage] | [![Igor Rodionov][goruha_avatar]][goruha_homepage]<br/>[Igor Rodionov][goruha_homepage] | [![Oscar][osulli_avatar]][osulli_homepage]<br/>[Oscar][osulli_homepage] |
 |---|---|---|---|
+<!-- markdownlint-restore -->
 
 
   [osterman_homepage]: https://github.com/osterman
