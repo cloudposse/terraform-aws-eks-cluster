@@ -114,7 +114,9 @@ Other examples:
   }
 
   module "label" {
-    source     = "git::https://github.com/cloudposse/terraform-null-label.git?ref=master"
+    source = "cloudposse/label/null"
+    # Cloud Posse recommends pinning every module to a specific version
+    # version     = "x.x.x"
     namespace  = var.namespace
     name       = var.name
     stage      = var.stage
@@ -138,7 +140,9 @@ Other examples:
   }
 
   module "vpc" {
-    source     = "git::https://github.com/cloudposse/terraform-aws-vpc.git?ref=master"
+    source = "cloudposse/vpc/aws"
+    # Cloud Posse recommends pinning every module to a specific version
+    # version     = "x.x.x"
     namespace  = var.namespace
     stage      = var.stage
     name       = var.name
@@ -148,7 +152,9 @@ Other examples:
   }
 
   module "subnets" {
-    source               = "git::https://github.com/cloudposse/terraform-aws-dynamic-subnets.git?ref=master"
+    source = "cloudposse/dynamic-subnets/aws"
+    # Cloud Posse recommends pinning every module to a specific version
+    # version     = "x.x.x"
     availability_zones   = var.availability_zones
     namespace            = var.namespace
     stage                = var.stage
@@ -163,7 +169,9 @@ Other examples:
   }
 
   module "eks_workers" {
-    source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=master"
+    source = "cloudposse/eks-workers/aws"
+    # Cloud Posse recommends pinning every module to a specific version
+    # version     = "x.x.x"
     namespace                          = var.namespace
     stage                              = var.stage
     name                               = var.name
@@ -189,7 +197,9 @@ Other examples:
   }
 
   module "eks_cluster" {
-    source     = "git::https://github.com/cloudposse/terraform-aws-eks-cluster.git?ref=master"
+    source = "cloudposse/eks-cluster/aws"
+    # Cloud Posse recommends pinning every module to a specific version
+    # version     = "x.x.x"
     namespace  = var.namespace
     stage      = var.stage
     name       = var.name
@@ -210,7 +220,9 @@ Module usage with two worker groups:
 
 ```hcl
   module "eks_workers" {
-    source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=master"
+    source = "cloudposse/eks-workers/aws"
+    # Cloud Posse recommends pinning every module to a specific version
+    # version     = "x.x.x"
     namespace                          = var.namespace
     stage                              = var.stage
     name                               = "small"
@@ -235,7 +247,9 @@ Module usage with two worker groups:
   }
 
   module "eks_workers_2" {
-    source                             = "git::https://github.com/cloudposse/terraform-aws-eks-workers.git?ref=master"
+    source = "cloudposse/eks-workers/aws"
+    # Cloud Posse recommends pinning every module to a specific version
+    # version     = "x.x.x"
     namespace                          = var.namespace
     stage                              = var.stage
     name                               = "medium"
@@ -260,7 +274,9 @@ Module usage with two worker groups:
   }
 
   module "eks_cluster" {
-    source     = "git::https://github.com/cloudposse/terraform-aws-eks-cluster.git?ref=master"
+    source = "cloudposse/eks-cluster/aws"
+    # Cloud Posse recommends pinning every module to a specific version
+    # version     = "x.x.x"
     namespace  = var.namespace
     stage      = var.stage
     name       = var.name
