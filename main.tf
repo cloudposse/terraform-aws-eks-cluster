@@ -9,7 +9,7 @@ locals {
 
 module "label" {
   source  = "cloudposse/label/null"
-  version = "0.19.2"
+  version = "0.22.0"
 
   # Using attributes = ["cluster"] would put "cluster" before any user-specified attributes.
   # While that might be preferable (adding an attribute "blue" would create
