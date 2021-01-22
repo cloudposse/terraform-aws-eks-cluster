@@ -43,18 +43,6 @@ variable "kubernetes_version" {
   description = "Desired Kubernetes master version. If you do not specify a value, the latest available version is used"
 }
 
-variable "kubernetes_config_path" {
-  type        = string
-  default     = ""
-  description = "Path to the kube config file"
-}
-
-variable "kubernetes_config_paths" {
-  type        = list(string)
-  default     = []
-  description = "A list of paths to the kube config files"
-}
-
 variable "oidc_provider_enabled" {
   type        = bool
   default     = false

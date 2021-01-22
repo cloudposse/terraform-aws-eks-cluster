@@ -33,9 +33,7 @@ clean:
 all: module examples/complete
 
 ## Run basic sanity checks against the module itself
-# module: export TESTS ?= installed lint get-modules module-pinning get-plugins provider-pinning validate terraform-docs input-descriptions output-descriptions
-# The kubernetes provider needs to be pinned because 2.x has breaking changes
-module: export TESTS ?= installed lint get-modules module-pinning get-plugins validate terraform-docs input-descriptions output-descriptions
+module: export TESTS ?= installed lint get-modules module-pinning get-plugins provider-pinning validate terraform-docs input-descriptions output-descriptions
 module: deps
 	$(call RUN_TESTS, ../)
 
