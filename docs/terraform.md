@@ -5,7 +5,7 @@
 |------|---------|
 | terraform | >= 0.12.26 |
 | aws | >= 2.0 |
-| kubernetes | >= 1.11 |
+| kubernetes | ~> 1.11 |
 | local | >= 1.3 |
 | null | >= 2.0 |
 | template | >= 2.0 |
@@ -15,7 +15,7 @@
 | Name | Version |
 |------|---------|
 | aws | >= 2.0 |
-| kubernetes | >= 1.11 |
+| kubernetes | ~> 1.11 |
 | null | >= 2.0 |
 
 ## Inputs
