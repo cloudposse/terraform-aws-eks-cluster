@@ -19,8 +19,10 @@ terraform {
       version = ">= 1.3"
     }
     kubernetes = {
+      # Version 2.0 has breaking changes, this module needs conversion to use it.
+      # After converting to 2.0, restore the provider-pinning Bats test in test/Makefile
       source  = "hashicorp/kubernetes"
-      version = ">= 1.11"
+      version = "~> 1.11"
     }
   }
 }

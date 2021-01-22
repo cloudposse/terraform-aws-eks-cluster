@@ -9,13 +9,9 @@ locals {
 
 module "label" {
   source  = "cloudposse/label/null"
-  version = "0.22.0"
+  version = "0.22.1"
 
-  # Using attributes = ["cluster"] would put "cluster" before any user-specified attributes.
-  # While that might be preferable (adding an attribute "blue" would create
-  # ...name-cluster-blue instead of ...name-blue-cluster), historically we forced "cluster"
-  # to the end of the attribute list, so we do it again here to maintain compatibility.
-  attributes = compact(concat(module.this.attributes, ["cluster"]))
+  attributes = ["cluster"]
 
   context = module.this.context
 }

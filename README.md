@@ -317,7 +317,7 @@ Available targets:
 |------|---------|
 | terraform | >= 0.12.26 |
 | aws | >= 2.0 |
-| kubernetes | >= 1.11 |
+| kubernetes | ~> 1.11 |
 | local | >= 1.3 |
 | null | >= 2.0 |
 | template | >= 2.0 |
@@ -327,7 +327,7 @@ Available targets:
 | Name | Version |
 |------|---------|
 | aws | >= 2.0 |
-| kubernetes | >= 1.11 |
+| kubernetes | ~> 1.11 |
 | null | >= 2.0 |
 
 ## Inputs
@@ -498,7 +498,7 @@ In general, PRs are welcome. We follow the typical "fork-and-pull" Git workflow.
 
 ## Copyright
 
-Copyright © 2017-2020 [Cloud Posse, LLC](https://cpco.io/copyright)
+Copyright © 2017-2021 [Cloud Posse, LLC](https://cpco.io/copyright)
 
 
 
