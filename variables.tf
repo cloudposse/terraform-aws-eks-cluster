@@ -45,14 +45,14 @@ variable "kubernetes_version" {
 
 variable "kubernetes_config_path" {
   type        = string
-  default     = "~/.kube/config"
-  description = "Path to the kube config file. Defaults to `~/.kube/config`"
+  default     = ""
+  description = "Path to the kube config file"
 }
 
-variable "kubernetes_load_config_file" {
-  type        = bool
-  default     = false
-  description = "Loads the default local config of ~/.kube/config for the provider, which is useful for resolving migration issues like `Error: configmaps \"aws-auth\" already exists`"
+variable "kubernetes_config_paths" {
+  type        = list(string)
+  default     = []
+  description = "A list of paths to the kube config files"
 }
 
 variable "oidc_provider_enabled" {
@@ -176,7 +176,7 @@ variable "cluster_encryption_config_kms_key_policy" {
 }
 
 variable "cluster_encryption_config_resources" {
-  type        = list
+  type        = list(any)
   default     = ["secrets"]
   description = "Cluster Encryption Config Resources to encrypt, e.g. ['secrets']"
 }
