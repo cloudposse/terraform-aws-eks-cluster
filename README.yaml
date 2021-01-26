@@ -9,43 +9,44 @@ badges:
   image: https://slack.cloudposse.com/badge.svg
   url: https://slack.cloudposse.com
 related:
+- name: terraform-null-label
+  description: Terraform Module to define a consistent naming convention by (namespace,
+    stage, name, [attributes])
+  url: https://github.com/cloudposse/terraform-null-label
+- name: terraform-aws-eks-cluster
+  description: Terraform module for provisioning an EKS cluster
+  url: https://github.com/cloudposse/terraform-aws-eks-cluster
 - name: terraform-aws-eks-workers
   description: Terraform module to provision an AWS AutoScaling Group, IAM Role, and
     Security Group for EKS Workers
   url: https://github.com/cloudposse/terraform-aws-eks-workers
-- name: terraform-aws-ec2-autoscale-group
-  description: Terraform module to provision Auto Scaling Group and Launch Template
-    on AWS
-  url: https://github.com/cloudposse/terraform-aws-ec2-autoscale-group
-- name: terraform-aws-ecs-container-definition
-  description: Terraform module to generate well-formed JSON documents (container
-    definitions) that are passed to the  aws_ecs_task_definition Terraform resource
-  url: https://github.com/cloudposse/terraform-aws-ecs-container-definition
-- name: terraform-aws-ecs-alb-service-task
-  description: Terraform module which implements an ECS service which exposes a web
-    service via ALB
-  url: https://github.com/cloudposse/terraform-aws-ecs-alb-service-task
-- name: terraform-aws-ecs-web-app
-  description: Terraform module that implements a web app on ECS and supports autoscaling,
-    CI/CD, monitoring, ALB integration, and much more
-  url: https://github.com/cloudposse/terraform-aws-ecs-web-app
-- name: terraform-aws-ecs-codepipeline
-  description: Terraform module for CI/CD with AWS Code Pipeline and Code Build for
-    ECS
-  url: https://github.com/cloudposse/terraform-aws-ecs-codepipeline
-- name: terraform-aws-ecs-cloudwatch-autoscaling
-  description: Terraform module to autoscale ECS Service based on CloudWatch metrics
-  url: https://github.com/cloudposse/terraform-aws-ecs-cloudwatch-autoscaling
-- name: terraform-aws-ecs-cloudwatch-sns-alarms
-  description: Terraform module to create CloudWatch Alarms on ECS Service level metrics
-  url: https://github.com/cloudposse/terraform-aws-ecs-cloudwatch-sns-alarms
-- name: terraform-aws-ec2-instance
-  description: Terraform module for providing a general purpose EC2 instance
-  url: https://github.com/cloudposse/terraform-aws-ec2-instance
-- name: terraform-aws-ec2-instance-group
-  description: Terraform module for provisioning multiple general purpose EC2 hosts
-    for stateful applications
-  url: https://github.com/cloudposse/terraform-aws-ec2-instance-group
+- name: terraform-aws-eks-fargate-profile
+  description: Terraform module to provision an EKS Fargate Profile
+  url: https://github.com/cloudposse/terraform-aws-eks-fargate-profile
+- name: terraform-aws-eks-node-group
+  description: Terraform module to provision an EKS Node Group
+  url: https://github.com/cloudposse/terraform-aws-eks-node-group
+- name: terraform-aws-eks-iam-role
+  description: Terraform module to provision an EKS IAM Role for Service Account
+  url: https://github.com/cloudposse/terraform-aws-eks-iam-role
+- name: terraform-aws-eks-spotinst-ocean-nodepool
+  description: A terraform module to create an EKS node pool with Spot Ocean by Spot.io
+  url: https://github.com/cloudposse/terraform-aws-eks-spotinst-ocean-nodepool
+- name: terraform-provider-aws
+  description: terraform-provider-aws
+  url: https://github.com/hashicorp/terraform-provider-aws
+- name: terraform-provider-kubernetes
+  description: terraform-provider-kubernetes
+  url: https://github.com/hashicorp/terraform-provider-kubernetes
+- name: terraform-provider-local
+  description: terraform-provider-local
+  url: https://github.com/hashicorp/terraform-provider-local
+- name: terraform-provider-null
+  description: terraform-provider-null
+  url: https://github.com/hashicorp/terraform-provider-null
+- name: terraform-provider-template
+  description: terraform-provider-template
+  url: https://github.com/hashicorp/terraform-provider-template
 description: Terraform module to provision an [EKS](https://aws.amazon.com/eks/) cluster
   on AWS.
 introduction: |-
