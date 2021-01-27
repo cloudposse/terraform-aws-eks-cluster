@@ -419,12 +419,19 @@ Check out these related projects.
 - [terraform-aws-eks-node-group](https://github.com/cloudposse/terraform-aws-eks-node-group) - Terraform module to provision an EKS Node Group
 - [terraform-aws-eks-iam-role](https://github.com/cloudposse/terraform-aws-eks-iam-role) - Terraform module to provision an EKS IAM Role for Service Account
 - [terraform-aws-eks-spotinst-ocean-nodepool](https://github.com/cloudposse/terraform-aws-eks-spotinst-ocean-nodepool) - A terraform module to create an EKS node pool with Spot Ocean by Spot.io
-- [terraform-provider-aws](https://github.com/hashicorp/terraform-provider-aws) - terraform-provider-aws
-- [terraform-provider-kubernetes](https://github.com/hashicorp/terraform-provider-kubernetes) - terraform-provider-kubernetes
-- [terraform-provider-local](https://github.com/hashicorp/terraform-provider-local) - terraform-provider-local
-- [terraform-provider-null](https://github.com/hashicorp/terraform-provider-null) - terraform-provider-null
-- [terraform-provider-template](https://github.com/hashicorp/terraform-provider-template) - terraform-provider-template
 
+
+
+
+## References
+
+For additional context, refer to some of these links.
+
+- [terraform-provider-aws](https://registry.terraform.io/providers/hashicorp/aws/latest) - Terraform AWS provider
+- [terraform-provider-kubernetes](https://registry.terraform.io/providers/hashicorp/kubernetes/latest) - Terraform Kubernetes provider
+- [terraform-provider-local](https://registry.terraform.io/providers/hashicorp/local/latest) - Terraform local provider – Used to manage local resources, such as creating files.
+- [terraform-provider-null](https://registry.terraform.io/providers/hashicorp/null/latest) - Provides constructs that intentionally do nothing, useful in various situations to help orchestrate tricky behavior or work around limitations. This provider is maintained by the HashiCorp Terraform Team.
+- [terraform-provider-template](https://registry.terraform.io/providers/hashicorp/template/latest) - Terraform template provider
 
 
 ## Help
