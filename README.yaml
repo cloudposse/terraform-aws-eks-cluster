@@ -32,21 +32,25 @@ related:
 - name: terraform-aws-eks-spotinst-ocean-nodepool
   description: A terraform module to create an EKS node pool with Spot Ocean by Spot.io
   url: https://github.com/cloudposse/terraform-aws-eks-spotinst-ocean-nodepool
+references:
 - name: terraform-provider-aws
-  description: terraform-provider-aws
-  url: https://github.com/hashicorp/terraform-provider-aws
+  description: Terraform AWS provider
+  url: https://registry.terraform.io/providers/hashicorp/aws/latest
 - name: terraform-provider-kubernetes
-  description: terraform-provider-kubernetes
-  url: https://github.com/hashicorp/terraform-provider-kubernetes
+  description: Terraform Kubernetes provider
+  url: https://registry.terraform.io/providers/hashicorp/kubernetes/latest
 - name: terraform-provider-local
-  description: terraform-provider-local
-  url: https://github.com/hashicorp/terraform-provider-local
+  description: Terraform local provider – Used to manage local resources, such as
+    creating files.
+  url: https://registry.terraform.io/providers/hashicorp/local/latest
 - name: terraform-provider-null
-  description: terraform-provider-null
-  url: https://github.com/hashicorp/terraform-provider-null
+  description: Provides constructs that intentionally do nothing, useful in various
+    situations to help orchestrate tricky behavior or work around limitations. This
+    provider is maintained by the HashiCorp Terraform Team.
+  url: https://registry.terraform.io/providers/hashicorp/null/latest
 - name: terraform-provider-template
-  description: terraform-provider-template
-  url: https://github.com/hashicorp/terraform-provider-template
+  description: Terraform template provider
+  url: https://registry.terraform.io/providers/hashicorp/template/latest
 description: Terraform module to provision an [EKS](https://aws.amazon.com/eks/) cluster
   on AWS.
 introduction: |-
