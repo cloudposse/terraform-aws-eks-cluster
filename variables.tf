@@ -169,8 +169,8 @@ variable "cluster_encryption_config_resources" {
   description = "Cluster Encryption Config Resources to encrypt, e.g. ['secrets']"
 }
 
-variable "iam_role_permission_boundary" {
+variable "permission_boundary" {
   type        = string
-  default     = ""
-  description = "IAM Role Permission Boundary"
+  default     = null
+  description = "If provided, all IAM roles will be created with this permissions boundary attached."
 }
