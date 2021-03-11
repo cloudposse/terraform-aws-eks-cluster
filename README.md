@@ -423,6 +423,7 @@ Available targets:
 | wait\_for\_cluster\_command | `local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint are available as environment variable `ENDPOINT` | `string` | `"curl --silent --fail --retry 60 --retry-delay 5 --retry-connrefused --insecure --output /dev/null $ENDPOINT/healthz"` | no |
 | workers\_role\_arns | List of Role ARNs of the worker nodes | `list(string)` | `[]` | no |
 | workers\_security\_group\_ids | Security Group IDs of the worker nodes | `list(string)` | `[]` | no |
+| iam\_role\_permission\_boundary | IAM Role permission boundary | `string` | `` | no |
 
 ## Outputs
 
