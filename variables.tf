@@ -168,3 +168,8 @@ variable "cluster_encryption_config_resources" {
   default     = ["secrets"]
   description = "Cluster Encryption Config Resources to encrypt, e.g. ['secrets']"
 }
+
+variable "iam_role_permission_boundary" {
+  type        = string
+  default     = ""
+  description = "IAM Role Permission Boundary"
