@@ -13,11 +13,11 @@ data "aws_iam_policy_document" "assume_role" {
 }
 
 resource "aws_iam_role" "default" {
-  count               = local.enabled ? 1 : 0
-  name                = module.label.id
-  assume_role_policy  = join("", data.aws_iam_policy_document.assume_role.*.json)
-  tags                = module.label.tags
-  permission_boundary = var.permission_boundary
+  count                = local.enabled ? 1 : 0
+  name                 = module.label.id
+  assume_role_policy   = join("", data.aws_iam_policy_document.assume_role.*.json)
+  tags                 = module.label.tags
+  permissions_boundary = var.permissions_boundary
 }
 
 resource "aws_iam_role_policy_attachment" "amazon_eks_cluster_policy" {
