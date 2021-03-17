@@ -336,7 +336,7 @@ Available targets:
 |------|---------|
 | terraform | >= 0.13.0 |
 | aws | >= 2.0 |
-| kubernetes | >= 2.0 |
+| kubernetes | >= 1.0 |
 | local | >= 1.3 |
 | null | >= 2.0 |
 | template | >= 2.0 |
@@ -346,7 +346,7 @@ Available targets:
 | Name | Version |
 |------|---------|
 | aws | >= 2.0 |
-| kubernetes | >= 2.0 |
+| kubernetes | >= 1.0 |
 | null | >= 2.0 |
 
 ## Modules
