@@ -135,14 +135,14 @@ variable "kubernetes_config_map_ignore_role_changes" {
 
 variable "cluster_encryption_config_enabled" {
   type        = bool
-  default     = false
+  default     = true
   description = "Set to `true` to enable Cluster Encryption Configuration"
 }
 
 variable "cluster_encryption_config_kms_key_id" {
   type        = string
   default     = ""
-  description = "Specify KMS Key Id ARN to use for cluster encryption config"
+  description = "KMS Key ID to use for cluster encryption config"
 }
 
 variable "cluster_encryption_config_kms_key_enable_key_rotation" {

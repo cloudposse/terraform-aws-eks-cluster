@@ -98,3 +98,39 @@ variable "min_size" {
   type        = number
   description = "The minimum size of the AutoScaling Group"
 }
+
+variable "cluster_encryption_config_enabled" {
+  type        = bool
+  default     = true
+  description = "Set to `true` to enable Cluster Encryption Configuration"
+}
+
+variable "cluster_encryption_config_kms_key_id" {
+  type        = string
+  default     = ""
+  description = "KMS Key ID to use for cluster encryption config"
+}
+
+variable "cluster_encryption_config_kms_key_enable_key_rotation" {
+  type        = bool
+  default     = true
+  description = "Cluster Encryption Config KMS Key Resource argument - enable kms key rotation"
+}
+
+variable "cluster_encryption_config_kms_key_deletion_window_in_days" {
+  type        = number
+  default     = 10
+  description = "Cluster Encryption Config KMS Key Resource argument - key deletion windows in days post destruction"
+}
+
+variable "cluster_encryption_config_kms_key_policy" {
+  type        = string
+  default     = null
+  description = "Cluster Encryption Config KMS Key Resource argument - key policy"
+}
+
+variable "cluster_encryption_config_resources" {
+  type        = list(any)
+  default     = ["secrets"]
+  description = "Cluster Encryption Config Resources to encrypt, e.g. ['secrets']"
+}

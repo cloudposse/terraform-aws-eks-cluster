@@ -4,7 +4,7 @@ provider "aws" {
 
 module "label" {
   source     = "cloudposse/label/null"
-  version    = "0.22.0"
+  version    = "0.24.1"
   attributes = ["cluster"]
 
   context = module.this.context
@@ -30,12 +30,11 @@ locals {
   private_subnets_additional_tags = {
     "kubernetes.io/role/internal-elb" : 1
   }
-
 }
 
 module "vpc" {
   source  = "cloudposse/vpc/aws"
-  version = "0.17.0"
+  version = "0.21.1"
 
   cidr_block = "172.16.0.0/16"
   tags       = local.tags
@@ -45,7 +44,7 @@ module "vpc" {
 
 module "subnets" {
   source  = "cloudposse/dynamic-subnets/aws"
-  version = "0.28.0"
+  version = "0.38.0"
 
   availability_zones              = var.availability_zones
   vpc_id                          = module.vpc.vpc_id
@@ -60,7 +59,6 @@ module "subnets" {
   context = module.this.context
 }
 
-
 module "eks_cluster" {
   source = "../../"
 
@@ -72,6 +70,13 @@ module "eks_cluster" {
   oidc_provider_enabled        = var.oidc_provider_enabled
   enabled_cluster_log_types    = var.enabled_cluster_log_types
   cluster_log_retention_period = var.cluster_log_retention_period
+
+  cluster_encryption_config_enabled                         = var.cluster_encryption_config_enabled
+  cluster_encryption_config_kms_key_id                      = var.cluster_encryption_config_kms_key_id
+  cluster_encryption_config_kms_key_enable_key_rotation     = var.cluster_encryption_config_kms_key_enable_key_rotation
+  cluster_encryption_config_kms_key_deletion_window_in_days = var.cluster_encryption_config_kms_key_deletion_window_in_days
+  cluster_encryption_config_kms_key_policy                  = var.cluster_encryption_config_kms_key_policy
+  cluster_encryption_config_resources                       = var.cluster_encryption_config_resources
 
   context = module.this.context
 }
@@ -90,7 +95,7 @@ data "null_data_source" "wait_for_cluster_and_kubernetes_configmap" {
 
 module "eks_node_group" {
   source  = "cloudposse/eks-node-group/aws"
-  version = "0.8.0"
+  version = "0.19.0"
 
   subnet_ids        = module.subnets.private_subnet_ids
   cluster_name      = data.null_data_source.wait_for_cluster_and_kubernetes_configmap.outputs["cluster_name"]
