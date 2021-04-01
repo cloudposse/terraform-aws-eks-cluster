@@ -142,7 +142,7 @@ variable "cluster_encryption_config_enabled" {
 variable "cluster_encryption_config_kms_key_id" {
   type        = string
   default     = ""
-  description = "Specify KMS Key Id ARN to use for cluster encryption config"
+  description = "KMS Key ID to use for cluster encryption config"
 }
 
 variable "cluster_encryption_config_kms_key_enable_key_rotation" {
