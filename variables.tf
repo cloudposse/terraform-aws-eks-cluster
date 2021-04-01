@@ -135,7 +135,7 @@ variable "kubernetes_config_map_ignore_role_changes" {
 
 variable "cluster_encryption_config_enabled" {
   type        = bool
-  default     = false
+  default     = true
   description = "Set to `true` to enable Cluster Encryption Configuration"
 }
 

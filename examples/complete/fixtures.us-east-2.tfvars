@@ -8,7 +8,7 @@ stage = "test"
 
 name = "eks"
 
-kubernetes_version = "1.17"
+kubernetes_version = "1.19"
 
 oidc_provider_enabled = true
 
@@ -27,3 +27,5 @@ min_size = 2
 disk_size = 20
 
 kubernetes_labels = {}
+
+cluster_encryption_config_enabled = true
