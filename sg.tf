@@ -8,5 +8,5 @@ module "security_group" {
   vpc_id          = var.vpc_id
 
   enabled = local.security_group_enabled
-  context = module.this.context
+  context = module.label.context
 }
