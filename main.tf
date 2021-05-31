@@ -86,7 +86,7 @@ resource "aws_eks_cluster" "default" {
 #
 
 data "tls_certificate" "cluster" {
-  url =  join("", aws_eks_cluster.default.*.identity.0.oidc.0.issuer)
+  url = join("", aws_eks_cluster.default.*.identity.0.oidc.0.issuer)
 }
 
 resource "aws_iam_openid_connect_provider" "default" {
@@ -94,7 +94,7 @@ resource "aws_iam_openid_connect_provider" "default" {
   url   = join("", aws_eks_cluster.default.*.identity.0.oidc.0.issuer)
   tags  = module.label.tags
 
-  client_id_list = ["sts.amazonaws.com"]
+  client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = [data.tls_certificate.cluster.certificates.0.sha1_fingerprint]
 }
 
