@@ -87,7 +87,7 @@ resource "aws_eks_cluster" "default" {
 
 data "tls_certificate" "cluster" {
   count = (local.enabled && var.oidc_provider_enabled) ? 1 : 0
-  url = join("", aws_eks_cluster.default.*.identity.0.oidc.0.issuer)
+  url   = join("", aws_eks_cluster.default.*.identity.0.oidc.0.issuer)
 }
 
 resource "aws_iam_openid_connect_provider" "default" {
