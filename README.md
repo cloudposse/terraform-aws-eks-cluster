@@ -386,6 +386,7 @@ Available targets:
 | <a name="requirement_local"></a> [local](#requirement\_local) | >= 1.3 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | >= 2.0 |
 | <a name="requirement_template"></a> [template](#requirement\_template) | >= 2.0 |
+| <a name="requirement_tls"></a> [tls](#requirement\_tls) | >= 2.2.0 |
 
 ## Providers
 
@@ -394,6 +395,7 @@ Available targets:
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 2.0 |
 | <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | >= 1.0 |
 | <a name="provider_null"></a> [null](#provider\_null) | >= 2.0 |
+| <a name="provider_tls"></a> [tls](#provider\_tls) | >= 2.2.0 |
 
 ## Modules
 
@@ -424,6 +426,7 @@ Available targets:
 | [aws_iam_policy_document.assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.cluster_elb_service_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_partition.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition) | data source |
+| [tls_certificate.cluster](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/data-sources/certificate) | data source |
 
 ## Inputs
 
