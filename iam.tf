@@ -15,7 +15,7 @@ data "aws_iam_policy_document" "assume_role" {
 locals {
   eks_service_role = var.eks_cluster_service_role_arn != null ? var.eks_cluster_service_role_arn : join("", aws_iam_role.default.*.arn)
 
-  create_eks_service_role = var.eks_cluster_service_role_arn != null && local.enabled
+  create_eks_service_role = var.eks_cluster_service_role_arn == null && local.enabled
 }
 
 resource "aws_iam_role" "default" {
