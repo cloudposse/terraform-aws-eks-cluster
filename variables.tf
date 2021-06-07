@@ -49,18 +49,6 @@ variable "kubernetes_version" {
   description = "Desired Kubernetes master version. If you do not specify a value, the latest available version is used"
 }
 
-variable "kubernetes_config_path" {
-  type        = string
-  default     = "~/.kube/config"
-  description = "Path to the kube config file. Defaults to `~/.kube/config`"
-}
-
-variable "kubernetes_load_config_file" {
-  type        = bool
-  default     = false
-  description = "Loads the default local config of ~/.kube/config for the provider, which is useful for resolving migration issues like `Error: configmaps \"aws-auth\" already exists`"
-}
-
 variable "oidc_provider_enabled" {
   type        = bool
   default     = false
@@ -153,14 +141,14 @@ variable "kubernetes_config_map_ignore_role_changes" {
 
 variable "cluster_encryption_config_enabled" {
   type        = bool
-  default     = false
+  default     = true
   description = "Set to `true` to enable Cluster Encryption Configuration"
 }
 
 variable "cluster_encryption_config_kms_key_id" {
   type        = string
   default     = ""
-  description = "Specify KMS Key Id ARN to use for cluster encryption config"
+  description = "KMS Key ID to use for cluster encryption config"
 }
 
 variable "cluster_encryption_config_kms_key_enable_key_rotation" {
@@ -182,7 +170,13 @@ variable "cluster_encryption_config_kms_key_policy" {
 }
 
 variable "cluster_encryption_config_resources" {
-  type        = list
+  type        = list(any)
   default     = ["secrets"]
   description = "Cluster Encryption Config Resources to encrypt, e.g. ['secrets']"
+}
+
+variable "permissions_boundary" {
+  type        = string
+  default     = null
+  description = "If provided, all IAM roles will be created with this permissions boundary attached."
 }

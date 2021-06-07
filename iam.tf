@@ -11,24 +11,29 @@ data "aws_iam_policy_document" "assume_role" {
     }
   }
 }
+
 locals {
   eks_service_role = var.eks_cluster_service_role_arn != null ? var.eks_cluster_service_role_arn : aws_iam_role.default[0].arn
+
+  create_eks_service_role = var.eks_cluster_service_role_arn != null && local.enabled
 }
+
 resource "aws_iam_role" "default" {
-  count              = var.eks_cluster_service_role_arn != null && local.enabled ? 1 : 0
-  name               = module.label.id
-  assume_role_policy = join("", data.aws_iam_policy_document.assume_role.*.json)
-  tags               = module.label.tags
+  count                = local.create_eks_service_role ? 1 : 0
+  name                 = module.label.id
+  assume_role_policy   = join("", data.aws_iam_policy_document.assume_role.*.json)
+  tags                 = module.label.tags
+  permissions_boundary = var.permissions_boundary
 }
 
 resource "aws_iam_role_policy_attachment" "amazon_eks_cluster_policy" {
-  count      = var.eks_cluster_service_role_arn != null && local.enabled ? 1 : 0
+  count      = local.create_eks_service_role ? 1 : 0
   policy_arn = format("arn:%s:iam::aws:policy/AmazonEKSClusterPolicy", join("", data.aws_partition.current.*.partition))
   role       = join("", aws_iam_role.default.*.name)
 }
 
 resource "aws_iam_role_policy_attachment" "amazon_eks_service_policy" {
-  count      = var.eks_cluster_service_role_arn != null && local.enabled ? 1 : 0
+  count      = local.create_eks_service_role ? 1 : 0
   policy_arn = format("arn:%s:iam::aws:policy/AmazonEKSServicePolicy", join("", data.aws_partition.current.*.partition))
   role       = join("", aws_iam_role.default.*.name)
 }
@@ -38,7 +43,7 @@ resource "aws_iam_role_policy_attachment" "amazon_eks_service_policy" {
 # Because of that, on a new AWS account (where load balancers have not been provisioned yet, `nginx-ingress` fails to provision a load balancer
 
 data "aws_iam_policy_document" "cluster_elb_service_role" {
-  count = var.eks_cluster_service_role_arn != null && local.enabled ? 1 : 0
+  count = local.create_eks_service_role ? 1 : 0
 
   statement {
     effect = "Allow"
@@ -54,7 +59,7 @@ data "aws_iam_policy_document" "cluster_elb_service_role" {
 }
 
 resource "aws_iam_role_policy" "cluster_elb_service_role" {
-  count  = var.eks_cluster_service_role_arn != null && local.enabled ? 1 : 0
+  count  = local.create_eks_service_role ? 1 : 0
   name   = module.label.id
   role   = join("", aws_iam_role.default.*.name)
   policy = join("", data.aws_iam_policy_document.cluster_elb_service_role.*.json)

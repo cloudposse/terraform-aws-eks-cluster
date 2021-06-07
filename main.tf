@@ -8,13 +8,10 @@ locals {
 }
 
 module "label" {
-  source = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.19.2"
+  source  = "cloudposse/label/null"
+  version = "0.24.1"
 
-  # Using attributes = ["cluster"] would put "cluster" before any user-specified attributes.
-  # While that might be preferable (adding an attribute "blue" would create
-  # ...name-cluster-blue instead of ...name-blue-cluster), historically we forced "cluster"
-  # to the end of the attribute list, so we do it again here to maintain compatibility.
-  attributes = compact(concat(module.this.attributes, ["cluster"]))
+  attributes = ["cluster"]
 
   context = module.this.context
 }
@@ -87,13 +84,17 @@ resource "aws_eks_cluster" "default" {
 # https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html
 # https://medium.com/@marcincuber/amazon-eks-with-oidc-provider-iam-roles-for-kubernetes-services-accounts-59015d15cb0c
 #
+
+data "tls_certificate" "cluster" {
+  count = (local.enabled && var.oidc_provider_enabled) ? 1 : 0
+  url   = join("", aws_eks_cluster.default.*.identity.0.oidc.0.issuer)
+}
+
 resource "aws_iam_openid_connect_provider" "default" {
   count = (local.enabled && var.oidc_provider_enabled) ? 1 : 0
   url   = join("", aws_eks_cluster.default.*.identity.0.oidc.0.issuer)
+  tags  = module.label.tags
 
-  client_id_list = ["sts.amazonaws.com"]
-
-  # it's thumbprint won't change for many years
-  # https://github.com/terraform-providers/terraform-provider-aws/issues/10104
-  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da2b0ab7280"]
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = [join("", data.tls_certificate.cluster.*.certificates.0.sha1_fingerprint)]
 }
