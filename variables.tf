@@ -58,7 +58,7 @@ variable "security_groups" {
 
 variable "eks_cluster_service_role_arn" {
   type        = string
-  description = "The arn of an externally created eks service role to use, or leave blank to create one"
+  description = "The ARN of an externally created EKS service role to use, or leave blank to create one"
   default     = null
 }
 
