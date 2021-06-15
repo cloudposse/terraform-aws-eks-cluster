@@ -13,22 +13,47 @@ variable "subnet_ids" {
   type        = list(string)
 }
 
-variable "allowed_security_groups" {
-  type        = list(string)
-  default     = []
-  description = "List of Security Group IDs to be allowed to connect to the EKS cluster"
+variable "security_group_enabled" {
+  type        = bool
+  description = "Whether to create default Security Group for EKS cluster."
+  default     = true
 }
 
-variable "allowed_cidr_blocks" {
-  type        = list(string)
-  default     = []
-  description = "List of CIDR blocks to be allowed to connect to the EKS cluster"
+variable "security_group_description" {
+  type        = string
+  default     = "Security Group for EKS cluster"
+  description = "The Security Group description."
 }
 
-variable "workers_role_arns" {
+variable "security_group_use_name_prefix" {
+  type        = bool
+  default     = false
+  description = "Whether to create a default Security Group with unique name beginning with the normalized prefix."
+}
+
+variable "security_group_rules" {
+  type = list(any)
+  default = [
+    {
+      type        = "egress"
+      from_port   = 0
+      to_port     = 65535
+      protocol    = "-1"
+      cidr_blocks = ["0.0.0.0/0"]
+      description = "Allow all outbound traffic"
+    }
+  ]
+  description = <<-EOT
+    A list of maps of Security Group rules. 
+    The values of map is fully complated with `aws_security_group_rule` resource. 
+    To get more info see https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule .
+  EOT
+}
+
+variable "security_groups" {
   type        = list(string)
-  description = "List of Role ARNs of the worker nodes"
   default     = []
+  description = "A list of Security Group IDs to associate with EKS cluster."
 }
 
 variable "eks_cluster_service_role_arn" {
@@ -37,9 +62,9 @@ variable "eks_cluster_service_role_arn" {
   default     = null
 }
 
-variable "workers_security_group_ids" {
+variable "workers_role_arns" {
   type        = list(string)
-  description = "Security Group IDs of the worker nodes"
+  description = "List of Role ARNs of the worker nodes"
   default     = []
 }
 
