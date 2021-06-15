@@ -56,6 +56,12 @@ variable "security_groups" {
   description = "A list of Security Group IDs to associate with EKS cluster."
 }
 
+variable "eks_cluster_service_role_arn" {
+  type        = string
+  description = "The ARN of an externally created EKS service role to use, or leave blank to create one"
+  default     = null
+}
+
 variable "workers_role_arns" {
   type        = list(string)
   description = "List of Role ARNs of the worker nodes"
