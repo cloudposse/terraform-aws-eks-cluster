@@ -6,7 +6,7 @@ locals {
     provider_key_arn = local.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? join("", aws_kms_key.cluster.*.arn) : var.cluster_encryption_config_kms_key_id
   }
 
-  security_group_enabled = module.this.enabled && var.security_group_enabled
+  security_group_enabled = local.enabled && var.security_group_enabled
 }
 
 module "label" {
