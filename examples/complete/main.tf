@@ -86,7 +86,7 @@ module "eks_node_group" {
   version = "0.19.0"
 
   subnet_ids        = module.subnets.private_subnet_ids
-  cluster_name      = data.null_data_source.wait_for_cluster_and_kubernetes_configmap.outputs["cluster_name"]
+  cluster_name      = module.eks_cluster.eks_cluster_id
   instance_types    = var.instance_types
   desired_size      = var.desired_size
   min_size          = var.min_size
