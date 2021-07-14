@@ -183,28 +183,9 @@ usage: |2-
 
       kubernetes_version    = var.kubernetes_version
       oidc_provider_enabled = false
-      workers_role_arns     = [module.eks_workers.workers_role_arn]
 
-      security_group_rules = [
-        {
-          type                     = "egress"
-          from_port                = 0
-          to_port                  = 65535
-          protocol                 = "-1"
-          cidr_blocks              = ["0.0.0.0/0"]
-          source_security_group_id = null
-          description              = "Allow all outbound traffic"
-        },
-        {
-          type                     = "ingress"
-          from_port                = 0
-          to_port                  = 65535
-          protocol                 = "-1"
-          cidr_blocks              = []
-          source_security_group_id = module.eks_workers.security_group_id
-          description              = "Allow all inbound traffic from EKS workers Security Group"
-        }
-      ]
+      workers_security_group_ids   = [module.eks_workers.security_group_id]
+      workers_role_arns            = [module.eks_workers.workers_role_arn]
     }
   ```
 
@@ -279,36 +260,9 @@ usage: |2-
 
       kubernetes_version    = var.kubernetes_version
       oidc_provider_enabled = false
-      workers_role_arns     = [module.eks_workers.workers_role_arn, module.eks_workers_2.workers_role_arn]
 
-      security_group_rules = [
-        {
-          type                     = "egress"
-          from_port                = 0
-          to_port                  = 65535
-          protocol                 = "-1"
-          cidr_blocks              = ["0.0.0.0/0"]
-          source_security_group_id = null
-          description              = "Allow all outbound traffic"
-        },
-        {
-          type                     = "ingress"
-          from_port                = 0
-          to_port                  = 65535
-          protocol                 = "-1"
-          cidr_blocks              = []
-          source_security_group_id = module.eks_workers.security_group_id
-          description              = "Allow all inbound traffic from EKS workers Security Group"
-        },
-        {
-          type                     = "ingress"
-          from_port                = 0
-          to_port                  = 65535
-          protocol                 = "-1"
-          cidr_blocks              = []
-          source_security_group_id = module.eks_workers_2.security_group_id
-          description              = "Allow all inbound traffic from EKS workers Security Group"
-        }
+      workers_role_arns          = [module.eks_workers.workers_role_arn, module.eks_workers_2.workers_role_arn]
+      workers_security_group_ids = [module.eks_workers.security_group_id, module.eks_workers_2.security_group_id]
     }
   ```
 include:
@@ -331,5 +285,3 @@ contributors:
   homepage: https://github.com/osulli/
   avatar: https://avatars1.githubusercontent.com/u/46930728?v=4&s=144
   github: osulli
-- name: Vladimir Syromyatnikov
-  github: SweetOps

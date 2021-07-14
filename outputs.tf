@@ -1,16 +1,16 @@
 output "security_group_id" {
   description = "ID of the EKS cluster Security Group"
-  value       = module.security_group.id
+  value       = join("", aws_security_group.default.*.id)
 }
 
 output "security_group_arn" {
   description = "ARN of the EKS cluster Security Group"
-  value       = module.security_group.arn
+  value       = join("", aws_security_group.default.*.arn)
 }
 
 output "security_group_name" {
   description = "Name of the EKS cluster Security Group"
-  value       = module.security_group.name
+  value       = join("", aws_security_group.default.*.name)
 }
 
 output "eks_cluster_id" {
