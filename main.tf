@@ -46,7 +46,7 @@ resource "aws_eks_cluster" "default" {
   count                     = local.enabled ? 1 : 0
   name                      = module.label.id
   tags                      = module.label.tags
-  role_arn                  = local.eks_service_role
+  role_arn                  = local.eks_service_role_arn
   version                   = var.kubernetes_version
   enabled_cluster_log_types = var.enabled_cluster_log_types
 
@@ -71,6 +71,11 @@ resource "aws_eks_cluster" "default" {
   depends_on = [
     aws_iam_role_policy_attachment.amazon_eks_cluster_policy,
     aws_iam_role_policy_attachment.amazon_eks_service_policy,
+    aws_security_group.default,
+    aws_security_group_rule.egress,
+    aws_security_group_rule.ingress_cidr_blocks,
+    aws_security_group_rule.ingress_security_groups,
+    aws_security_group_rule.ingress_workers,
     aws_cloudwatch_log_group.default
   ]
 }

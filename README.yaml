@@ -60,16 +60,62 @@ introduction: |-
   - The module creates and automatically applies an authentication ConfigMap to allow the workers nodes to join the cluster and to add additional users/roles/accounts
 
   __NOTE:__ The module works with [Terraform Cloud](https://www.terraform.io/docs/cloud/index.html).
+  
+  __NOTE:__ Every Terraform module that provisions an EKS cluster has faced the challenge that access to the cluster
+  is partly controlled by a resource inside the cluster, a ConfigMap called `aws-auth`. You need to be able to access
+  the cluster through the Kubernetes API to modify the ConfigMap, because there is no AWS API for it. This presents
+  a problem: how do you authenticate to an API endpoint that you have not yet created?
+  
+  We use the Terraform Kubernetes provider to access the cluster, and it uses the same underlying library
+  that `kubectl` uses, so configuration is very similar. However, every kind of configuration we have tried
+  has failed at some point.
+  - After creating the EKS cluster, we can generate a "KUBECONFIG" file that configures access to it.
+  This works most of the time, but if the file was present and used as part of the configuration to create
+  the cluster, and then the file is deleted (as would happen in a CI system like Terraform Cloud), Terraform
+  would not cause the file to be regenerated in time use it to refresh its state and the "plan" phase will fail.
+  - An authentication token can be retrieved using the `aws_eks_cluster_auth` data source. Again, this works, as
+  long as the token does not expire while Terraform is running, and the token is refreshed during the "plan"
+  phase before trying to refresh the state. Unfortunately, failures of both types have been seen.
+  - An authentication token can be retrieved on demand by using the `exec` feature of the Kubernetes provider
+  to call `aws eks get-token`. This requires that `aws` be installed and available to Terraform and that it
+  has access to sufficient credentials to perform the authentication and is configured to use them.
+  
+  All of the above methods can face additional challenges when using `terraform import` to import
+  resources into the Terraform state. The KUBECONFG file is the most reliable, and probably what you
+  would want to use when importing objects if your usual method does not work. You will need to create
+  the file, of course, but that is easily done with `aws eks update-kubeconfig`.
+  
+  At the moment, the `exec` option appears to be the most reliable method, so we recommend using it if possible,
+  but because of the extra requirements it has, we use the data source as the default authentication method.
 
-  __NOTE:__ In `auth.tf`, we added `ignore_changes = [data["mapRoles"]]` to the `kubernetes_config_map` for the following reason:
+  __NOTE:__ We give you the `kubernetes_config_map_ignore_role_changes` option and default it to `true` for the following reasons:
   - We provision the EKS cluster and then the Kubernetes Auth ConfigMap to map additional roles/users/accounts to Kubernetes groups
   - Then we wait for the cluster to become available and for the ConfigMap to get provisioned (see `data "null_data_source" "wait_for_cluster_and_kubernetes_configmap"` in `examples/complete/main.tf`)
   - Then we provision a managed Node Group
   - Then EKS updates the Auth ConfigMap and adds worker roles to it (for the worker nodes to join the cluster)
-  - Since the ConfigMap is modified outside of Terraform state, Terraform wants to update it (remove the roles that EKS added) on each `plan/apply`
-
-  If you want to modify the Node Group (e.g. add more Node Groups to the cluster) or need to map other IAM roles to Kubernetes groups,
-  set the variable `kubernetes_config_map_ignore_role_changes` to `false` and re-provision the module. Then set `kubernetes_config_map_ignore_role_changes` back to `true`.
+  - Since the ConfigMap is modified outside of Terraform state, Terraform wants to update it
+  - If you update the ConfigMap without including the worker nodes EKS added, you will disconnect them from the cluster
+  
+  However, it is possible capture the changes and apply them (example to be publshed later), so we make this optional.
+  If you do not ignore changes then you have no problem with making future intentional changes.
+  
+  The downside of having `kubernetes_config_map_ignore_role_changes` set to true is that if you later want to make changes,
+  such as adding other IAM roles to Kubernetes groups, you cannot do so via Terraform, because the role changes are ignored.
+  Because of Terraform restrictions, you cannot simply change `kubernetes_config_map_ignore_role_changes` from `true`
+  to `false`, apply changes, and set it back to `true` again. Terraform does not allow the
+  "ignore" settings to be changed on a resource, so `kubernetes_config_map_ignore_role_changes` is implemented as
+  2 different resources, one with ignore settings and one without. If you want to switch from ignoring to not ignoring,
+  or vice versa, you must manually move the `aws_auth` resource in the terraform state. Change the setting of
+  `kubernetes_config_map_ignore_role_changes`, run `terraform plan`, and you will see that an `aws_auth` resource
+  is planned to be destroyed and another one is planned to be created. Use `terraform state mv` to move the destroyed
+  resource to the created resource "address", something like
+  ```
+  terraform state mv 'module.eks_cluster.kubernetes_config_map.aws_auth_ignore_changes[0]' 'module.eks_cluster.kubernetes_config_map.aws_auth[0]'
+  ```
+  Then run `terraform plan` again and you should see only your desired changes made "in place". After applying your
+  changes, if you want to set `kubernetes_config_map_ignore_role_changes` back to `true`, you will again need to use
+  `terraform state mv` to move the `auth-map` back to its old "address".
+  
 usage: |2-
 
   For a complete example, see [examples/complete](examples/complete).
@@ -94,114 +140,99 @@ usage: |2-
       name       = var.name
       stage      = var.stage
       delimiter  = var.delimiter
-      attributes = compact(concat(var.attributes, list("cluster")))
+      attributes = compact(concat(var.attributes, ["cluster"]))
       tags       = var.tags
     }
 
     locals {
-      # The usage of the specific kubernetes.io/cluster/* resource tags below are required
+      # Prior to Kubernetes 1.19, the usage of the specific kubernetes.io/cluster/* resource tags below are required
       # for EKS and Kubernetes to discover and manage networking resources
       # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#base-vpc-networking
-      tags = merge(var.tags, map("kubernetes.io/cluster/${module.label.id}", "shared"))
-
-      # Unfortunately, most_recent (https://github.com/cloudposse/terraform-aws-eks-workers/blob/34a43c25624a6efb3ba5d2770a601d7cb3c0d391/main.tf#L141)
-      # variable does not work as expected, if you are not going to use custom AMI you should
-      # enforce usage of eks_worker_ami_name_filter variable to set the right kubernetes version for EKS workers,
-      # otherwise the first version of Kubernetes supported by AWS (v1.11) for EKS workers will be used, but
-      # EKS control plane will use the version specified by kubernetes_version variable.
-      eks_worker_ami_name_filter = "amazon-eks-node-${var.kubernetes_version}*"
+      tags = { "kubernetes.io/cluster/${module.label.id}" = "shared" }
     }
 
     module "vpc" {
       source = "cloudposse/vpc/aws"
       # Cloud Posse recommends pinning every module to a specific version
       # version     = "x.x.x"
-      namespace  = var.namespace
-      stage      = var.stage
-      name       = var.name
-      attributes = var.attributes
       cidr_block = "172.16.0.0/16"
-      tags       = local.tags
+
+      tags    = local.tags
+      context = module.label.context
     }
 
     module "subnets" {
       source = "cloudposse/dynamic-subnets/aws"
       # Cloud Posse recommends pinning every module to a specific version
       # version     = "x.x.x"
+  
       availability_zones   = var.availability_zones
-      namespace            = var.namespace
-      stage                = var.stage
-      name                 = var.name
-      attributes           = var.attributes
       vpc_id               = module.vpc.vpc_id
       igw_id               = module.vpc.igw_id
       cidr_block           = module.vpc.vpc_cidr_block
-      nat_gateway_enabled  = false
+      nat_gateway_enabled  = true
       nat_instance_enabled = false
-      tags                 = local.tags
+
+      tags    = local.tags
+      context = module.label.context
     }
 
-    module "eks_workers" {
-      source = "cloudposse/eks-workers/aws"
+    module "eks_node_group" {
+      source = "cloudposse/eks-node-group/aws"
       # Cloud Posse recommends pinning every module to a specific version
       # version     = "x.x.x"
-      namespace                          = var.namespace
-      stage                              = var.stage
-      name                               = var.name
-      attributes                         = var.attributes
-      tags                               = var.tags
-      instance_type                      = var.instance_type
-      eks_worker_ami_name_filter          = local.eks_worker_ami_name_filter
-      vpc_id                             = module.vpc.vpc_id
+  
+      instance_types                     = [var.instance_type]
       subnet_ids                         = module.subnets.public_subnet_ids
       health_check_type                  = var.health_check_type
       min_size                           = var.min_size
       max_size                           = var.max_size
-      wait_for_capacity_timeout          = var.wait_for_capacity_timeout
-      cluster_name                       = module.label.id
-      cluster_endpoint                   = module.eks_cluster.eks_cluster_endpoint
-      cluster_certificate_authority_data = module.eks_cluster.eks_cluster_certificate_authority_data
-      cluster_security_group_id          = module.eks_cluster.security_group_id
+      cluster_name                       = module.eks_cluster.eks_cluster_id
 
-      # Auto-scaling policies and CloudWatch metric alarms
-      autoscaling_policies_enabled           = var.autoscaling_policies_enabled
-      cpu_utilization_high_threshold_percent = var.cpu_utilization_high_threshold_percent
-      cpu_utilization_low_threshold_percent  = var.cpu_utilization_low_threshold_percent
+      # Enable the Kubernetes cluster auto-scaler to find the auto-scaling group
+      cluster_autoscaler_enabled = var.autoscaling_policies_enabled
+
+      context = module.label.context
+  
+      # Ensure the cluster is fully created before trying to add the node group
+      module_depends_on = module.eks_cluster.kubernetes_config_map_id
     }
 
     module "eks_cluster" {
       source = "cloudposse/eks-cluster/aws"
       # Cloud Posse recommends pinning every module to a specific version
       # version     = "x.x.x"
-      namespace  = var.namespace
-      stage      = var.stage
-      name       = var.name
-      attributes = var.attributes
-      tags       = var.tags
+
       vpc_id     = module.vpc.vpc_id
       subnet_ids = module.subnets.public_subnet_ids
 
       kubernetes_version    = var.kubernetes_version
-      oidc_provider_enabled = false
+      oidc_provider_enabled = true
 
-      workers_security_group_ids   = [module.eks_workers.security_group_id]
-      workers_role_arns            = [module.eks_workers.workers_role_arn]
+      context = module.label.context
     }
   ```
 
   Module usage with two worker groups:
 
   ```hcl
+    locals {
+      # Unfortunately, the `aws_ami` data source attribute `most_recent` (https://github.com/cloudposse/terraform-aws-eks-workers/blob/34a43c25624a6efb3ba5d2770a601d7cb3c0d391/main.tf#L141)
+      # does not work as you might expect. If you are not going to use a custom AMI you should
+      # use the `eks_worker_ami_name_filter` variable to set the right kubernetes version for EKS workers,
+      # otherwise the first version of Kubernetes supported by AWS (v1.11) for EKS workers will be selected, but
+      # EKS control plane will ignore it to use one that matches the version specified by the `kubernetes_version` variable.
+      eks_worker_ami_name_filter = "amazon-eks-node-${var.kubernetes_version}*"
+    }
+
     module "eks_workers" {
       source = "cloudposse/eks-workers/aws"
       # Cloud Posse recommends pinning every module to a specific version
       # version     = "x.x.x"
-      namespace                          = var.namespace
-      stage                              = var.stage
-      name                               = "small"
-      attributes                         = var.attributes
-      tags                               = var.tags
+
+      attributes                         = ["small"]
       instance_type                      = "t3.small"
+      eks_worker_ami_name_filter         = local.eks_worker_ami_name_filter
       vpc_id                             = module.vpc.vpc_id
       subnet_ids                         = module.subnets.public_subnet_ids
       health_check_type                  = var.health_check_type
@@ -217,18 +248,18 @@ usage: |2-
       autoscaling_policies_enabled           = var.autoscaling_policies_enabled
       cpu_utilization_high_threshold_percent = var.cpu_utilization_high_threshold_percent
       cpu_utilization_low_threshold_percent  = var.cpu_utilization_low_threshold_percent
+  
+      context = module.label.context
     }
 
     module "eks_workers_2" {
       source = "cloudposse/eks-workers/aws"
       # Cloud Posse recommends pinning every module to a specific version
       # version     = "x.x.x"
-      namespace                          = var.namespace
-      stage                              = var.stage
-      name                               = "medium"
-      attributes                         = var.attributes
-      tags                               = var.tags
+
+      attributes                         = ["medium"]
       instance_type                      = "t3.medium"
+      eks_worker_ami_name_filter         = local.eks_worker_ami_name_filter
       vpc_id                             = module.vpc.vpc_id
       subnet_ids                         = module.subnets.public_subnet_ids
       health_check_type                  = var.health_check_type
@@ -244,17 +275,15 @@ usage: |2-
       autoscaling_policies_enabled           = var.autoscaling_policies_enabled
       cpu_utilization_high_threshold_percent = var.cpu_utilization_high_threshold_percent
       cpu_utilization_low_threshold_percent  = var.cpu_utilization_low_threshold_percent
+
+      context = module.label.context
     }
 
     module "eks_cluster" {
       source = "cloudposse/eks-cluster/aws"
       # Cloud Posse recommends pinning every module to a specific version
       # version     = "x.x.x"
-      namespace  = var.namespace
-      stage      = var.stage
-      name       = var.name
-      attributes = var.attributes
-      tags       = var.tags
+
       vpc_id     = module.vpc.vpc_id
       subnet_ids = module.subnets.public_subnet_ids
 
@@ -263,6 +292,8 @@ usage: |2-
 
       workers_role_arns          = [module.eks_workers.workers_role_arn, module.eks_workers_2.workers_role_arn]
       workers_security_group_ids = [module.eks_workers.security_group_id, module.eks_workers_2.security_group_id]
+  
+      context = module.label.context
     }
   ```
 include:

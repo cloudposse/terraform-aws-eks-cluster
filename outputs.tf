@@ -55,7 +55,7 @@ output "eks_cluster_managed_security_group_id" {
 
 output "eks_cluster_role_arn" {
   description = "ARN of the EKS cluster IAM role"
-  value       = local.eks_service_role
+  value       = local.eks_service_role_arn
 }
 
 output "kubernetes_config_map_id" {
