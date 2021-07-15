@@ -219,7 +219,7 @@ variable "kubeconfig_path" {
 
 variable "kube_data_auth_enabled" {
   type        = bool
-  default     = false
+  default     = true
   description = <<-EOT
     If `true`, use an `aws_eks_cluster_auth` data source to authenticate to the EKS cluster.
     Disabled by `kubeconfig_path_enabled`, overrides `kube_exec_auth_enabled`.
@@ -228,7 +228,7 @@ variable "kube_data_auth_enabled" {
 
 variable "kube_exec_auth_enabled" {
   type        = bool
-  default     = true
+  default     = false
   description = <<-EOT
     If `true`, execute `aws eks get-token` to authenticate to the EKS cluster.
     Disabled by `kubeconfig_path_enabled` or `kube_exec_auth_enabled`.
