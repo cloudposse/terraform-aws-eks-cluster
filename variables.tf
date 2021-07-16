@@ -271,6 +271,9 @@ variable "dummy_kubeapi_server" {
   default     = "https://jsonplaceholder.typicode.com"
   description = <<-EOT
     URL of a dummy API server for the Kubernetes server to use when the real one is unknown.
-    This is a workaround to ignore connection failures when the results do not matter.
+    This is a workaround to ignore connection failures that break Terraform even though the results do not matter.
+    You can disable it by setting it to `null`; however, as of Kubernetes provider v2.3.2, doing so _will_
+    cause Terraform to fail in several situations unless you provide a valid `kubeconfig` file
+    via `kubeconfig_path` and set `kubeconfig_path_enabled` to `true`.
     EOT
 }
