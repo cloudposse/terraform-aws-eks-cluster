@@ -201,8 +201,8 @@ variable "permissions_boundary" {
 #
 # The reason there are so many "enabled" inputs rather than automatically
 # detecting whether or not they are enabled based on the value of the input
-# is that logic based in input values requires the values be known during
-# the "plan" phase of Terraform, which often causes problems.
+# is that any logic based on input values requires the values to be known during
+# the "plan" phase of Terraform, and often they are not, which causes problems.
 #
 
 variable "kubeconfig_path_enabled" {
@@ -222,7 +222,7 @@ variable "kube_data_auth_enabled" {
   default     = true
   description = <<-EOT
     If `true`, use an `aws_eks_cluster_auth` data source to authenticate to the EKS cluster.
-    Disabled by `kubeconfig_path_enabled`, overrides `kube_exec_auth_enabled`.
+    Disabled by `kubeconfig_path_enabled` or `kube_exec_auth_enabled`.
     EOT
 }
 
@@ -230,8 +230,8 @@ variable "kube_exec_auth_enabled" {
   type        = bool
   default     = false
   description = <<-EOT
-    If `true`, execute `aws eks get-token` to authenticate to the EKS cluster.
-    Disabled by `kubeconfig_path_enabled` or `kube_exec_auth_enabled`.
+    If `true`, use the Kubernetes provider `exec` feature to execute `aws eks get-token` to authenticate to the EKS cluster.
+    Disabled by `kubeconfig_path_enabled`, overrides `kube_data_auth_enabled`.
     EOT
 }
 
@@ -245,7 +245,7 @@ variable "kube_exec_auth_role_arn" {
 variable "kube_exec_auth_role_arn_enabled" {
   type        = bool
   default     = false
-  description = "If true, pass `kube_exec_auth_role_arn` as the role ARN to `aws eks get-token`"
+  description = "If `true`, pass `kube_exec_auth_role_arn` as the role ARN to `aws eks get-token`"
 }
 
 variable "kube_exec_auth_aws_profile" {
@@ -257,13 +257,13 @@ variable "kube_exec_auth_aws_profile" {
 variable "kube_exec_auth_aws_profile_enabled" {
   type        = bool
   default     = false
-  description = "If true, pass `kube_exec_auth_aws_profile` as the `profile` to `aws eks get-token`"
+  description = "If `true`, pass `kube_exec_auth_aws_profile` as the `profile` to `aws eks get-token`"
 }
 
 variable "aws_auth_yaml_strip_quotes" {
   type        = bool
   default     = true
-  description = "If true, remove double quotes from the generated aws-auth ConfigMap YAML to reduce suprious diffs in plans"
+  description = "If true, remove double quotes from the generated aws-auth ConfigMap YAML to reduce spurious diffs in plans"
 }
 
 variable "dummy_kubeapi_server" {

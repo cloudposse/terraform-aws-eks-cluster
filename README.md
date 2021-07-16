@@ -81,15 +81,15 @@ a problem: how do you authenticate to an API endpoint that you have not yet crea
 We use the Terraform Kubernetes provider to access the cluster, and it uses the same underlying library
 that `kubectl` uses, so configuration is very similar. However, every kind of configuration we have tried
 has failed at some point.
-- After creating the EKS cluster, we can generate a "KUBECONFIG" file that configures access to it.
+- After creating the EKS cluster, we can generate a `kubeconfig` file that configures access to it.
 This works most of the time, but if the file was present and used as part of the configuration to create
 the cluster, and then the file is deleted (as would happen in a CI system like Terraform Cloud), Terraform
-would not cause the file to be regenerated in time use it to refresh its state and the "plan" phase will fail.
+would not cause the file to be regenerated in time to use it to refresh Terraform's state and the "plan" phase will fail.
 - An authentication token can be retrieved using the `aws_eks_cluster_auth` data source. Again, this works, as
 long as the token does not expire while Terraform is running, and the token is refreshed during the "plan"
 phase before trying to refresh the state. Unfortunately, failures of both types have been seen.
 - An authentication token can be retrieved on demand by using the `exec` feature of the Kubernetes provider
-to call `aws eks get-token`. This requires that `aws` be installed and available to Terraform and that it
+to call `aws eks get-token`. This requires that the `aws` CLI be installed and available to Terraform and that it
 has access to sufficient credentials to perform the authentication and is configured to use them.
 
 All of the above methods can face additional challenges when using `terraform import` to import
@@ -101,15 +101,18 @@ At the moment, the `exec` option appears to be the most reliable method, so we r
 but because of the extra requirements it has, we use the data source as the default authentication method.
 
 __NOTE:__ We give you the `kubernetes_config_map_ignore_role_changes` option and default it to `true` for the following reasons:
-- We provision the EKS cluster and then the Kubernetes Auth ConfigMap to map additional roles/users/accounts to Kubernetes groups
-- Then we wait for the cluster to become available and for the ConfigMap to get provisioned (see `data "null_data_source" "wait_for_cluster_and_kubernetes_configmap"` in `examples/complete/main.tf`)
-- Then we provision a managed Node Group
+- We provision the EKS cluster
+- Then we wait for the cluster to become available (see `null_resource.wait_for_cluster` in [auth.tf](auth.tf)
+- Then we provision the Kubernetes Auth ConfigMap to map and add additional roles/users/accounts to Kubernetes groups
+- That is all we do in this module, but after that, we expect you to use [terraform-aws-eks-node-group](https://github.com/cloudposse/terraform-aws-eks-node-group)
+to provision a managed Node Group
 - Then EKS updates the Auth ConfigMap and adds worker roles to it (for the worker nodes to join the cluster)
-- Since the ConfigMap is modified outside of Terraform state, Terraform wants to update it
-- If you update the ConfigMap without including the worker nodes EKS added, you will disconnect them from the cluster
+- Since the ConfigMap is modified outside of Terraform state, Terraform wants to update it to to remove the worker roles EKS added
+- If you update the ConfigMap without including the worker nodes that EKS added, you will disconnect them from the cluster
 
-However, it is possible capture the changes and apply them (example to be publshed later), so we make this optional.
-If you do not ignore changes then you have no problem with making future intentional changes.
+However, it is possible to get the worker node roles from the terraform-aws-eks-node-group via Terraform "remote state"
+and include them with any other roles you want to add (example code to be published later), so we make
+ignoring the role changes optional. If you do not ignore changes then you will have no problem with making future intentional changes.
 
 The downside of having `kubernetes_config_map_ignore_role_changes` set to true is that if you later want to make changes,
 such as adding other IAM roles to Kubernetes groups, you cannot do so via Terraform, because the role changes are ignored.
@@ -424,7 +427,7 @@ Available targets:
 | <a name="input_allowed_security_groups"></a> [allowed\_security\_groups](#input\_allowed\_security\_groups) | List of Security Group IDs to be allowed to connect to the EKS cluster | `list(string)` | `[]` | no |
 | <a name="input_apply_config_map_aws_auth"></a> [apply\_config\_map\_aws\_auth](#input\_apply\_config\_map\_aws\_auth) | Whether to apply the ConfigMap to allow worker nodes to join the EKS cluster and allow additional users, accounts and roles to acces the cluster | `bool` | `true` | no |
 | <a name="input_attributes"></a> [attributes](#input\_attributes) | Additional attributes (e.g. `1`) | `list(string)` | `[]` | no |
-| <a name="input_aws_auth_yaml_strip_quotes"></a> [aws\_auth\_yaml\_strip\_quotes](#input\_aws\_auth\_yaml\_strip\_quotes) | If true, remove double quotes from the generated aws-auth ConfigMap YAML to reduce suprious diffs in plans | `bool` | `true` | no |
+| <a name="input_aws_auth_yaml_strip_quotes"></a> [aws\_auth\_yaml\_strip\_quotes](#input\_aws\_auth\_yaml\_strip\_quotes) | If true, remove double quotes from the generated aws-auth ConfigMap YAML to reduce spurious diffs in plans | `bool` | `true` | no |
 | <a name="input_cluster_encryption_config_enabled"></a> [cluster\_encryption\_config\_enabled](#input\_cluster\_encryption\_config\_enabled) | Set to `true` to enable Cluster Encryption Configuration | `bool` | `true` | no |
 | <a name="input_cluster_encryption_config_kms_key_deletion_window_in_days"></a> [cluster\_encryption\_config\_kms\_key\_deletion\_window\_in\_days](#input\_cluster\_encryption\_config\_kms\_key\_deletion\_window\_in\_days) | Cluster Encryption Config KMS Key Resource argument - key deletion windows in days post destruction | `number` | `10` | no |
 | <a name="input_cluster_encryption_config_kms_key_enable_key_rotation"></a> [cluster\_encryption\_config\_kms\_key\_enable\_key\_rotation](#input\_cluster\_encryption\_config\_kms\_key\_enable\_key\_rotation) | Cluster Encryption Config KMS Key Resource argument - enable kms key rotation | `bool` | `true` | no |
@@ -443,12 +446,12 @@ Available targets:
 | <a name="input_endpoint_public_access"></a> [endpoint\_public\_access](#input\_endpoint\_public\_access) | Indicates whether or not the Amazon EKS public API server endpoint is enabled. Default to AWS EKS resource and it is true | `bool` | `true` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment, e.g. 'uw2', 'us-west-2', OR 'prod', 'staging', 'dev', 'UAT' | `string` | `null` | no |
 | <a name="input_id_length_limit"></a> [id\_length\_limit](#input\_id\_length\_limit) | Limit `id` to this many characters (minimum 6).<br>Set to `0` for unlimited length.<br>Set to `null` for default, which is `0`.<br>Does not affect `id_full`. | `number` | `null` | no |
-| <a name="input_kube_data_auth_enabled"></a> [kube\_data\_auth\_enabled](#input\_kube\_data\_auth\_enabled) | If `true`, use an `aws_eks_cluster_auth` data source to authenticate to the EKS cluster.<br>Disabled by `kubeconfig_path_enabled`, overrides `kube_exec_auth_enabled`. | `bool` | `true` | no |
+| <a name="input_kube_data_auth_enabled"></a> [kube\_data\_auth\_enabled](#input\_kube\_data\_auth\_enabled) | If `true`, use an `aws_eks_cluster_auth` data source to authenticate to the EKS cluster.<br>Disabled by `kubeconfig_path_enabled` or `kube_exec_auth_enabled`. | `bool` | `true` | no |
 | <a name="input_kube_exec_auth_aws_profile"></a> [kube\_exec\_auth\_aws\_profile](#input\_kube\_exec\_auth\_aws\_profile) | The AWS config profile for `aws eks get-token` to use | `string` | `""` | no |
-| <a name="input_kube_exec_auth_aws_profile_enabled"></a> [kube\_exec\_auth\_aws\_profile\_enabled](#input\_kube\_exec\_auth\_aws\_profile\_enabled) | If true, pass `kube_exec_auth_aws_profile` as the `profile` to `aws eks get-token` | `bool` | `false` | no |
-| <a name="input_kube_exec_auth_enabled"></a> [kube\_exec\_auth\_enabled](#input\_kube\_exec\_auth\_enabled) | If `true`, execute `aws eks get-token` to authenticate to the EKS cluster.<br>Disabled by `kubeconfig_path_enabled` or `kube_exec_auth_enabled`. | `bool` | `false` | no |
+| <a name="input_kube_exec_auth_aws_profile_enabled"></a> [kube\_exec\_auth\_aws\_profile\_enabled](#input\_kube\_exec\_auth\_aws\_profile\_enabled) | If `true`, pass `kube_exec_auth_aws_profile` as the `profile` to `aws eks get-token` | `bool` | `false` | no |
+| <a name="input_kube_exec_auth_enabled"></a> [kube\_exec\_auth\_enabled](#input\_kube\_exec\_auth\_enabled) | If `true`, use the Kubernetes provider `exec` feature to execute `aws eks get-token` to authenticate to the EKS cluster.<br>Disabled by `kubeconfig_path_enabled`, overrides `kube_data_auth_enabled`. | `bool` | `false` | no |
 | <a name="input_kube_exec_auth_role_arn"></a> [kube\_exec\_auth\_role\_arn](#input\_kube\_exec\_auth\_role\_arn) | The role ARN for `aws eks get-token` to use | `string` | `""` | no |
-| <a name="input_kube_exec_auth_role_arn_enabled"></a> [kube\_exec\_auth\_role\_arn\_enabled](#input\_kube\_exec\_auth\_role\_arn\_enabled) | If true, pass `kube_exec_auth_role_arn` as the role ARN to `aws eks get-token` | `bool` | `false` | no |
+| <a name="input_kube_exec_auth_role_arn_enabled"></a> [kube\_exec\_auth\_role\_arn\_enabled](#input\_kube\_exec\_auth\_role\_arn\_enabled) | If `true`, pass `kube_exec_auth_role_arn` as the role ARN to `aws eks get-token` | `bool` | `false` | no |
 | <a name="input_kubeconfig_path"></a> [kubeconfig\_path](#input\_kubeconfig\_path) | The Kubernetes provider `config_path` setting to use when `kubeconfig_path_enabled` is `true` | `string` | `""` | no |
 | <a name="input_kubeconfig_path_enabled"></a> [kubeconfig\_path\_enabled](#input\_kubeconfig\_path\_enabled) | If `true`, configure the Kubernetes provider with `kubeconfig_path` and use it for authenticating to the EKS cluster | `bool` | `false` | no |
 | <a name="input_kubernetes_config_map_ignore_role_changes"></a> [kubernetes\_config\_map\_ignore\_role\_changes](#input\_kubernetes\_config\_map\_ignore\_role\_changes) | Set to `true` to ignore IAM role changes in the Kubernetes Auth ConfigMap | `bool` | `true` | no |
