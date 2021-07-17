@@ -14,7 +14,7 @@ locals {
   # The usage of the specific kubernetes.io/cluster/* resource tags below are required
   # for EKS and Kubernetes to discover and manage networking resources
   # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#base-vpc-networking
-  tags = merge(module.label.tags, map("kubernetes.io/cluster/${module.label.id}", "shared"))
+  tags = { "kubernetes.io/cluster/${module.label.id}" = "shared" }
 
   # Unfortunately, most_recent (https://github.com/cloudposse/terraform-aws-eks-workers/blob/34a43c25624a6efb3ba5d2770a601d7cb3c0d391/main.tf#L141)
   # variable does not work as expected, if you are not going to use custom ami you should
@@ -81,30 +81,21 @@ module "eks_cluster" {
   context = module.this.context
 }
 
-# Ensure ordering of resource creation to eliminate the race conditions when applying the Kubernetes Auth ConfigMap.
-# Do not create Node Group before the EKS cluster is created and the `aws-auth` Kubernetes ConfigMap is applied.
-# Otherwise, EKS will create the ConfigMap first and add the managed node role ARNs to it,
-# and the kubernetes provider will throw an error that the ConfigMap already exists (because it can't update the map, only create it).
-# If we create the ConfigMap first (to add additional roles/users/accounts), EKS will just update it by adding the managed node role ARNs.
-data "null_data_source" "wait_for_cluster_and_kubernetes_configmap" {
-  inputs = {
-    cluster_name             = module.eks_cluster.eks_cluster_id
-    kubernetes_config_map_id = module.eks_cluster.kubernetes_config_map_id
-  }
-}
-
 module "eks_node_group" {
   source  = "cloudposse/eks-node-group/aws"
-  version = "0.19.0"
+  version = "0.20.0"
 
   subnet_ids        = module.subnets.private_subnet_ids
-  cluster_name      = data.null_data_source.wait_for_cluster_and_kubernetes_configmap.outputs["cluster_name"]
+  cluster_name      = module.eks_cluster.eks_cluster_id
   instance_types    = var.instance_types
   desired_size      = var.desired_size
   min_size          = var.min_size
   max_size          = var.max_size
   kubernetes_labels = var.kubernetes_labels
   disk_size         = var.disk_size
+
+  # Prevent the node groups from being created before the Kubernetes aws-auth ConfigMap
+  module_depends_on = module.eks_cluster.kubernetes_config_map_id
 
   context = module.this.context
 }

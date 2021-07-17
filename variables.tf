@@ -13,58 +13,43 @@ variable "subnet_ids" {
   type        = list(string)
 }
 
-variable "security_group_enabled" {
-  type        = bool
-  description = "Whether to create default Security Group for EKS cluster."
-  default     = true
-}
-
-variable "security_group_description" {
-  type        = string
-  default     = "Security Group for EKS cluster"
-  description = "The Security Group description."
-}
-
-variable "security_group_use_name_prefix" {
-  type        = bool
-  default     = false
-  description = "Whether to create a default Security Group with unique name beginning with the normalized prefix."
-}
-
-variable "security_group_rules" {
-  type = list(any)
-  default = [
-    {
-      type        = "egress"
-      from_port   = 0
-      to_port     = 65535
-      protocol    = "-1"
-      cidr_blocks = ["0.0.0.0/0"]
-      description = "Allow all outbound traffic"
-    }
-  ]
-  description = <<-EOT
-    A list of maps of Security Group rules. 
-    The values of map is fully complated with `aws_security_group_rule` resource. 
-    To get more info see https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule .
-  EOT
-}
-
-variable "security_groups" {
+variable "allowed_security_groups" {
   type        = list(string)
   default     = []
-  description = "A list of Security Group IDs to associate with EKS cluster."
+  description = "List of Security Group IDs to be allowed to connect to the EKS cluster"
+}
+
+variable "allowed_cidr_blocks" {
+  type        = list(string)
+  default     = []
+  description = "List of CIDR blocks to be allowed to connect to the EKS cluster"
+}
+
+variable "create_eks_service_role" {
+  type        = bool
+  default     = true
+  description = "Set `false` to use existing `eks_cluster_service_role_arn` instead of creating one"
 }
 
 variable "eks_cluster_service_role_arn" {
   type        = string
-  description = "The ARN of an externally created EKS service role to use, or leave blank to create one"
+  description = <<-EOT
+    The ARN of an IAM role for the EKS cluster to use that provides permissions
+    for the Kubernetes control plane to perform needed AWS API operations.
+    Required if `create_eks_service_role` is `false`, ignored otherwise.
+    EOT
   default     = null
 }
 
 variable "workers_role_arns" {
   type        = list(string)
   description = "List of Role ARNs of the worker nodes"
+  default     = []
+}
+
+variable "workers_security_group_ids" {
+  type        = list(string)
+  description = "Security Group IDs of the worker nodes"
   default     = []
 }
 
@@ -204,4 +189,91 @@ variable "permissions_boundary" {
   type        = string
   default     = null
   description = "If provided, all IAM roles will be created with this permissions boundary attached."
+}
+
+##################
+# All the following variables are just about configuring the Kubernetes provider
+# to be able to modify the aws-auth ConfigMap. Once EKS provides a normal
+# AWS API for modifying it, we can do away with all of this.
+#
+# The reason there are so many options is because at various times, each
+# one of them has had problems, so we give you a choice.
+#
+# The reason there are so many "enabled" inputs rather than automatically
+# detecting whether or not they are enabled based on the value of the input
+# is that any logic based on input values requires the values to be known during
+# the "plan" phase of Terraform, and often they are not, which causes problems.
+#
+
+variable "kubeconfig_path_enabled" {
+  type        = bool
+  default     = false
+  description = "If `true`, configure the Kubernetes provider with `kubeconfig_path` and use it for authenticating to the EKS cluster"
+}
+
+variable "kubeconfig_path" {
+  type        = string
+  default     = ""
+  description = "The Kubernetes provider `config_path` setting to use when `kubeconfig_path_enabled` is `true`"
+}
+
+variable "kube_data_auth_enabled" {
+  type        = bool
+  default     = true
+  description = <<-EOT
+    If `true`, use an `aws_eks_cluster_auth` data source to authenticate to the EKS cluster.
+    Disabled by `kubeconfig_path_enabled` or `kube_exec_auth_enabled`.
+    EOT
+}
+
+variable "kube_exec_auth_enabled" {
+  type        = bool
+  default     = false
+  description = <<-EOT
+    If `true`, use the Kubernetes provider `exec` feature to execute `aws eks get-token` to authenticate to the EKS cluster.
+    Disabled by `kubeconfig_path_enabled`, overrides `kube_data_auth_enabled`.
+    EOT
+}
+
+
+variable "kube_exec_auth_role_arn" {
+  type        = string
+  default     = ""
+  description = "The role ARN for `aws eks get-token` to use"
+}
+
+variable "kube_exec_auth_role_arn_enabled" {
+  type        = bool
+  default     = false
+  description = "If `true`, pass `kube_exec_auth_role_arn` as the role ARN to `aws eks get-token`"
+}
+
+variable "kube_exec_auth_aws_profile" {
+  type        = string
+  default     = ""
+  description = "The AWS config profile for `aws eks get-token` to use"
+}
+
+variable "kube_exec_auth_aws_profile_enabled" {
+  type        = bool
+  default     = false
+  description = "If `true`, pass `kube_exec_auth_aws_profile` as the `profile` to `aws eks get-token`"
+}
+
+variable "aws_auth_yaml_strip_quotes" {
+  type        = bool
+  default     = true
+  description = "If true, remove double quotes from the generated aws-auth ConfigMap YAML to reduce spurious diffs in plans"
+}
+
+variable "dummy_kubeapi_server" {
+  type        = string
+  default     = "https://jsonplaceholder.typicode.com"
+  description = <<-EOT
+    URL of a dummy API server for the Kubernetes server to use when the real one is unknown.
+    This is a workaround to ignore connection failures that break Terraform even though the results do not matter.
+    You can disable it by setting it to `null`; however, as of Kubernetes provider v2.3.2, doing so _will_
+    cause Terraform to fail in several situations unless you provide a valid `kubeconfig` file
+    via `kubeconfig_path` and set `kubeconfig_path_enabled` to `true`.
+    EOT
 }

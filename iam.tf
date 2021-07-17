@@ -1,5 +1,11 @@
+locals {
+  create_eks_service_role = local.enabled && var.create_eks_service_role
+
+  eks_service_role_arn = local.create_eks_service_role ? join("", aws_iam_role.default.*.arn) : var.eks_cluster_service_role_arn
+}
+
 data "aws_iam_policy_document" "assume_role" {
-  count = local.enabled ? 1 : 0
+  count = local.create_eks_service_role ? 1 : 0
 
   statement {
     effect  = "Allow"
@@ -12,14 +18,9 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 
-locals {
-  eks_service_role = var.eks_cluster_service_role_arn != null ? var.eks_cluster_service_role_arn : join("", aws_iam_role.default.*.arn)
-
-  create_eks_service_role = local.enabled && var.eks_cluster_service_role_arn == null
-}
-
 resource "aws_iam_role" "default" {
-  count                = local.create_eks_service_role ? 1 : 0
+  count = local.create_eks_service_role ? 1 : 0
+
   name                 = module.label.id
   assume_role_policy   = join("", data.aws_iam_policy_document.assume_role.*.json)
   tags                 = module.label.tags
@@ -27,13 +28,15 @@ resource "aws_iam_role" "default" {
 }
 
 resource "aws_iam_role_policy_attachment" "amazon_eks_cluster_policy" {
-  count      = local.create_eks_service_role ? 1 : 0
+  count = local.create_eks_service_role ? 1 : 0
+
   policy_arn = format("arn:%s:iam::aws:policy/AmazonEKSClusterPolicy", join("", data.aws_partition.current.*.partition))
   role       = join("", aws_iam_role.default.*.name)
 }
 
 resource "aws_iam_role_policy_attachment" "amazon_eks_service_policy" {
-  count      = local.create_eks_service_role ? 1 : 0
+  count = local.create_eks_service_role ? 1 : 0
+
   policy_arn = format("arn:%s:iam::aws:policy/AmazonEKSServicePolicy", join("", data.aws_partition.current.*.partition))
   role       = join("", aws_iam_role.default.*.name)
 }
@@ -59,7 +62,8 @@ data "aws_iam_policy_document" "cluster_elb_service_role" {
 }
 
 resource "aws_iam_role_policy" "cluster_elb_service_role" {
-  count  = local.create_eks_service_role ? 1 : 0
+  count = local.create_eks_service_role ? 1 : 0
+
   name   = module.label.id
   role   = join("", aws_iam_role.default.*.name)
   policy = join("", data.aws_iam_policy_document.cluster_elb_service_role.*.json)

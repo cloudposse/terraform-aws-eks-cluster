@@ -5,8 +5,6 @@ locals {
     resources        = var.cluster_encryption_config_resources
     provider_key_arn = local.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? join("", aws_kms_key.cluster.*.arn) : var.cluster_encryption_config_kms_key_id
   }
-
-  security_group_enabled = local.enabled && var.security_group_enabled
 }
 
 module "label" {
@@ -48,7 +46,7 @@ resource "aws_eks_cluster" "default" {
   count                     = local.enabled ? 1 : 0
   name                      = module.label.id
   tags                      = module.label.tags
-  role_arn                  = local.eks_service_role
+  role_arn                  = local.eks_service_role_arn
   version                   = var.kubernetes_version
   enabled_cluster_log_types = var.enabled_cluster_log_types
 
@@ -63,7 +61,7 @@ resource "aws_eks_cluster" "default" {
   }
 
   vpc_config {
-    security_group_ids      = compact(concat(module.security_group.*.id, var.security_groups))
+    security_group_ids      = [join("", aws_security_group.default.*.id)]
     subnet_ids              = var.subnet_ids
     endpoint_private_access = var.endpoint_private_access
     endpoint_public_access  = var.endpoint_public_access
@@ -73,6 +71,11 @@ resource "aws_eks_cluster" "default" {
   depends_on = [
     aws_iam_role_policy_attachment.amazon_eks_cluster_policy,
     aws_iam_role_policy_attachment.amazon_eks_service_policy,
+    aws_security_group.default,
+    aws_security_group_rule.egress,
+    aws_security_group_rule.ingress_cidr_blocks,
+    aws_security_group_rule.ingress_security_groups,
+    aws_security_group_rule.ingress_workers,
     aws_cloudwatch_log_group.default
   ]
 }
