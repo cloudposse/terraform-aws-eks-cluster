@@ -73,15 +73,63 @@ The module provisions the following resources:
 
 __NOTE:__ The module works with [Terraform Cloud](https://www.terraform.io/docs/cloud/index.html).
 
-__NOTE:__ In `auth.tf`, we added `ignore_changes = [data["mapRoles"]]` to the `kubernetes_config_map` for the following reason:
-- We provision the EKS cluster and then the Kubernetes Auth ConfigMap to map additional roles/users/accounts to Kubernetes groups
-- Then we wait for the cluster to become available and for the ConfigMap to get provisioned (see `data "null_data_source" "wait_for_cluster_and_kubernetes_configmap"` in `examples/complete/main.tf`)
-- Then we provision a managed Node Group
-- Then EKS updates the Auth ConfigMap and adds worker roles to it (for the worker nodes to join the cluster)
-- Since the ConfigMap is modified outside of Terraform state, Terraform wants to update it (remove the roles that EKS added) on each `plan/apply`
+__NOTE:__ Every Terraform module that provisions an EKS cluster has faced the challenge that access to the cluster
+is partly controlled by a resource inside the cluster, a ConfigMap called `aws-auth`. You need to be able to access
+the cluster through the Kubernetes API to modify the ConfigMap, because there is no AWS API for it. This presents
+a problem: how do you authenticate to an API endpoint that you have not yet created?
 
-If you want to modify the Node Group (e.g. add more Node Groups to the cluster) or need to map other IAM roles to Kubernetes groups,
-set the variable `kubernetes_config_map_ignore_role_changes` to `false` and re-provision the module. Then set `kubernetes_config_map_ignore_role_changes` back to `true`.
+We use the Terraform Kubernetes provider to access the cluster, and it uses the same underlying library
+that `kubectl` uses, so configuration is very similar. However, every kind of configuration we have tried
+has failed at some point.
+- After creating the EKS cluster, we can generate a `kubeconfig` file that configures access to it.
+This works most of the time, but if the file was present and used as part of the configuration to create
+the cluster, and then the file is deleted (as would happen in a CI system like Terraform Cloud), Terraform
+would not cause the file to be regenerated in time to use it to refresh Terraform's state and the "plan" phase will fail.
+- An authentication token can be retrieved using the `aws_eks_cluster_auth` data source. Again, this works, as
+long as the token does not expire while Terraform is running, and the token is refreshed during the "plan"
+phase before trying to refresh the state. Unfortunately, failures of both types have been seen.
+- An authentication token can be retrieved on demand by using the `exec` feature of the Kubernetes provider
+to call `aws eks get-token`. This requires that the `aws` CLI be installed and available to Terraform and that it
+has access to sufficient credentials to perform the authentication and is configured to use them.
+
+All of the above methods can face additional challenges when using `terraform import` to import
+resources into the Terraform state. The KUBECONFG file is the most reliable, and probably what you
+would want to use when importing objects if your usual method does not work. You will need to create
+the file, of course, but that is easily done with `aws eks update-kubeconfig`.
+
+At the moment, the `exec` option appears to be the most reliable method, so we recommend using it if possible,
+but because of the extra requirements it has, we use the data source as the default authentication method.
+
+__NOTE:__ We give you the `kubernetes_config_map_ignore_role_changes` option and default it to `true` for the following reasons:
+- We provision the EKS cluster
+- Then we wait for the cluster to become available (see `null_resource.wait_for_cluster` in [auth.tf](auth.tf)
+- Then we provision the Kubernetes Auth ConfigMap to map and add additional roles/users/accounts to Kubernetes groups
+- That is all we do in this module, but after that, we expect you to use [terraform-aws-eks-node-group](https://github.com/cloudposse/terraform-aws-eks-node-group)
+to provision a managed Node Group
+- Then EKS updates the Auth ConfigMap and adds worker roles to it (for the worker nodes to join the cluster)
+- Since the ConfigMap is modified outside of Terraform state, Terraform wants to update it to to remove the worker roles EKS added
+- If you update the ConfigMap without including the worker nodes that EKS added, you will disconnect them from the cluster
+
+However, it is possible to get the worker node roles from the terraform-aws-eks-node-group via Terraform "remote state"
+and include them with any other roles you want to add (example code to be published later), so we make
+ignoring the role changes optional. If you do not ignore changes then you will have no problem with making future intentional changes.
+
+The downside of having `kubernetes_config_map_ignore_role_changes` set to true is that if you later want to make changes,
+such as adding other IAM roles to Kubernetes groups, you cannot do so via Terraform, because the role changes are ignored.
+Because of Terraform restrictions, you cannot simply change `kubernetes_config_map_ignore_role_changes` from `true`
+to `false`, apply changes, and set it back to `true` again. Terraform does not allow the
+"ignore" settings to be changed on a resource, so `kubernetes_config_map_ignore_role_changes` is implemented as
+2 different resources, one with ignore settings and one without. If you want to switch from ignoring to not ignoring,
+or vice versa, you must manually move the `aws_auth` resource in the terraform state. Change the setting of
+`kubernetes_config_map_ignore_role_changes`, run `terraform plan`, and you will see that an `aws_auth` resource
+is planned to be destroyed and another one is planned to be created. Use `terraform state mv` to move the destroyed
+resource to the created resource "address", something like
+```
+terraform state mv 'module.eks_cluster.kubernetes_config_map.aws_auth_ignore_changes[0]' 'module.eks_cluster.kubernetes_config_map.aws_auth[0]'
+```
+Then run `terraform plan` again and you should see only your desired changes made "in place". After applying your
+changes, if you want to set `kubernetes_config_map_ignore_role_changes` back to `true`, you will again need to use
+`terraform state mv` to move the `auth-map` back to its old "address".
 
 
 ## Security & Compliance [<img src="https://cloudposse.com/wp-content/uploads/2020/11/bridgecrew.svg" width="250" align="right" />](https://bridgecrew.io/)
@@ -140,133 +188,99 @@ Other examples:
     name       = var.name
     stage      = var.stage
     delimiter  = var.delimiter
-    attributes = compact(concat(var.attributes, list("cluster")))
+    attributes = compact(concat(var.attributes, ["cluster"]))
     tags       = var.tags
   }
 
   locals {
-    # The usage of the specific kubernetes.io/cluster/* resource tags below are required
+    # Prior to Kubernetes 1.19, the usage of the specific kubernetes.io/cluster/* resource tags below are required
     # for EKS and Kubernetes to discover and manage networking resources
     # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#base-vpc-networking
-    tags = merge(var.tags, map("kubernetes.io/cluster/${module.label.id}", "shared"))
-
-    # Unfortunately, most_recent (https://github.com/cloudposse/terraform-aws-eks-workers/blob/34a43c25624a6efb3ba5d2770a601d7cb3c0d391/main.tf#L141)
-    # variable does not work as expected, if you are not going to use custom AMI you should
-    # enforce usage of eks_worker_ami_name_filter variable to set the right kubernetes version for EKS workers,
-    # otherwise the first version of Kubernetes supported by AWS (v1.11) for EKS workers will be used, but
-    # EKS control plane will use the version specified by kubernetes_version variable.
-    eks_worker_ami_name_filter = "amazon-eks-node-${var.kubernetes_version}*"
+    tags = { "kubernetes.io/cluster/${module.label.id}" = "shared" }
   }
 
   module "vpc" {
     source = "cloudposse/vpc/aws"
     # Cloud Posse recommends pinning every module to a specific version
     # version     = "x.x.x"
-    namespace  = var.namespace
-    stage      = var.stage
-    name       = var.name
-    attributes = var.attributes
     cidr_block = "172.16.0.0/16"
-    tags       = local.tags
+
+    tags    = local.tags
+    context = module.label.context
   }
 
   module "subnets" {
     source = "cloudposse/dynamic-subnets/aws"
     # Cloud Posse recommends pinning every module to a specific version
     # version     = "x.x.x"
+
     availability_zones   = var.availability_zones
-    namespace            = var.namespace
-    stage                = var.stage
-    name                 = var.name
-    attributes           = var.attributes
     vpc_id               = module.vpc.vpc_id
     igw_id               = module.vpc.igw_id
     cidr_block           = module.vpc.vpc_cidr_block
-    nat_gateway_enabled  = false
+    nat_gateway_enabled  = true
     nat_instance_enabled = false
-    tags                 = local.tags
+
+    tags    = local.tags
+    context = module.label.context
   }
 
-  module "eks_workers" {
-    source = "cloudposse/eks-workers/aws"
+  module "eks_node_group" {
+    source = "cloudposse/eks-node-group/aws"
     # Cloud Posse recommends pinning every module to a specific version
     # version     = "x.x.x"
-    namespace                          = var.namespace
-    stage                              = var.stage
-    name                               = var.name
-    attributes                         = var.attributes
-    tags                               = var.tags
-    instance_type                      = var.instance_type
-    eks_worker_ami_name_filter          = local.eks_worker_ami_name_filter
-    vpc_id                             = module.vpc.vpc_id
+
+    instance_types                     = [var.instance_type]
     subnet_ids                         = module.subnets.public_subnet_ids
     health_check_type                  = var.health_check_type
     min_size                           = var.min_size
     max_size                           = var.max_size
-    wait_for_capacity_timeout          = var.wait_for_capacity_timeout
-    cluster_name                       = module.label.id
-    cluster_endpoint                   = module.eks_cluster.eks_cluster_endpoint
-    cluster_certificate_authority_data = module.eks_cluster.eks_cluster_certificate_authority_data
-    cluster_security_group_id          = module.eks_cluster.security_group_id
+    cluster_name                       = module.eks_cluster.eks_cluster_id
 
-    # Auto-scaling policies and CloudWatch metric alarms
-    autoscaling_policies_enabled           = var.autoscaling_policies_enabled
-    cpu_utilization_high_threshold_percent = var.cpu_utilization_high_threshold_percent
-    cpu_utilization_low_threshold_percent  = var.cpu_utilization_low_threshold_percent
+    # Enable the Kubernetes cluster auto-scaler to find the auto-scaling group
+    cluster_autoscaler_enabled = var.autoscaling_policies_enabled
+
+    context = module.label.context
+
+    # Ensure the cluster is fully created before trying to add the node group
+    module_depends_on = module.eks_cluster.kubernetes_config_map_id
   }
 
   module "eks_cluster" {
     source = "cloudposse/eks-cluster/aws"
     # Cloud Posse recommends pinning every module to a specific version
     # version     = "x.x.x"
-    namespace  = var.namespace
-    stage      = var.stage
-    name       = var.name
-    attributes = var.attributes
-    tags       = var.tags
+
     vpc_id     = module.vpc.vpc_id
     subnet_ids = module.subnets.public_subnet_ids
 
     kubernetes_version    = var.kubernetes_version
-    oidc_provider_enabled = false
-    workers_role_arns     = [module.eks_workers.workers_role_arn]
+    oidc_provider_enabled = true
 
-    security_group_rules = [
-      {
-        type                     = "egress"
-        from_port                = 0
-        to_port                  = 65535
-        protocol                 = "-1"
-        cidr_blocks              = ["0.0.0.0/0"]
-        source_security_group_id = null
-        description              = "Allow all outbound traffic"
-      },
-      {
-        type                     = "ingress"
-        from_port                = 0
-        to_port                  = 65535
-        protocol                 = "-1"
-        cidr_blocks              = []
-        source_security_group_id = module.eks_workers.security_group_id
-        description              = "Allow all inbound traffic from EKS workers Security Group"
-      }
-    ]
+    context = module.label.context
   }
 ```
 
 Module usage with two worker groups:
 
 ```hcl
+  locals {
+    # Unfortunately, the `aws_ami` data source attribute `most_recent` (https://github.com/cloudposse/terraform-aws-eks-workers/blob/34a43c25624a6efb3ba5d2770a601d7cb3c0d391/main.tf#L141)
+    # does not work as you might expect. If you are not going to use a custom AMI you should
+    # use the `eks_worker_ami_name_filter` variable to set the right kubernetes version for EKS workers,
+    # otherwise the first version of Kubernetes supported by AWS (v1.11) for EKS workers will be selected, but
+    # EKS control plane will ignore it to use one that matches the version specified by the `kubernetes_version` variable.
+    eks_worker_ami_name_filter = "amazon-eks-node-${var.kubernetes_version}*"
+  }
+
   module "eks_workers" {
     source = "cloudposse/eks-workers/aws"
     # Cloud Posse recommends pinning every module to a specific version
     # version     = "x.x.x"
-    namespace                          = var.namespace
-    stage                              = var.stage
-    name                               = "small"
-    attributes                         = var.attributes
-    tags                               = var.tags
+
+    attributes                         = ["small"]
     instance_type                      = "t3.small"
+    eks_worker_ami_name_filter         = local.eks_worker_ami_name_filter
     vpc_id                             = module.vpc.vpc_id
     subnet_ids                         = module.subnets.public_subnet_ids
     health_check_type                  = var.health_check_type
@@ -282,18 +296,18 @@ Module usage with two worker groups:
     autoscaling_policies_enabled           = var.autoscaling_policies_enabled
     cpu_utilization_high_threshold_percent = var.cpu_utilization_high_threshold_percent
     cpu_utilization_low_threshold_percent  = var.cpu_utilization_low_threshold_percent
+
+    context = module.label.context
   }
 
   module "eks_workers_2" {
     source = "cloudposse/eks-workers/aws"
     # Cloud Posse recommends pinning every module to a specific version
     # version     = "x.x.x"
-    namespace                          = var.namespace
-    stage                              = var.stage
-    name                               = "medium"
-    attributes                         = var.attributes
-    tags                               = var.tags
+
+    attributes                         = ["medium"]
     instance_type                      = "t3.medium"
+    eks_worker_ami_name_filter         = local.eks_worker_ami_name_filter
     vpc_id                             = module.vpc.vpc_id
     subnet_ids                         = module.subnets.public_subnet_ids
     health_check_type                  = var.health_check_type
@@ -309,52 +323,25 @@ Module usage with two worker groups:
     autoscaling_policies_enabled           = var.autoscaling_policies_enabled
     cpu_utilization_high_threshold_percent = var.cpu_utilization_high_threshold_percent
     cpu_utilization_low_threshold_percent  = var.cpu_utilization_low_threshold_percent
+
+    context = module.label.context
   }
 
   module "eks_cluster" {
     source = "cloudposse/eks-cluster/aws"
     # Cloud Posse recommends pinning every module to a specific version
     # version     = "x.x.x"
-    namespace  = var.namespace
-    stage      = var.stage
-    name       = var.name
-    attributes = var.attributes
-    tags       = var.tags
+
     vpc_id     = module.vpc.vpc_id
     subnet_ids = module.subnets.public_subnet_ids
 
     kubernetes_version    = var.kubernetes_version
     oidc_provider_enabled = false
-    workers_role_arns     = [module.eks_workers.workers_role_arn, module.eks_workers_2.workers_role_arn]
 
-    security_group_rules = [
-      {
-        type                     = "egress"
-        from_port                = 0
-        to_port                  = 65535
-        protocol                 = "-1"
-        cidr_blocks              = ["0.0.0.0/0"]
-        source_security_group_id = null
-        description              = "Allow all outbound traffic"
-      },
-      {
-        type                     = "ingress"
-        from_port                = 0
-        to_port                  = 65535
-        protocol                 = "-1"
-        cidr_blocks              = []
-        source_security_group_id = module.eks_workers.security_group_id
-        description              = "Allow all inbound traffic from EKS workers Security Group"
-      },
-      {
-        type                     = "ingress"
-        from_port                = 0
-        to_port                  = 65535
-        protocol                 = "-1"
-        cidr_blocks              = []
-        source_security_group_id = module.eks_workers_2.security_group_id
-        description              = "Allow all inbound traffic from EKS workers Security Group"
-      }
+    workers_role_arns          = [module.eks_workers.workers_role_arn, module.eks_workers_2.workers_role_arn]
+    workers_security_group_ids = [module.eks_workers.security_group_id, module.eks_workers_2.security_group_id]
+
+    context = module.label.context
   }
 ```
 
@@ -381,8 +368,8 @@ Available targets:
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 2.0 |
-| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 1.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 3.38 |
+| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 1.13 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | >= 1.3 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | >= 2.0 |
 | <a name="requirement_template"></a> [template](#requirement\_template) | >= 2.0 |
@@ -392,8 +379,8 @@ Available targets:
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 2.0 |
-| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | >= 1.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 3.38 |
+| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | >= 1.13 |
 | <a name="provider_null"></a> [null](#provider\_null) | >= 2.0 |
 | <a name="provider_tls"></a> [tls](#provider\_tls) | >= 2.2.0 |
 
@@ -402,7 +389,6 @@ Available targets:
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_label"></a> [label](#module\_label) | cloudposse/label/null | 0.24.1 |
-| <a name="module_security_group"></a> [security\_group](#module\_security\_group) | cloudposse/security-group/aws | 0.3.1 |
 | <a name="module_this"></a> [this](#module\_this) | cloudposse/label/null | 0.24.1 |
 
 ## Resources
@@ -418,10 +404,14 @@ Available targets:
 | [aws_iam_role_policy_attachment.amazon_eks_service_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_kms_alias.cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
 | [aws_kms_key.cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
+| [aws_security_group.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_security_group_rule.egress](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_security_group_rule.ingress_cidr_blocks](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_security_group_rule.ingress_security_groups](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_security_group_rule.ingress_workers](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [kubernetes_config_map.aws_auth](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map) | resource |
 | [kubernetes_config_map.aws_auth_ignore_changes](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map) | resource |
 | [null_resource.wait_for_cluster](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
-| [aws_eks_cluster.eks](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/eks_cluster) | data source |
 | [aws_eks_cluster_auth.eks](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/eks_cluster_auth) | data source |
 | [aws_iam_policy_document.assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.cluster_elb_service_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
@@ -433,8 +423,11 @@ Available targets:
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_additional_tag_map"></a> [additional\_tag\_map](#input\_additional\_tag\_map) | Additional tags for appending to tags\_as\_list\_of\_maps. Not added to `tags`. | `map(string)` | `{}` | no |
+| <a name="input_allowed_cidr_blocks"></a> [allowed\_cidr\_blocks](#input\_allowed\_cidr\_blocks) | List of CIDR blocks to be allowed to connect to the EKS cluster | `list(string)` | `[]` | no |
+| <a name="input_allowed_security_groups"></a> [allowed\_security\_groups](#input\_allowed\_security\_groups) | List of Security Group IDs to be allowed to connect to the EKS cluster | `list(string)` | `[]` | no |
 | <a name="input_apply_config_map_aws_auth"></a> [apply\_config\_map\_aws\_auth](#input\_apply\_config\_map\_aws\_auth) | Whether to apply the ConfigMap to allow worker nodes to join the EKS cluster and allow additional users, accounts and roles to acces the cluster | `bool` | `true` | no |
 | <a name="input_attributes"></a> [attributes](#input\_attributes) | Additional attributes (e.g. `1`) | `list(string)` | `[]` | no |
+| <a name="input_aws_auth_yaml_strip_quotes"></a> [aws\_auth\_yaml\_strip\_quotes](#input\_aws\_auth\_yaml\_strip\_quotes) | If true, remove double quotes from the generated aws-auth ConfigMap YAML to reduce spurious diffs in plans | `bool` | `true` | no |
 | <a name="input_cluster_encryption_config_enabled"></a> [cluster\_encryption\_config\_enabled](#input\_cluster\_encryption\_config\_enabled) | Set to `true` to enable Cluster Encryption Configuration | `bool` | `true` | no |
 | <a name="input_cluster_encryption_config_kms_key_deletion_window_in_days"></a> [cluster\_encryption\_config\_kms\_key\_deletion\_window\_in\_days](#input\_cluster\_encryption\_config\_kms\_key\_deletion\_window\_in\_days) | Cluster Encryption Config KMS Key Resource argument - key deletion windows in days post destruction | `number` | `10` | no |
 | <a name="input_cluster_encryption_config_kms_key_enable_key_rotation"></a> [cluster\_encryption\_config\_kms\_key\_enable\_key\_rotation](#input\_cluster\_encryption\_config\_kms\_key\_enable\_key\_rotation) | Cluster Encryption Config KMS Key Resource argument - enable kms key rotation | `bool` | `true` | no |
@@ -443,14 +436,24 @@ Available targets:
 | <a name="input_cluster_encryption_config_resources"></a> [cluster\_encryption\_config\_resources](#input\_cluster\_encryption\_config\_resources) | Cluster Encryption Config Resources to encrypt, e.g. ['secrets'] | `list(any)` | <pre>[<br>  "secrets"<br>]</pre> | no |
 | <a name="input_cluster_log_retention_period"></a> [cluster\_log\_retention\_period](#input\_cluster\_log\_retention\_period) | Number of days to retain cluster logs. Requires `enabled_cluster_log_types` to be set. See https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. | `number` | `0` | no |
 | <a name="input_context"></a> [context](#input\_context) | Single object for setting entire context at once.<br>See description of individual variables for details.<br>Leave string and numeric variables as `null` to use default value.<br>Individual variable settings (non-null) override settings in context object,<br>except for attributes, tags, and additional\_tag\_map, which are merged. | `any` | <pre>{<br>  "additional_tag_map": {},<br>  "attributes": [],<br>  "delimiter": null,<br>  "enabled": true,<br>  "environment": null,<br>  "id_length_limit": null,<br>  "label_key_case": null,<br>  "label_order": [],<br>  "label_value_case": null,<br>  "name": null,<br>  "namespace": null,<br>  "regex_replace_chars": null,<br>  "stage": null,<br>  "tags": {}<br>}</pre> | no |
+| <a name="input_create_eks_service_role"></a> [create\_eks\_service\_role](#input\_create\_eks\_service\_role) | Set `false` to use existing `eks_cluster_service_role_arn` instead of creating one | `bool` | `true` | no |
 | <a name="input_delimiter"></a> [delimiter](#input\_delimiter) | Delimiter to be used between `namespace`, `environment`, `stage`, `name` and `attributes`.<br>Defaults to `-` (hyphen). Set to `""` to use no delimiter at all. | `string` | `null` | no |
-| <a name="input_eks_cluster_service_role_arn"></a> [eks\_cluster\_service\_role\_arn](#input\_eks\_cluster\_service\_role\_arn) | The ARN of an externally created EKS service role to use, or leave blank to create one | `string` | `null` | no |
+| <a name="input_dummy_kubeapi_server"></a> [dummy\_kubeapi\_server](#input\_dummy\_kubeapi\_server) | URL of a dummy API server for the Kubernetes server to use when the real one is unknown.<br>This is a workaround to ignore connection failures that break Terraform even though the results do not matter.<br>You can disable it by setting it to `null`; however, as of Kubernetes provider v2.3.2, doing so \_will\_<br>cause Terraform to fail in several situations unless you provide a valid `kubeconfig` file<br>via `kubeconfig_path` and set `kubeconfig_path_enabled` to `true`. | `string` | `"https://jsonplaceholder.typicode.com"` | no |
+| <a name="input_eks_cluster_service_role_arn"></a> [eks\_cluster\_service\_role\_arn](#input\_eks\_cluster\_service\_role\_arn) | The ARN of an IAM role for the EKS cluster to use that provides permissions<br>for the Kubernetes control plane to perform needed AWS API operations.<br>Required if `create_eks_service_role` is `false`, ignored otherwise. | `string` | `null` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Set to false to prevent the module from creating any resources | `bool` | `null` | no |
 | <a name="input_enabled_cluster_log_types"></a> [enabled\_cluster\_log\_types](#input\_enabled\_cluster\_log\_types) | A list of the desired control plane logging to enable. For more information, see https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. Possible values [`api`, `audit`, `authenticator`, `controllerManager`, `scheduler`] | `list(string)` | `[]` | no |
 | <a name="input_endpoint_private_access"></a> [endpoint\_private\_access](#input\_endpoint\_private\_access) | Indicates whether or not the Amazon EKS private API server endpoint is enabled. Default to AWS EKS resource and it is false | `bool` | `false` | no |
 | <a name="input_endpoint_public_access"></a> [endpoint\_public\_access](#input\_endpoint\_public\_access) | Indicates whether or not the Amazon EKS public API server endpoint is enabled. Default to AWS EKS resource and it is true | `bool` | `true` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment, e.g. 'uw2', 'us-west-2', OR 'prod', 'staging', 'dev', 'UAT' | `string` | `null` | no |
 | <a name="input_id_length_limit"></a> [id\_length\_limit](#input\_id\_length\_limit) | Limit `id` to this many characters (minimum 6).<br>Set to `0` for unlimited length.<br>Set to `null` for default, which is `0`.<br>Does not affect `id_full`. | `number` | `null` | no |
+| <a name="input_kube_data_auth_enabled"></a> [kube\_data\_auth\_enabled](#input\_kube\_data\_auth\_enabled) | If `true`, use an `aws_eks_cluster_auth` data source to authenticate to the EKS cluster.<br>Disabled by `kubeconfig_path_enabled` or `kube_exec_auth_enabled`. | `bool` | `true` | no |
+| <a name="input_kube_exec_auth_aws_profile"></a> [kube\_exec\_auth\_aws\_profile](#input\_kube\_exec\_auth\_aws\_profile) | The AWS config profile for `aws eks get-token` to use | `string` | `""` | no |
+| <a name="input_kube_exec_auth_aws_profile_enabled"></a> [kube\_exec\_auth\_aws\_profile\_enabled](#input\_kube\_exec\_auth\_aws\_profile\_enabled) | If `true`, pass `kube_exec_auth_aws_profile` as the `profile` to `aws eks get-token` | `bool` | `false` | no |
+| <a name="input_kube_exec_auth_enabled"></a> [kube\_exec\_auth\_enabled](#input\_kube\_exec\_auth\_enabled) | If `true`, use the Kubernetes provider `exec` feature to execute `aws eks get-token` to authenticate to the EKS cluster.<br>Disabled by `kubeconfig_path_enabled`, overrides `kube_data_auth_enabled`. | `bool` | `false` | no |
+| <a name="input_kube_exec_auth_role_arn"></a> [kube\_exec\_auth\_role\_arn](#input\_kube\_exec\_auth\_role\_arn) | The role ARN for `aws eks get-token` to use | `string` | `""` | no |
+| <a name="input_kube_exec_auth_role_arn_enabled"></a> [kube\_exec\_auth\_role\_arn\_enabled](#input\_kube\_exec\_auth\_role\_arn\_enabled) | If `true`, pass `kube_exec_auth_role_arn` as the role ARN to `aws eks get-token` | `bool` | `false` | no |
+| <a name="input_kubeconfig_path"></a> [kubeconfig\_path](#input\_kubeconfig\_path) | The Kubernetes provider `config_path` setting to use when `kubeconfig_path_enabled` is `true` | `string` | `""` | no |
+| <a name="input_kubeconfig_path_enabled"></a> [kubeconfig\_path\_enabled](#input\_kubeconfig\_path\_enabled) | If `true`, configure the Kubernetes provider with `kubeconfig_path` and use it for authenticating to the EKS cluster | `bool` | `false` | no |
 | <a name="input_kubernetes_config_map_ignore_role_changes"></a> [kubernetes\_config\_map\_ignore\_role\_changes](#input\_kubernetes\_config\_map\_ignore\_role\_changes) | Set to `true` to ignore IAM role changes in the Kubernetes Auth ConfigMap | `bool` | `true` | no |
 | <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version) | Desired Kubernetes master version. If you do not specify a value, the latest available version is used | `string` | `"1.15"` | no |
 | <a name="input_label_key_case"></a> [label\_key\_case](#input\_label\_key\_case) | The letter case of label keys (`tag` names) (i.e. `name`, `namespace`, `environment`, `stage`, `attributes`) to use in `tags`.<br>Possible values: `lower`, `title`, `upper`.<br>Default value: `title`. | `string` | `null` | no |
@@ -467,17 +470,13 @@ Available targets:
 | <a name="input_public_access_cidrs"></a> [public\_access\_cidrs](#input\_public\_access\_cidrs) | Indicates which CIDR blocks can access the Amazon EKS public API server endpoint when enabled. EKS defaults this to a list with 0.0.0.0/0. | `list(string)` | <pre>[<br>  "0.0.0.0/0"<br>]</pre> | no |
 | <a name="input_regex_replace_chars"></a> [regex\_replace\_chars](#input\_regex\_replace\_chars) | Regex to replace chars with empty string in `namespace`, `environment`, `stage` and `name`.<br>If not set, `"/[^a-zA-Z0-9-]/"` is used to remove all characters other than hyphens, letters and digits. | `string` | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | AWS Region | `string` | n/a | yes |
-| <a name="input_security_group_description"></a> [security\_group\_description](#input\_security\_group\_description) | The Security Group description. | `string` | `"Security Group for EKS cluster"` | no |
-| <a name="input_security_group_enabled"></a> [security\_group\_enabled](#input\_security\_group\_enabled) | Whether to create default Security Group for EKS cluster. | `bool` | `true` | no |
-| <a name="input_security_group_rules"></a> [security\_group\_rules](#input\_security\_group\_rules) | A list of maps of Security Group rules. <br>The values of map is fully complated with `aws_security_group_rule` resource. <br>To get more info see https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule . | `list(any)` | <pre>[<br>  {<br>    "cidr_blocks": [<br>      "0.0.0.0/0"<br>    ],<br>    "description": "Allow all outbound traffic",<br>    "from_port": 0,<br>    "protocol": "-1",<br>    "to_port": 65535,<br>    "type": "egress"<br>  }<br>]</pre> | no |
-| <a name="input_security_group_use_name_prefix"></a> [security\_group\_use\_name\_prefix](#input\_security\_group\_use\_name\_prefix) | Whether to create a default Security Group with unique name beginning with the normalized prefix. | `bool` | `false` | no |
-| <a name="input_security_groups"></a> [security\_groups](#input\_security\_groups) | A list of Security Group IDs to associate with EKS cluster. | `list(string)` | `[]` | no |
 | <a name="input_stage"></a> [stage](#input\_stage) | Stage, e.g. 'prod', 'staging', 'dev', OR 'source', 'build', 'test', 'deploy', 'release' | `string` | `null` | no |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | A list of subnet IDs to launch the cluster in | `list(string)` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Additional tags (e.g. `map('BusinessUnit','XYZ')` | `map(string)` | `{}` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID for the EKS cluster | `string` | n/a | yes |
 | <a name="input_wait_for_cluster_command"></a> [wait\_for\_cluster\_command](#input\_wait\_for\_cluster\_command) | `local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint are available as environment variable `ENDPOINT` | `string` | `"curl --silent --fail --retry 60 --retry-delay 5 --retry-connrefused --insecure --output /dev/null $ENDPOINT/healthz"` | no |
 | <a name="input_workers_role_arns"></a> [workers\_role\_arns](#input\_workers\_role\_arns) | List of Role ARNs of the worker nodes | `list(string)` | `[]` | no |
+| <a name="input_workers_security_group_ids"></a> [workers\_security\_group\_ids](#input\_workers\_security\_group\_ids) | Security Group IDs of the worker nodes | `list(string)` | `[]` | no |
 
 ## Outputs
 
@@ -656,8 +655,8 @@ Check out [our other projects][github], [follow us on twitter][twitter], [apply 
 ### Contributors
 
 <!-- markdownlint-disable -->
-|  [![Erik Osterman][osterman_avatar]][osterman_homepage]<br/>[Erik Osterman][osterman_homepage] | [![Andriy Knysh][aknysh_avatar]][aknysh_homepage]<br/>[Andriy Knysh][aknysh_homepage] | [![Igor Rodionov][goruha_avatar]][goruha_homepage]<br/>[Igor Rodionov][goruha_homepage] | [![Oscar][osulli_avatar]][osulli_homepage]<br/>[Oscar][osulli_homepage] | [![Vladimir Syromyatnikov][SweetOps_avatar]][SweetOps_homepage]<br/>[Vladimir Syromyatnikov][SweetOps_homepage] |
-|---|---|---|---|---|
+|  [![Erik Osterman][osterman_avatar]][osterman_homepage]<br/>[Erik Osterman][osterman_homepage] | [![Andriy Knysh][aknysh_avatar]][aknysh_homepage]<br/>[Andriy Knysh][aknysh_homepage] | [![Igor Rodionov][goruha_avatar]][goruha_homepage]<br/>[Igor Rodionov][goruha_homepage] | [![Oscar][osulli_avatar]][osulli_homepage]<br/>[Oscar][osulli_homepage] |
+|---|---|---|---|
 <!-- markdownlint-restore -->
 
 
@@ -676,8 +675,6 @@ Check out [our other projects][github], [follow us on twitter][twitter], [apply 
   [osulli_homepage]: https://github.com/osulli/
   [osulli_avatar]: https://avatars1.githubusercontent.com/u/46930728?v=4&s=144
 
-  [SweetOps_homepage]: https://github.com/SweetOps
-  [SweetOps_avatar]: https://img.cloudposse.com/150x150/https://github.com/SweetOps.png
 
 [![README Footer][readme_footer_img]][readme_footer_link]
 [![Beacon][beacon]][website]

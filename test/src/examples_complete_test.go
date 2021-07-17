@@ -107,16 +107,6 @@ func TestExamplesComplete(t *testing.T) {
 	assert.Equal(t, "eg-test-eks-"+randId+"-cluster", eksClusterSecurityGroupName)
 
 	// Run `terraform output` to get the value of an output variable
-	eksClusterSecurityGroupID := terraform.Output(t, terraformOptions, "eks_cluster_security_group_id")
-	// Verify we're getting back the outputs we expect
-	assert.Contains(t, eksClusterSecurityGroupID, "sg-", "SG ID should contains substring 'sg-'")
-
-	// Run `terraform output` to get the value of an output variable
-	eksClusterSecurityGroupARN := terraform.Output(t, terraformOptions, "eks_cluster_security_group_arn")
-	// Verify we're getting back the outputs we expect
-	assert.Contains(t, eksClusterSecurityGroupARN, "arn:aws:ec2", "SG ID should contains substring 'arn:aws:ec2'")
-
-	// Run `terraform output` to get the value of an output variable
 	eksNodeGroupId := terraform.Output(t, terraformOptions, "eks_node_group_id")
 	// Verify we're getting back the outputs we expect
 	assert.Equal(t, "eg-test-eks-"+randId+"-cluster:eg-test-eks-"+randId+"-workers", eksNodeGroupId)
