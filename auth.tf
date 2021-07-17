@@ -139,7 +139,7 @@ resource "kubernetes_config_map" "aws_auth" {
   }
 
   data = {
-    mapRoles    = replace(yamlencode(distinct(concat(var.map_additional_iam_roles, local.map_worker_roles))), "\"", local.yaml_quote)
+    mapRoles    = replace(yamlencode(distinct(concat(local.map_worker_roles, var.map_additional_iam_roles))), "\"", local.yaml_quote)
     mapUsers    = replace(yamlencode(var.map_additional_iam_users), "\"", local.yaml_quote)
     mapAccounts = replace(yamlencode(var.map_additional_aws_accounts), "\"", local.yaml_quote)
   }
