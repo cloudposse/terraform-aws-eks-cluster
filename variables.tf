@@ -260,6 +260,16 @@ variable "kube_exec_auth_aws_profile_enabled" {
   description = "If `true`, pass `kube_exec_auth_aws_profile` as the `profile` to `aws eks get-token`"
 }
 
+variable "kube_exec_auth_api_version" {
+  type        = string
+  default     = "client.authentication.k8s.io/v1alpha1"
+  description = <<-EOT
+    API version to use when decoding the ExecCredentials resource.
+    Default value matches API version returned by AWS CLI v1 <= 1.20.8 and v2 <= 2.2.23.
+    With newer AWS CLI value should be set to 'client.authentication.k8s.io/v1beta1'.
+    EOT
+}
+
 variable "aws_auth_yaml_strip_quotes" {
   type        = bool
   default     = true
