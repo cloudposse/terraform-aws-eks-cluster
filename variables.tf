@@ -247,6 +247,29 @@ variable "kube_exec_auth_role_arn_enabled" {
   default     = false
   description = "If `true`, pass `kube_exec_auth_role_arn` as the role ARN to `aws eks get-token`"
 }
+variable "kube_exec_auth_credentials_enabled" {
+  type        = bool
+  default     = false
+  description = "If `true`, pass `kube_exec_auth_aws_access_key_id`, `kube_exec_auth_aws_secret_access_key` and `kube_exec_auth_aws_session_token` as  `envs` to `aws eks get-token`"
+}
+
+variable "kube_exec_auth_aws_access_key_id" {
+  type        = string
+  default     = null
+  description = "The aws access key id for `aws eks get-token` to use"
+}
+
+variable "kube_exec_auth_aws_secret_access_key" {
+  type        = string
+  default     = null
+  description = "The aws secret access key for `aws eks get-token` to use"
+}
+
+variable "kube_exec_auth_aws_session_token" {
+  type        = string
+  default     = null
+  description = "The aws session_token for `aws eks get-token` to use"
+}
 
 variable "kube_exec_auth_aws_profile" {
   type        = string

@@ -35,8 +35,11 @@ locals {
   kube_exec_auth_enabled  = local.kubeconfig_path_enabled ? false : local.need_kubernetes_provider && var.kube_exec_auth_enabled
   kube_data_auth_enabled  = local.kube_exec_auth_enabled ? false : local.need_kubernetes_provider && var.kube_data_auth_enabled
 
-  exec_profile = local.kube_exec_auth_enabled && var.kube_exec_auth_aws_profile_enabled ? ["--profile", var.kube_exec_auth_aws_profile] : []
-  exec_role    = local.kube_exec_auth_enabled && var.kube_exec_auth_role_arn_enabled ? ["--role-arn", var.kube_exec_auth_role_arn] : []
+  exec_profile           = local.kube_exec_auth_enabled && var.kube_exec_auth_aws_profile_enabled ? ["--profile", var.kube_exec_auth_aws_profile] : []
+  exec_role              = local.kube_exec_auth_enabled && var.kube_exec_auth_role_arn_enabled ? ["--role-arn", var.kube_exec_auth_role_arn] : []
+  exec_access_key_id     = local.kube_exec_auth_enabled && var.kube_exec_auth_credentials_enabled ? var.kube_exec_auth_aws_access_key_id : null
+  exec_secret_access_key = local.kube_exec_auth_enabled && var.kube_exec_auth_credentials_enabled ? var.kube_exec_auth_aws_secret_access_key : null
+  exec_session_token     = local.kube_exec_auth_enabled && var.kube_exec_auth_credentials_enabled ? var.kube_exec_auth_aws_session_token : null
 
   certificate_authority_data_list          = coalescelist(aws_eks_cluster.default.*.certificate_authority, [[{ data : "" }]])
   certificate_authority_data_list_internal = local.certificate_authority_data_list[0]
@@ -105,6 +108,11 @@ provider "kubernetes" {
       api_version = "client.authentication.k8s.io/v1alpha1"
       command     = "aws"
       args        = concat(local.exec_profile, ["eks", "get-token", "--cluster-name", aws_eks_cluster.default[0].id], local.exec_role)
+      env = {
+        AWS_ACCESS_KEY_ID     = local.exec_access_key_id
+        AWS_SECRET_ACCESS_KEY = local.exec_secret_access_key
+        AWS_SESSION_TOKEN     = local.exec_session_token
+      }
     }
   }
 }
