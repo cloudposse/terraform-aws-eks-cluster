@@ -105,12 +105,12 @@ resource "aws_iam_openid_connect_provider" "default" {
 }
 
 resource "aws_eks_addon" "cluster" {
-  for_each = {
+  for_each = local.enabled ? {
     for addon in var.addons :
     addon.addon_name => addon
-  }
+  } : {}
 
-  cluster_name             = aws_eks_cluster.default.name
+  cluster_name             = join("", aws_eks_cluster.default.*.name)
   addon_name               = each.key
   addon_version            = lookup(each.value, "addon_version", null)
   resolve_conflicts        = lookup(each.value, "resolve_conflicts", null)
