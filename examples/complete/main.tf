@@ -78,6 +78,8 @@ module "eks_cluster" {
   cluster_encryption_config_kms_key_policy                  = var.cluster_encryption_config_kms_key_policy
   cluster_encryption_config_resources                       = var.cluster_encryption_config_resources
 
+  addons = var.addons
+
   context = module.this.context
 }
 
