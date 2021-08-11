@@ -105,7 +105,10 @@ resource "aws_iam_openid_connect_provider" "default" {
 }
 
 resource "aws_eks_addon" "cluster" {
-  for_each = var.eks_addons
+  for_each = {
+    for addon in var.eks_addons:
+    addon.addon_name => addon
+  }
 
   cluster_name             = aws_eks_cluster.cluster.name
   addon_name               = each.key
