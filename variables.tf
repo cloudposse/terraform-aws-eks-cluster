@@ -277,3 +277,9 @@ variable "dummy_kubeapi_server" {
     via `kubeconfig_path` and set `kubeconfig_path_enabled` to `true`.
     EOT
 }
+
+variable "eks_addons" {
+  type        = any
+  default     = {}
+  description = "Manages an EKS add-on."
+}
