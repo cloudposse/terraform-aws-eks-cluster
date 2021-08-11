@@ -91,15 +91,27 @@ resource "aws_eks_cluster" "default" {
 #
 
 data "tls_certificate" "cluster" {
-  count = (local.enabled && var.oidc_provider_enabled) ? 1 : 0
+  count = local.enabled && var.oidc_provider_enabled ? 1 : 0
   url   = join("", aws_eks_cluster.default.*.identity.0.oidc.0.issuer)
 }
 
 resource "aws_iam_openid_connect_provider" "default" {
-  count = (local.enabled && var.oidc_provider_enabled) ? 1 : 0
+  count = local.enabled && var.oidc_provider_enabled ? 1 : 0
   url   = join("", aws_eks_cluster.default.*.identity.0.oidc.0.issuer)
   tags  = module.label.tags
 
   client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = [join("", data.tls_certificate.cluster.*.certificates.0.sha1_fingerprint)]
+}
+
+resource "aws_eks_addon" "cluster" {
+  for_each = var.eks_addons
+
+  cluster_name             = aws_eks_cluster.cluster.name
+  addon_name               = each.key
+  addon_version            = lookup(each.value, "addon_version", null)
+  resolve_conflicts        = lookup(each.value, "resolve_conflicts", null)
+  service_account_role_arn = lookup(each.value, "service_account_role_arn", null)
+
+  tags = module.label.tags
 }
