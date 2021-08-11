@@ -110,7 +110,7 @@ resource "aws_eks_addon" "cluster" {
     addon.addon_name => addon
   }
 
-  cluster_name             = aws_eks_cluster.cluster.name
+  cluster_name             = aws_eks_cluster.default.name
   addon_name               = each.key
   addon_version            = lookup(each.value, "addon_version", null)
   resolve_conflicts        = lookup(each.value, "resolve_conflicts", null)
