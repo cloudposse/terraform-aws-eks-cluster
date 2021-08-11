@@ -33,7 +33,7 @@ cluster_encryption_config_enabled = true
 addons = [
   {
     addon_name               = "vpc-cni"
-    addon_version            = "v1.9.0"
+    addon_version            = null
     resolve_conflicts        = "NONE"
     service_account_role_arn = null
   }
