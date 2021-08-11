@@ -278,7 +278,7 @@ variable "dummy_kubeapi_server" {
     EOT
 }
 
-variable "eks_addons" {
+variable "addons" {
   type = list(object({
     addon_name               = string
     addon_version            = string
