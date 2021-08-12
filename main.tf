@@ -112,7 +112,7 @@ resource "time_sleep" "addons" {
 
   triggers = {
     for addon in var.addons :
-    addon.addon_name => addon
+    addon.addon_name => addon.addon_name
   }
 }
 
