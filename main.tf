@@ -114,7 +114,7 @@ resource "time_sleep" "addons" {
     for addon in var.addons :
     addon.addon_name => addon.addon_name
   }
-    
+
   depends_on = [aws_eks_cluster.default[0]]
 }
 
