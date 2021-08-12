@@ -288,3 +288,9 @@ variable "addons" {
   default     = []
   description = "Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources."
 }
+
+variable "addons_time_sleep_duration" {
+  type        = number
+  default     = 300
+  description = "Time duration to delay addons creation. For example, 30s for 30 seconds or 5m for 5 minutes. Updating this value by itself will not trigger a delay."
+}
