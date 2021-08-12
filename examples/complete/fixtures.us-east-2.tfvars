@@ -37,12 +37,12 @@ addons = [
     resolve_conflicts        = "NONE"
     service_account_role_arn = null
   },
-  # {
-  #   addon_name               = "coredns"
-  #   addon_version            = null
-  #   resolve_conflicts        = "NONE"
-  #   service_account_role_arn = null
-  # },
+  {
+    addon_name               = "coredns"
+    addon_version            = null
+    resolve_conflicts        = "NONE"
+    service_account_role_arn = null
+  },
   {
     addon_name               = "kube-proxy"
     addon_version            = null
