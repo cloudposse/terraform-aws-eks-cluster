@@ -290,7 +290,7 @@ variable "addons" {
 }
 
 variable "addons_time_sleep_duration" {
-  type        = number
-  default     = 300
+  type        = string
+  default     = "5m"
   description = "Time duration to delay addons creation. For example, 30s for 30 seconds or 5m for 5 minutes. Updating this value by itself will not trigger a delay."
 }
