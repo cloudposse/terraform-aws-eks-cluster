@@ -104,6 +104,13 @@ resource "aws_iam_openid_connect_provider" "default" {
   thumbprint_list = [join("", data.tls_certificate.cluster.*.certificates.0.sha1_fingerprint)]
 }
 
+
+resource "time_sleep" "addons" {
+  create_duration = var.addons_time_sleep_duration
+
+  triggers = var.addons
+}
+
 resource "aws_eks_addon" "cluster" {
   for_each = local.enabled ? {
     for addon in var.addons :
@@ -117,4 +124,8 @@ resource "aws_eks_addon" "cluster" {
   service_account_role_arn = lookup(each.value, "service_account_role_arn", null)
 
   tags = module.label.tags
+
+  depends_on = [
+    time_sleep.addons
+  ]
 }
