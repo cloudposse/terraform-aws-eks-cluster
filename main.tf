@@ -106,9 +106,14 @@ resource "aws_iam_openid_connect_provider" "default" {
 
 
 resource "time_sleep" "addons" {
+  count = local.enabled && length(var.addons) > 0 ? 1 : 0
+
   create_duration = var.addons_time_sleep_duration
 
-  triggers = var.addons
+  triggers = {
+    for addon in var.addons :
+    addon.addon_name => addon
+  }
 }
 
 resource "aws_eks_addon" "cluster" {
@@ -126,6 +131,6 @@ resource "aws_eks_addon" "cluster" {
   tags = module.label.tags
 
   depends_on = [
-    time_sleep.addons
+    time_sleep.addons[0]
   ]
 }
