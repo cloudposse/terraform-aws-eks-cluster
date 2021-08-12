@@ -277,3 +277,14 @@ variable "dummy_kubeapi_server" {
     via `kubeconfig_path` and set `kubeconfig_path_enabled` to `true`.
     EOT
 }
+
+variable "addons" {
+  type = list(object({
+    addon_name               = string
+    addon_version            = string
+    resolve_conflicts        = string
+    service_account_role_arn = string
+  }))
+  default     = []
+  description = "Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources."
+}

@@ -29,3 +29,12 @@ disk_size = 20
 kubernetes_labels = {}
 
 cluster_encryption_config_enabled = true
+
+addons = [
+  {
+    addon_name               = "vpc-cni"
+    addon_version            = null
+    resolve_conflicts        = "NONE"
+    service_account_role_arn = null
+  }
+]
