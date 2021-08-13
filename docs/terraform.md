@@ -9,6 +9,7 @@
 | <a name="requirement_local"></a> [local](#requirement\_local) | >= 1.3 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | >= 2.0 |
 | <a name="requirement_template"></a> [template](#requirement\_template) | >= 2.0 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.7 |
 | <a name="requirement_tls"></a> [tls](#requirement\_tls) | >= 2.2.0 |
 
 ## Providers
@@ -18,7 +19,7 @@
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 3.38 |
 | <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | >= 1.13 |
 | <a name="provider_null"></a> [null](#provider\_null) | >= 2.0 |
-| <a name="provider_time"></a> [time](#provider\_time) | n/a |
+| <a name="provider_time"></a> [time](#provider\_time) | >= 0.7 |
 | <a name="provider_tls"></a> [tls](#provider\_tls) | >= 2.2.0 |
 
 ## Modules
