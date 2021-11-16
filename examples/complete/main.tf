@@ -94,7 +94,6 @@ module "eks_node_group" {
   min_size          = var.min_size
   max_size          = var.max_size
   kubernetes_labels = var.kubernetes_labels
-  disk_size         = var.disk_size
 
   # Prevent the node groups from being created before the Kubernetes aws-auth ConfigMap
   module_depends_on = module.eks_cluster.kubernetes_config_map_id
