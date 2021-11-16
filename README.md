@@ -183,12 +183,13 @@ Other examples:
   module "label" {
     source = "cloudposse/label/null"
     # Cloud Posse recommends pinning every module to a specific version
-    # version     = "x.x.x"
+    # version  = "x.x.x"
+
     namespace  = var.namespace
     name       = var.name
     stage      = var.stage
     delimiter  = var.delimiter
-    attributes = compact(concat(var.attributes, ["cluster"]))
+    attributes = ["cluster"]
     tags       = var.tags
   }
 
@@ -249,7 +250,7 @@ Other examples:
   module "eks_cluster" {
     source = "cloudposse/eks-cluster/aws"
     # Cloud Posse recommends pinning every module to a specific version
-    # version     = "x.x.x"
+    # version = "x.x.x"
 
     vpc_id     = module.vpc.vpc_id
     subnet_ids = module.subnets.public_subnet_ids
@@ -372,7 +373,6 @@ Available targets:
 | <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 1.13 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | >= 1.3 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | >= 2.0 |
-| <a name="requirement_template"></a> [template](#requirement\_template) | >= 2.0 |
 | <a name="requirement_tls"></a> [tls](#requirement\_tls) | >= 2.2.0 |
 
 ## Providers
