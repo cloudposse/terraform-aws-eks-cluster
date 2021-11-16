@@ -138,12 +138,13 @@ usage: |2-
     module "label" {
       source = "cloudposse/label/null"
       # Cloud Posse recommends pinning every module to a specific version
-      # version     = "x.x.x"
+      # version  = "x.x.x"
+
       namespace  = var.namespace
       name       = var.name
       stage      = var.stage
       delimiter  = var.delimiter
-      attributes = compact(concat(var.attributes, ["cluster"]))
+      attributes = ["cluster"]
       tags       = var.tags
     }
 
@@ -204,7 +205,7 @@ usage: |2-
     module "eks_cluster" {
       source = "cloudposse/eks-cluster/aws"
       # Cloud Posse recommends pinning every module to a specific version
-      # version     = "x.x.x"
+      # version = "x.x.x"
 
       vpc_id     = module.vpc.vpc_id
       subnet_ids = module.subnets.public_subnet_ids
