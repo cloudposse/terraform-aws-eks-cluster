@@ -59,22 +59,10 @@ data "aws_iam_policy_document" "cluster_elb_service_role" {
     ]
     resources = ["*"]
   }
-}
-
-resource "aws_iam_role_policy" "cluster_elb_service_role" {
-  count = local.create_eks_service_role ? 1 : 0
-
-  name   = module.label.id
-  role   = join("", aws_iam_role.default.*.name)
-  policy = join("", data.aws_iam_policy_document.cluster_elb_service_role.*.json)
-}
-
-# Adding a policy to cluster IAM role that deny permissions to logs:CreateLogGroup
-# it is not needed since we create the log group ourselve in this module, and it is causing trouble during cleanup/deletion
-
-data "aws_iam_policy_document" "cluster_deny_log_group" {
-  count = local.create_eks_service_role ? 1 : 0
-
+  
+  
+  # Adding a policy to cluster IAM role that deny permissions to logs:CreateLogGroup
+  # it is not needed since we create the log group ourselve in this module, and it is causing trouble during cleanup/deletion
   statement {
     effect = "Deny"
     actions = [
@@ -84,10 +72,10 @@ data "aws_iam_policy_document" "cluster_deny_log_group" {
   }
 }
 
-resource "aws_iam_role_policy" "cluster_deny_log_group" {
+resource "aws_iam_role_policy" "cluster_elb_service_role" {
   count = local.create_eks_service_role ? 1 : 0
 
-  name   = "${module.label.id}-deny-log-group"
+  name   = module.label.id
   role   = join("", aws_iam_role.default.*.name)
-  policy = join("", data.aws_iam_policy_document.cluster_deny_log_group.*.json)
+  policy = join("", data.aws_iam_policy_document.cluster_elb_service_role.*.json)
 }
