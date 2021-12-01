@@ -59,8 +59,8 @@ data "aws_iam_policy_document" "cluster_elb_service_role" {
     ]
     resources = ["*"]
   }
-  
-  
+
+
   # Adding a policy to cluster IAM role that deny permissions to logs:CreateLogGroup
   # it is not needed since we create the log group ourselve in this module, and it is causing trouble during cleanup/deletion
   statement {
