@@ -87,7 +87,7 @@ data "aws_iam_policy_document" "cluster_deny_log_group" {
 resource "aws_iam_role_policy" "cluster_deny_log_group" {
   count = local.create_eks_service_role ? 1 : 0
 
-  name   = module.label.id
+  name   = "${module.label.id}-deny-log-group"
   role   = join("", aws_iam_role.default.*.name)
   policy = join("", data.aws_iam_policy_document.cluster_deny_log_group.*.json)
 }
