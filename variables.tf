@@ -83,6 +83,15 @@ variable "public_access_cidrs" {
   description = "Indicates which CIDR blocks can access the Amazon EKS public API server endpoint when enabled. EKS defaults this to a list with 0.0.0.0/0."
 }
 
+variable "service_ipv4_cidr" {
+  type        = string
+  default     = null
+  description = <<-EOT
+    The CIDR block to assign Kubernetes service IP addresses from.
+    You can only specify a custom CIDR block when you create a cluster, changing this value will force a new cluster to be created.
+    EOT
+}
+
 variable "enabled_cluster_log_types" {
   type        = list(string)
   default     = []
@@ -215,6 +224,12 @@ variable "kubeconfig_path" {
   type        = string
   default     = ""
   description = "The Kubernetes provider `config_path` setting to use when `kubeconfig_path_enabled` is `true`"
+}
+
+variable "kubeconfig_context" {
+  type        = string
+  default     = ""
+  description = "Context to choose from the Kubernetes kube config file"
 }
 
 variable "kube_data_auth_enabled" {
