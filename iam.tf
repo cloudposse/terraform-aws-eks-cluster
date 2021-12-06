@@ -51,6 +51,7 @@ data "aws_iam_policy_document" "cluster_elb_service_role" {
   statement {
     sid    = "AllowElasticLoadBalancer"
     effect = "Allow"
+    #bridgecrew:skip=BC_AWS_IAM_57:There is no workable constraint to add to this policy
     actions = [
       "ec2:DescribeAccountAttributes",
       "ec2:DescribeAddresses",
