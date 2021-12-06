@@ -97,7 +97,10 @@ provider "kubernetes" {
   host                   = local.enabled ? coalesce(aws_eks_cluster.default[0].endpoint, var.dummy_kubeapi_server) : var.dummy_kubeapi_server
   cluster_ca_certificate = local.enabled ? base64decode(local.certificate_authority_data) : null
   token                  = local.kube_data_auth_enabled ? data.aws_eks_cluster_auth.eks[0].token : null
-  config_path            = local.kubeconfig_path_enabled ? var.kubeconfig_path : null
+  # The Kubernetes provider will use information from KUBECONFIG if it exists, but if the default cluster
+  # in KUBECONFIG is some other cluster, this will cause problems, so we override it always.
+  config_path    = local.kubeconfig_path_enabled ? var.kubeconfig_path : ""
+  config_context = var.kubeconfig_context
 
   dynamic "exec" {
     for_each = local.kube_exec_auth_enabled ? ["exec"] : []

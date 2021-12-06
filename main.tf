@@ -68,6 +68,13 @@ resource "aws_eks_cluster" "default" {
     public_access_cidrs     = var.public_access_cidrs
   }
 
+  dynamic "kubernetes_network_config" {
+    for_each = compact([var.service_ipv4_cidr])
+    content {
+      service_ipv4_cidr = kubernetes_network_config.value
+    }
+  }
+
   depends_on = [
     aws_iam_role_policy_attachment.amazon_eks_cluster_policy,
     aws_iam_role_policy_attachment.amazon_eks_service_policy,
