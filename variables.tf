@@ -13,16 +13,10 @@ variable "subnet_ids" {
   type        = list(string)
 }
 
-variable "allowed_security_groups" {
+variable "workers_security_group_ids" {
   type        = list(string)
+  description = "Security Group IDs of the worker nodes"
   default     = []
-  description = "List of Security Group IDs to be allowed to connect to the EKS cluster"
-}
-
-variable "allowed_cidr_blocks" {
-  type        = list(string)
-  default     = []
-  description = "List of CIDR blocks to be allowed to connect to the EKS cluster"
 }
 
 variable "create_eks_service_role" {
@@ -44,12 +38,6 @@ variable "eks_cluster_service_role_arn" {
 variable "workers_role_arns" {
   type        = list(string)
   description = "List of Role ARNs of the worker nodes"
-  default     = []
-}
-
-variable "workers_security_group_ids" {
-  type        = list(string)
-  description = "Security Group IDs of the worker nodes"
   default     = []
 }
 

@@ -46,8 +46,9 @@ related:
   description: Terraform module for provisioning multiple general purpose EC2 hosts
     for stateful applications
   url: https://github.com/cloudposse/terraform-aws-ec2-instance-group
-description: Terraform module to provision an [EKS](https://aws.amazon.com/eks/) cluster
-  on AWS.
+
+description: Terraform module to provision an [EKS](https://aws.amazon.com/eks/) cluster on AWS.
+
 introduction: |-
   The module provisions the following resources:
 
@@ -60,6 +61,9 @@ introduction: |-
   - The module creates and automatically applies an authentication ConfigMap to allow the workers nodes to join the cluster and to add additional users/roles/accounts
 
   __NOTE:__ The module works with [Terraform Cloud](https://www.terraform.io/docs/cloud/index.html).
+
+  __NOTE:__ Release `0.45.0` contains breaking changes that will result in the destruction of your existing EKS cluster.
+  To preserve the original cluster, follow the instructions in the [0.44.x to 0.45.x+ migration path](./docs/migration-0.44.x-0.45.x+.md).
   
   __NOTE:__ Every Terraform module that provisions an EKS cluster has faced the challenge that access to the cluster
   is partly controlled by a resource inside the cluster, a ConfigMap called `aws-auth`. You need to be able to access
@@ -118,7 +122,7 @@ introduction: |-
   Then run `terraform plan` again and you should see only your desired changes made "in place". After applying your
   changes, if you want to set `kubernetes_config_map_ignore_role_changes` back to `true`, you will again need to use
   `terraform state mv` to move the `auth-map` back to its old "address".
-  
+
 usage: |2-
 
   For a complete example, see [examples/complete](examples/complete).
@@ -300,13 +304,14 @@ usage: |2-
       context = module.label.context
     }
   ```
+
 include:
 - docs/targets.md
 - docs/terraform.md
 contributors:
 - name: Erik Osterman
   homepage: https://github.com/osterman
-  avatar: http://s.gravatar.com/avatar/88c480d4f73b813904e00a5695a454cb?s=144
+  avatar: https://s.gravatar.com/avatar/88c480d4f73b813904e00a5695a454cb?s=144
   github: osterman
 - name: Andriy Knysh
   homepage: https://github.com/aknysh/
@@ -314,7 +319,7 @@ contributors:
   github: aknysh
 - name: Igor Rodionov
   homepage: https://github.com/goruha/
-  avatar: http://s.gravatar.com/avatar/bc70834d32ed4517568a1feb0b9be7e2?s=144
+  avatar: https://s.gravatar.com/avatar/bc70834d32ed4517568a1feb0b9be7e2?s=144
   github: goruha
 - name: Oscar
   homepage: https://github.com/osulli/
