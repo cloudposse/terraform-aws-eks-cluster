@@ -1,6 +1,21 @@
 # security_group_inputs Version: 1
 #
 
+variable "create_security_group" {
+  type        = bool
+  default     = true
+  description = "Set `true` to create and configure a new security group. If false, `associated_security_group_ids` must be provided."
+}
+
+variable "associated_security_group_ids" {
+  type        = list(string)
+  default     = []
+  description = <<-EOT
+    A list of IDs of Security Groups to associate the created resource with, in addition to the created security group.
+    These security groups will not be modified and, if `create_security_group` is `false`, must have rules providing the desired access.
+    EOT
+}
+
 variable "allowed_security_group_ids" {
   type        = list(string)
   default     = []

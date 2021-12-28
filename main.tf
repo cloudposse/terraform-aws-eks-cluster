@@ -2,8 +2,11 @@ locals {
   enabled = module.this.enabled
 
   cluster_encryption_config = {
-    resources        = var.cluster_encryption_config_resources
-    provider_key_arn = local.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? join("", aws_kms_key.cluster.*.arn) : var.cluster_encryption_config_kms_key_id
+    resources = var.cluster_encryption_config_resources
+
+    provider_key_arn = local.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? (
+      join("", aws_kms_key.cluster.*.arn)
+    ) : var.cluster_encryption_config_kms_key_id
   }
 }
 
@@ -61,7 +64,7 @@ resource "aws_eks_cluster" "default" {
   }
 
   vpc_config {
-    security_group_ids      = [join("", aws_security_group.default.*.id)]
+    security_group_ids      = var.create_security_group ? concat(var.associated_security_group_ids, [module.aws_security_group.id]) : var.associated_security_group_ids
     subnet_ids              = var.subnet_ids
     endpoint_private_access = var.endpoint_private_access
     endpoint_public_access  = var.endpoint_public_access

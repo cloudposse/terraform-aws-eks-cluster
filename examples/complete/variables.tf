@@ -10,7 +10,7 @@ variable "availability_zones" {
 
 variable "kubernetes_version" {
   type        = string
-  default     = "1.17"
+  default     = "1.21"
   description = "Desired Kubernetes master version. If you do not specify a value, the latest available version is used"
 }
 
