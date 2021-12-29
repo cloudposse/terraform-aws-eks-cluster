@@ -1,4 +1,4 @@
-# security_group_inputs Version: 1
+# security-group-inputs Version: 2
 #
 
 variable "create_security_group" {

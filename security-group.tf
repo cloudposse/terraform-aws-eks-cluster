@@ -1,6 +1,6 @@
 module "aws_security_group" {
   source  = "cloudposse/security-group/aws"
-  version = "0.4.2"
+  version = "0.4.3"
 
   enabled = local.enabled && var.create_security_group
 
