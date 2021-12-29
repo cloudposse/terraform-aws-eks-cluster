@@ -4,7 +4,7 @@
 variable "create_security_group" {
   type        = bool
   default     = true
-  description = "Set `true` to create and configure a new security group. If false, `associated_security_group_ids` must be provided."
+  description = "Set `true` to create and configure a Security Group for the cluster."
 }
 
 variable "associated_security_group_ids" {
