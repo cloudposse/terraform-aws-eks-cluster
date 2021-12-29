@@ -13,16 +13,10 @@ variable "subnet_ids" {
   type        = list(string)
 }
 
-variable "allowed_security_groups" {
+variable "workers_security_group_ids" {
   type        = list(string)
+  description = "Security Group IDs of the worker nodes"
   default     = []
-  description = "List of Security Group IDs to be allowed to connect to the EKS cluster"
-}
-
-variable "allowed_cidr_blocks" {
-  type        = list(string)
-  default     = []
-  description = "List of CIDR blocks to be allowed to connect to the EKS cluster"
 }
 
 variable "create_eks_service_role" {
@@ -47,15 +41,9 @@ variable "workers_role_arns" {
   default     = []
 }
 
-variable "workers_security_group_ids" {
-  type        = list(string)
-  description = "Security Group IDs of the worker nodes"
-  default     = []
-}
-
 variable "kubernetes_version" {
   type        = string
-  default     = "1.15"
+  default     = "1.21"
   description = "Desired Kubernetes master version. If you do not specify a value, the latest available version is used"
 }
 
