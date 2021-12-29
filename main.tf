@@ -81,11 +81,7 @@ resource "aws_eks_cluster" "default" {
   depends_on = [
     aws_iam_role_policy_attachment.amazon_eks_cluster_policy,
     aws_iam_role_policy_attachment.amazon_eks_service_policy,
-    aws_security_group.default,
-    aws_security_group_rule.egress,
-    aws_security_group_rule.ingress_cidr_blocks,
-    aws_security_group_rule.ingress_security_groups,
-    aws_security_group_rule.ingress_workers,
+    module.aws_security_group,
     aws_cloudwatch_log_group.default
   ]
 }
