@@ -3,8 +3,17 @@
 
 variable "create_security_group" {
   type        = bool
-  default     = true
-  description = "Set `true` to create and configure a Security Group for the cluster."
+  default     = false
+  description = <<-EOT
+    Set `true` to create and configure a Security Group for the cluster.
+    We need to create a new Security Group only if the EKS cluster is used with unmanaged worker nodes.
+    EKS creates a security group for the cluster automatically, places the control plane and managed nodes into the security group,
+    and allows all communications between the control plane and the managed worker nodes
+    (EKS applies it to ENIs that are attached to EKS Control Plane master nodes and to any managed workloads).
+    If only Managed Node Groups are used, we don't need to create a separate Security Group;
+    otherwise we place the cluster in two SGs - one that is created by EKS, the other one that the module creates.
+    See https://docs.aws.amazon.com/eks/latest/userguide/sec-group-reqs.html for more details.
+    EOT
 }
 
 variable "associated_security_group_ids" {

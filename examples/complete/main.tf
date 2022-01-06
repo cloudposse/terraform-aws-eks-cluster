@@ -80,12 +80,14 @@ module "eks_cluster" {
 
   addons = var.addons
 
+  create_security_group = var.create_security_group
+
   context = module.this.context
 }
 
 module "eks_node_group" {
   source  = "cloudposse/eks-node-group/aws"
-  version = "0.27.0"
+  version = "0.27.1"
 
   subnet_ids        = module.subnets.private_subnet_ids
   cluster_name      = module.eks_cluster.eks_cluster_id

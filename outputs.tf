@@ -1,15 +1,15 @@
 output "security_group_id" {
-  description = "ID of the EKS cluster Security Group"
+  description = "ID of the created Security Group for the EKS cluster"
   value       = module.aws_security_group.id
 }
 
 output "security_group_arn" {
-  description = "ARN of the EKS cluster Security Group"
+  description = "ARN of the created Security Group for the EKS cluster"
   value       = module.aws_security_group.arn
 }
 
 output "security_group_name" {
-  description = "Name of the EKS cluster Security Group"
+  description = "Name of the created Security Group for the EKS cluster"
   value       = module.aws_security_group.name
 }
 
