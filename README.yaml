@@ -1,51 +1,55 @@
 name: terraform-aws-eks-cluster
+
 license: APACHE2
+
 github_repo: cloudposse/terraform-aws-eks-cluster
+
 badges:
-- name: Latest Release
-  image: https://img.shields.io/github/release/cloudposse/terraform-aws-eks-cluster.svg
-  url: https://github.com/cloudposse/terraform-aws-eks-cluster/releases/latest
-- name: Slack Community
-  image: https://slack.cloudposse.com/badge.svg
-  url: https://slack.cloudposse.com
+  - name: Latest Release
+    image: https://img.shields.io/github/release/cloudposse/terraform-aws-eks-cluster.svg
+    url: https://github.com/cloudposse/terraform-aws-eks-cluster/releases/latest
+  - name: Slack Community
+    image: https://slack.cloudposse.com/badge.svg
+    url: https://slack.cloudposse.com
+
 related:
-- name: terraform-aws-eks-workers
-  description: Terraform module to provision an AWS AutoScaling Group, IAM Role, and
-    Security Group for EKS Workers
-  url: https://github.com/cloudposse/terraform-aws-eks-workers
-- name: terraform-aws-ec2-autoscale-group
-  description: Terraform module to provision Auto Scaling Group and Launch Template
-    on AWS
-  url: https://github.com/cloudposse/terraform-aws-ec2-autoscale-group
-- name: terraform-aws-ecs-container-definition
-  description: Terraform module to generate well-formed JSON documents (container
-    definitions) that are passed to the  aws_ecs_task_definition Terraform resource
-  url: https://github.com/cloudposse/terraform-aws-ecs-container-definition
-- name: terraform-aws-ecs-alb-service-task
-  description: Terraform module which implements an ECS service which exposes a web
-    service via ALB
-  url: https://github.com/cloudposse/terraform-aws-ecs-alb-service-task
-- name: terraform-aws-ecs-web-app
-  description: Terraform module that implements a web app on ECS and supports autoscaling,
-    CI/CD, monitoring, ALB integration, and much more
-  url: https://github.com/cloudposse/terraform-aws-ecs-web-app
-- name: terraform-aws-ecs-codepipeline
-  description: Terraform module for CI/CD with AWS Code Pipeline and Code Build for
-    ECS
-  url: https://github.com/cloudposse/terraform-aws-ecs-codepipeline
-- name: terraform-aws-ecs-cloudwatch-autoscaling
-  description: Terraform module to autoscale ECS Service based on CloudWatch metrics
-  url: https://github.com/cloudposse/terraform-aws-ecs-cloudwatch-autoscaling
-- name: terraform-aws-ecs-cloudwatch-sns-alarms
-  description: Terraform module to create CloudWatch Alarms on ECS Service level metrics
-  url: https://github.com/cloudposse/terraform-aws-ecs-cloudwatch-sns-alarms
-- name: terraform-aws-ec2-instance
-  description: Terraform module for providing a general purpose EC2 instance
-  url: https://github.com/cloudposse/terraform-aws-ec2-instance
-- name: terraform-aws-ec2-instance-group
-  description: Terraform module for provisioning multiple general purpose EC2 hosts
-    for stateful applications
-  url: https://github.com/cloudposse/terraform-aws-ec2-instance-group
+  - name: terraform-aws-eks-workers
+    description: Terraform module to provision an AWS AutoScaling Group, IAM Role, and
+      Security Group for EKS Workers
+    url: https://github.com/cloudposse/terraform-aws-eks-workers
+  - name: terraform-aws-ec2-autoscale-group
+    description: Terraform module to provision Auto Scaling Group and Launch Template
+      on AWS
+    url: https://github.com/cloudposse/terraform-aws-ec2-autoscale-group
+  - name: terraform-aws-ecs-container-definition
+    description: Terraform module to generate well-formed JSON documents (container
+      definitions) that are passed to the  aws_ecs_task_definition Terraform resource
+    url: https://github.com/cloudposse/terraform-aws-ecs-container-definition
+  - name: terraform-aws-ecs-alb-service-task
+    description: Terraform module which implements an ECS service which exposes a web
+      service via ALB
+    url: https://github.com/cloudposse/terraform-aws-ecs-alb-service-task
+  - name: terraform-aws-ecs-web-app
+    description: Terraform module that implements a web app on ECS and supports autoscaling,
+      CI/CD, monitoring, ALB integration, and much more
+    url: https://github.com/cloudposse/terraform-aws-ecs-web-app
+  - name: terraform-aws-ecs-codepipeline
+    description: Terraform module for CI/CD with AWS Code Pipeline and Code Build for
+      ECS
+    url: https://github.com/cloudposse/terraform-aws-ecs-codepipeline
+  - name: terraform-aws-ecs-cloudwatch-autoscaling
+    description: Terraform module to autoscale ECS Service based on CloudWatch metrics
+    url: https://github.com/cloudposse/terraform-aws-ecs-cloudwatch-autoscaling
+  - name: terraform-aws-ecs-cloudwatch-sns-alarms
+    description: Terraform module to create CloudWatch Alarms on ECS Service level metrics
+    url: https://github.com/cloudposse/terraform-aws-ecs-cloudwatch-sns-alarms
+  - name: terraform-aws-ec2-instance
+    description: Terraform module for providing a general purpose EC2 instance
+    url: https://github.com/cloudposse/terraform-aws-ec2-instance
+  - name: terraform-aws-ec2-instance-group
+    description: Terraform module for provisioning multiple general purpose EC2 hosts
+      for stateful applications
+    url: https://github.com/cloudposse/terraform-aws-ec2-instance-group
 
 description: Terraform module to provision an [EKS](https://aws.amazon.com/eks/) cluster on AWS.
 
@@ -62,8 +66,8 @@ introduction: |-
 
   __NOTE:__ The module works with [Terraform Cloud](https://www.terraform.io/docs/cloud/index.html).
 
-  __NOTE:__ Release `0.45.0` contains breaking changes that will result in the destruction of your existing EKS cluster.
-  To preserve the original cluster, follow the instructions in the [0.44.x to 0.45.x+ migration path](./docs/migration-0.44.x-0.45.x+.md).
+  __NOTE:__ Release `0.45.0` contains breaking changes that could result in the destruction of your existing EKS cluster.
+  To circumvent this, follow the instructions in the [0.45.x+ migration path](./docs/migration-0.45.x+.md).
   
   __NOTE:__ Every Terraform module that provisions an EKS cluster has faced the challenge that access to the cluster
   is partly controlled by a resource inside the cluster, a ConfigMap called `aws-auth`. You need to be able to access
@@ -173,7 +177,7 @@ usage: |2-
       source = "cloudposse/dynamic-subnets/aws"
       # Cloud Posse recommends pinning every module to a specific version
       # version     = "x.x.x"
-  
+
       availability_zones   = var.availability_zones
       vpc_id               = module.vpc.vpc_id
       igw_id               = module.vpc.igw_id
@@ -189,7 +193,7 @@ usage: |2-
       source = "cloudposse/eks-node-group/aws"
       # Cloud Posse recommends pinning every module to a specific version
       # version     = "x.x.x"
-  
+
       instance_types                     = [var.instance_type]
       subnet_ids                         = module.subnets.public_subnet_ids
       health_check_type                  = var.health_check_type
@@ -201,7 +205,7 @@ usage: |2-
       cluster_autoscaler_enabled = var.autoscaling_policies_enabled
 
       context = module.label.context
-  
+
       # Ensure the cluster is fully created before trying to add the node group
       module_depends_on = module.eks_cluster.kubernetes_config_map_id
     }
@@ -256,7 +260,7 @@ usage: |2-
       autoscaling_policies_enabled           = var.autoscaling_policies_enabled
       cpu_utilization_high_threshold_percent = var.cpu_utilization_high_threshold_percent
       cpu_utilization_low_threshold_percent  = var.cpu_utilization_low_threshold_percent
-  
+
       context = module.label.context
     }
 
@@ -300,28 +304,29 @@ usage: |2-
 
       workers_role_arns          = [module.eks_workers.workers_role_arn, module.eks_workers_2.workers_role_arn]
       workers_security_group_ids = [module.eks_workers.security_group_id, module.eks_workers_2.security_group_id]
-  
+
       context = module.label.context
     }
   ```
 
 include:
-- docs/targets.md
-- docs/terraform.md
+  - docs/targets.md
+  - docs/terraform.md
+
 contributors:
-- name: Erik Osterman
-  homepage: https://github.com/osterman
-  avatar: https://s.gravatar.com/avatar/88c480d4f73b813904e00a5695a454cb?s=144
-  github: osterman
-- name: Andriy Knysh
-  homepage: https://github.com/aknysh/
-  avatar: https://avatars0.githubusercontent.com/u/7356997?v=4&u=ed9ce1c9151d552d985bdf5546772e14ef7ab617&s=144
-  github: aknysh
-- name: Igor Rodionov
-  homepage: https://github.com/goruha/
-  avatar: https://s.gravatar.com/avatar/bc70834d32ed4517568a1feb0b9be7e2?s=144
-  github: goruha
-- name: Oscar
-  homepage: https://github.com/osulli/
-  avatar: https://avatars1.githubusercontent.com/u/46930728?v=4&s=144
-  github: osulli
+  - name: Erik Osterman
+    homepage: https://github.com/osterman
+    avatar: https://s.gravatar.com/avatar/88c480d4f73b813904e00a5695a454cb?s=144
+    github: osterman
+  - name: Andriy Knysh
+    homepage: https://github.com/aknysh/
+    avatar: https://avatars0.githubusercontent.com/u/7356997?v=4&u=ed9ce1c9151d552d985bdf5546772e14ef7ab617&s=144
+    github: aknysh
+  - name: Igor Rodionov
+    homepage: https://github.com/goruha/
+    avatar: https://s.gravatar.com/avatar/bc70834d32ed4517568a1feb0b9be7e2?s=144
+    github: goruha
+  - name: Oscar
+    homepage: https://github.com/osulli/
+    avatar: https://avatars1.githubusercontent.com/u/46930728?v=4&s=144
+    github: osulli
