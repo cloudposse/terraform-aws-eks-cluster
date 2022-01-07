@@ -1,48 +1,42 @@
 locals {
-  allowed_security_group_rule = local.enabled && length(local.allowed_security_group_ids) > 0 ? {
-    key                       = "ingress-allowed-security-groups"
-    source_security_group_ids = local.allowed_security_group_ids
-    rules = [{
-      key         = "ingress-allowed-security-groups"
-      type        = "ingress"
-      from_port   = 0
-      to_port     = 65535
-      protocol    = "-1"
-      description = "Allow all inbound traffic from existing Security Groups"
-    }]
-  } : null
-
-  allowed_cidr_blocks_rule = local.enabled && length(var.allowed_cidr_blocks) > 0 ? {
-    key         = "ingress-cidr-blocks"
-    cidr_blocks = var.allowed_cidr_blocks
-    rules = [{
+  rule_matrix = [
+    {
+      key                       = "ingress-allowed-security-groups"
+      source_security_group_ids = local.allowed_security_group_ids
+      rules = [{
+        key         = "ingress-allowed-security-groups"
+        type        = "ingress"
+        from_port   = 0
+        to_port     = 65535
+        protocol    = "-1"
+        description = "Allow all inbound traffic from existing Security Groups"
+      }]
+    },
+    {
       key         = "ingress-cidr-blocks"
-      type        = "ingress"
-      from_port   = 0
-      to_port     = 65535
-      protocol    = "-1"
-      description = "Allow all inbound traffic from CIDR blocks"
-    }]
-  } : null
-
-  workers_security_group_rule = local.enabled && length(var.workers_security_group_ids) > 0 ? {
-    key                       = "ingress-workers"
-    source_security_group_ids = var.workers_security_group_ids
-    rules = [{
-      key         = "ingress-workers"
-      type        = "ingress"
-      from_port   = 0
-      to_port     = 65535
-      protocol    = "-1"
-      description = "Allow all inbound traffic from EKS workers Security Group"
-    }]
-  } : null
-
-  rule_matrix = compact([
-    local.allowed_security_group_rule,
-    local.allowed_cidr_blocks_rule,
-    local.workers_security_group_rule
-  ])
+      cidr_blocks = var.allowed_cidr_blocks
+      rules = [{
+        key         = "ingress-cidr-blocks"
+        type        = "ingress"
+        from_port   = 0
+        to_port     = 65535
+        protocol    = "-1"
+        description = "Allow all inbound traffic from CIDR blocks"
+      }]
+    },
+    {
+      key                       = "ingress-workers"
+      source_security_group_ids = var.workers_security_group_ids
+      rules = [{
+        key         = "ingress-workers"
+        type        = "ingress"
+        from_port   = 0
+        to_port     = 65535
+        protocol    = "-1"
+        description = "Allow all inbound traffic from EKS workers Security Group"
+      }]
+    }
+  ]
 }
 
 # If `var.create_security_group=true`, `module "aws_security_group"` will create a new Security Group and apply all the rules to it
