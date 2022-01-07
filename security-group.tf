@@ -56,8 +56,8 @@ module "aws_security_group" {
   rules       = var.additional_security_group_rules
   rule_matrix = local.rule_matrix
 
-  # If `var.create_security_group=true`, `module "aws_security_group"` will create a new Security Group and apply all the rules to it
-  # If `var.create_security_group=false`, `module "aws_security_group"` will use the EKS cluster managed Security Group and apply all the rules to it
+  # If `var.create_security_group=true`, `module "aws_security_group"` will create a new Security Group and apply all the rules to it - use this with unmanaged worker nodes
+  # If `var.create_security_group=false`, `module "aws_security_group"` will use the EKS cluster managed Security Group and apply all the rules to it - use this with managed worker nodes
   target_security_group_id = var.create_security_group ? [] : [join("", aws_eks_cluster.default.*.vpc_config.0.cluster_security_group_id)]
 
   vpc_id = var.vpc_id
