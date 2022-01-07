@@ -7,7 +7,7 @@ variable "create_security_group" {
   description = <<-EOT
     Set `true` to create and configure a Security Group for the cluster.
     We need to create a new Security Group only if the EKS cluster is used with unmanaged worker nodes.
-    EKS creates a managed security group for the cluster automatically, places the control plane and managed nodes into the security group,
+    EKS creates a managed Security Group for the cluster automatically, places the control plane and managed nodes into the security group,
     and allows all communications between the control plane and the managed worker nodes
     (EKS applies it to ENIs that are attached to EKS Control Plane master nodes and to any managed workloads).
     If only Managed Node Groups are used, we don't need to create a separate Security Group;
