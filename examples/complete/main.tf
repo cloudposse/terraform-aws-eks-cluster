@@ -80,7 +80,19 @@ module "eks_cluster" {
 
   addons = var.addons
 
-  create_security_group = var.create_security_group
+  # We need to create a new Security Group only if the EKS cluster is used with unmanaged worker nodes.
+  # EKS creates a managed Security Group for the cluster automatically, places the control plane and managed nodes into the security group,
+  # and allows all communications between the control plane and the managed worker nodes
+  # (EKS applies it to ENIs that are attached to EKS Control Plane master nodes and to any managed workloads).
+  # If only Managed Node Groups are used, we don't need to create a separate Security Group;
+  # otherwise we place the cluster in two SGs - one that is created by EKS, the other one that the module creates.
+  # See https://docs.aws.amazon.com/eks/latest/userguide/sec-group-reqs.html for more details.
+  create_security_group = false
+
+  # This is to test `allowed_security_group_ids` and `allowed_cidr_blocks`
+  # In real cluster, these should be other (existing) Security Groups and CIDR blocks to allow access to the cluster
+  allowed_security_group_ids = [module.vpc.vpc_default_security_group_id]
+  allowed_cidr_blocks        = [module.vpc.vpc_cidr_block]
 
   context = module.this.context
 }
