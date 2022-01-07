@@ -73,8 +73,8 @@ The module provisions the following resources:
 
 __NOTE:__ The module works with [Terraform Cloud](https://www.terraform.io/docs/cloud/index.html).
 
-__NOTE:__ Release `0.45.0` contains breaking changes that will result in the destruction of your existing EKS cluster.
-To preserve the original cluster, follow the instructions in the [0.44.x to 0.45.x+ migration path](./docs/migration-0.44.x-0.45.x+.md).
+__NOTE:__ Release `0.45.0` contains breaking changes that could result in the destruction of your existing EKS cluster.
+To circumvent this, follow the instructions in the [0.45.x+ migration path](./docs/migration-0.45.x+.md).
 
 __NOTE:__ Every Terraform module that provisions an EKS cluster has faced the challenge that access to the cluster
 is partly controlled by a resource inside the cluster, a ConfigMap called `aws-auth`. You need to be able to access
