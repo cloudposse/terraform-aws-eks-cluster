@@ -1,88 +1,104 @@
-locals {
-  rule_matrix = [
-    {
-      key                       = "ingress-allowed-security-groups"
-      source_security_group_ids = local.allowed_security_group_ids
-      rules = [{
-        key         = "ingress-allowed-security-groups"
-        type        = "ingress"
-        from_port   = 0
-        to_port     = 65535
-        protocol    = "-1"
-        description = "Allow all inbound traffic from existing Security Groups"
-      }]
-    },
-    {
-      key         = "ingress-cidr-blocks"
-      cidr_blocks = var.allowed_cidr_blocks
-      rules = [{
-        key         = "ingress-cidr-blocks"
-        type        = "ingress"
-        from_port   = 0
-        to_port     = 65535
-        protocol    = "-1"
-        description = "Allow all inbound traffic from CIDR blocks"
-      }]
-    },
-    {
-      key                       = "ingress-workers"
-      source_security_group_ids = var.workers_security_group_ids
-      rules = [{
-        key         = "ingress-workers"
-        type        = "ingress"
-        from_port   = 0
-        to_port     = 65535
-        protocol    = "-1"
-        description = "Allow all inbound traffic from EKS workers Security Group"
-      }]
-    }
-  ]
+# -----------------------------------------------------------------------
+# Rules for EKS-managed Security Group
+# -----------------------------------------------------------------------
+
+resource "aws_security_group_rule" "managed_egress" {
+  count = local.enabled ? 1 : 0
+
+  description       = "Allow all egress traffic"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = join("", aws_eks_cluster.default.*.vpc_config.0.cluster_security_group_id)
+  type              = "egress"
 }
 
-# If `var.create_security_group=true`, `module "aws_security_group"` will create a new Security Group and apply all the rules to it
-# Used with unmanaged worker nodes
-module "aws_security_group" {
-  source  = "cloudposse/security-group/aws"
-  version = "0.4.3"
+resource "aws_security_group_rule" "managed_ingress_security_groups" {
+  count = local.enabled ? length(local.allowed_security_group_ids) : 0
 
-  enabled = local.enabled && var.create_security_group
-
-  security_group_name        = length(var.security_group_name) > 0 ? var.security_group_name : [module.label.id]
-  security_group_description = var.security_group_description
-  allow_all_egress           = true
-
-  rules       = var.additional_security_group_rules
-  rule_matrix = local.rule_matrix
-
-  vpc_id = var.vpc_id
-
-  create_before_destroy         = var.security_group_create_before_destroy
-  security_group_create_timeout = var.security_group_create_timeout
-  security_group_delete_timeout = var.security_group_delete_timeout
-
-  context = module.label.context
-}
-
-# If `var.create_security_group=false`, add rules to the EKS cluster managed Security Group
-# Used with managed Node Groups
-resource "aws_security_group_rule" "ingress_security_groups" {
-  count                    = local.enabled && var.create_security_group == false ? length(var.allowed_security_group_ids) : 0
   description              = "Allow inbound traffic from existing Security Groups"
   from_port                = 0
   to_port                  = 65535
   protocol                 = "-1"
-  source_security_group_id = var.allowed_security_group_ids[count.index]
+  source_security_group_id = local.allowed_security_group_ids[count.index]
   security_group_id        = join("", aws_eks_cluster.default.*.vpc_config.0.cluster_security_group_id)
   type                     = "ingress"
 }
 
-resource "aws_security_group_rule" "ingress_cidr_blocks" {
-  count             = local.enabled && var.create_security_group == false && length(var.allowed_cidr_blocks) > 0 ? 1 : 0
+resource "aws_security_group_rule" "managed_ingress_cidr_blocks" {
+  count = local.enabled && length(var.allowed_cidr_blocks) > 0 ? 1 : 0
+
   description       = "Allow inbound traffic from CIDR blocks"
   from_port         = 0
   to_port           = 65535
   protocol          = "-1"
   cidr_blocks       = var.allowed_cidr_blocks
   security_group_id = join("", aws_eks_cluster.default.*.vpc_config.0.cluster_security_group_id)
+  type              = "ingress"
+}
+
+# -----------------------------------------------------------------------
+# DEPRECATED: Security Group
+# -----------------------------------------------------------------------
+
+locals {
+  create_security_group = local.enabled && var.create_security_group
+}
+
+resource "aws_security_group" "default" {
+  count = local.create_security_group ? 1 : 0
+
+  name        = module.label.id
+  description = "Security Group for EKS cluster"
+  vpc_id      = var.vpc_id
+  tags        = module.label.tags
+}
+
+resource "aws_security_group_rule" "egress" {
+  count = local.create_security_group ? 1 : 0
+
+  description       = "Allow all egress traffic"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = join("", aws_security_group.default.*.id)
+  type              = "egress"
+}
+
+resource "aws_security_group_rule" "ingress_workers" {
+  count = local.create_security_group ? length(var.workers_security_group_ids) : 0
+
+  description              = "Allow the cluster to receive communication from the worker nodes"
+  from_port                = 0
+  to_port                  = 65535
+  protocol                 = "-1"
+  source_security_group_id = var.workers_security_group_ids[count.index]
+  security_group_id        = join("", aws_security_group.default.*.id)
+  type                     = "ingress"
+}
+
+resource "aws_security_group_rule" "ingress_security_groups" {
+  count = local.create_security_group ? length(var.allowed_security_groups) : 0
+
+  description              = "Allow inbound traffic from existing Security Groups"
+  from_port                = 0
+  to_port                  = 65535
+  protocol                 = "-1"
+  source_security_group_id = var.allowed_security_groups[count.index]
+  security_group_id        = join("", aws_security_group.default.*.id)
+  type                     = "ingress"
+}
+
+resource "aws_security_group_rule" "ingress_cidr_blocks" {
+  count = local.create_security_group && length(var.allowed_cidr_blocks) > 0 ? 1 : 0
+
+  description       = "Allow inbound traffic from CIDR blocks"
+  from_port         = 0
+  to_port           = 65535
+  protocol          = "-1"
+  cidr_blocks       = var.allowed_cidr_blocks
+  security_group_id = join("", aws_security_group.default.*.id)
   type              = "ingress"
 }

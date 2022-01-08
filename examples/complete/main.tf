@@ -3,8 +3,9 @@ provider "aws" {
 }
 
 module "label" {
-  source     = "cloudposse/label/null"
-  version    = "0.25.0"
+  source  = "cloudposse/label/null"
+  version = "0.25.0"
+
   attributes = ["cluster"]
 
   context = module.this.context
@@ -90,7 +91,7 @@ module "eks_cluster" {
   create_security_group = false
 
   # This is to test `allowed_security_group_ids` and `allowed_cidr_blocks`
-  # In real cluster, these should be other (existing) Security Groups and CIDR blocks to allow access to the cluster
+  # In a real cluster, these should be some other (existing) Security Groups and CIDR blocks to allow access to the cluster
   allowed_security_group_ids = [module.vpc.vpc_default_security_group_id]
   allowed_cidr_blocks        = [module.vpc.vpc_cidr_block]
 
