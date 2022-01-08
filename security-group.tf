@@ -2,18 +2,6 @@
 # Rules for EKS-managed Security Group
 # -----------------------------------------------------------------------
 
-resource "aws_security_group_rule" "managed_egress" {
-  count = local.enabled ? 1 : 0
-
-  description       = "Allow all egress traffic"
-  from_port         = 0
-  to_port           = 0
-  protocol          = "-1"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = join("", aws_eks_cluster.default.*.vpc_config.0.cluster_security_group_id)
-  type              = "egress"
-}
-
 resource "aws_security_group_rule" "managed_ingress_security_groups" {
   count = local.enabled ? length(local.allowed_security_group_ids) : 0
 
@@ -39,7 +27,7 @@ resource "aws_security_group_rule" "managed_ingress_cidr_blocks" {
 }
 
 # -----------------------------------------------------------------------
-# DEPRECATED: Security Group
+# DEPRECATED: Additional Security Group
 # -----------------------------------------------------------------------
 
 locals {
