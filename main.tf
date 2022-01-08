@@ -85,7 +85,8 @@ resource "aws_eks_cluster" "default" {
     aws_security_group_rule.egress,
     aws_security_group_rule.ingress_cidr_blocks,
     aws_security_group_rule.ingress_security_groups,
-    aws_security_group_rule.ingress_workers, aws_cloudwatch_log_group.default
+    aws_security_group_rule.ingress_workers,
+    aws_cloudwatch_log_group.default
   ]
 }
 

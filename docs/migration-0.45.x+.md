@@ -31,17 +31,17 @@ Some variables have been deprecated (see `variables-deprecated.tf`), don't use t
 - When using unmanaged worker nodes (e.g. https://github.com/cloudposse/terraform-aws-eks-workers module), provide the worker nodes Security Groups to the cluster using
   the `allowed_security_group_ids` variable, for example:
 
-```hcl
-  module "eks_workers" {
-    source = "cloudposse/eks-workers/aws"
-  }
-
-  module "eks_workers_2" {
-    source = "cloudposse/eks-workers/aws"
-  }
-
-  module "eks_cluster" {
-    source = "cloudposse/eks-cluster/aws"
-    allowed_security_group_ids = [module.eks_workers.security_group_id, module.eks_workers_2.security_group_id]
-  }
-```
+  ```hcl
+    module "eks_workers" {
+      source = "cloudposse/eks-workers/aws"
+    }
+  
+    module "eks_workers_2" {
+      source = "cloudposse/eks-workers/aws"
+    }
+  
+    module "eks_cluster" {
+      source = "cloudposse/eks-cluster/aws"
+      allowed_security_group_ids = [module.eks_workers.security_group_id, module.eks_workers_2.security_group_id]
+    }
+  ```
