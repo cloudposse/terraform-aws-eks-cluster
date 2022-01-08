@@ -32,16 +32,15 @@ Some variables have been deprecated (see `variables-deprecated.tf`), don't use t
   the `allowed_security_group_ids` variable, for example:
 
   ```hcl
-    module "eks_workers" {
-      source = "cloudposse/eks-workers/aws"
-    }
+  module "eks_workers" {
+    source = "cloudposse/eks-workers/aws"
+  }
+
+  module "eks_workers_2" {
+    source = "cloudposse/eks-workers/aws"
+  }
   
-    module "eks_workers_2" {
-      source = "cloudposse/eks-workers/aws"
-    }
-  
-    module "eks_cluster" {
-      source = "cloudposse/eks-cluster/aws"
-      allowed_security_group_ids = [module.eks_workers.security_group_id, module.eks_workers_2.security_group_id]
-    }
-  ```
+  module "eks_cluster" {
+    source = "cloudposse/eks-cluster/aws"
+    allowed_security_group_ids = [module.eks_workers.security_group_id, module.eks_workers_2.security_group_id]
+  }
