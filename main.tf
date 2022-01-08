@@ -64,7 +64,7 @@ resource "aws_eks_cluster" "default" {
   }
 
   vpc_config {
-    security_group_ids      = var.create_security_group ? concat(var.associated_security_group_ids, [module.aws_security_group.id]) : var.associated_security_group_ids
+    security_group_ids      = var.create_security_group ? compact(concat(var.associated_security_group_ids, [join("", aws_security_group.default.*.id)])) : var.associated_security_group_ids
     subnet_ids              = var.subnet_ids
     endpoint_private_access = var.endpoint_private_access
     endpoint_public_access  = var.endpoint_public_access
@@ -81,7 +81,11 @@ resource "aws_eks_cluster" "default" {
   depends_on = [
     aws_iam_role_policy_attachment.amazon_eks_cluster_policy,
     aws_iam_role_policy_attachment.amazon_eks_service_policy,
-    module.aws_security_group,
+    aws_security_group.default,
+    aws_security_group_rule.egress,
+    aws_security_group_rule.ingress_cidr_blocks,
+    aws_security_group_rule.ingress_security_groups,
+    aws_security_group_rule.ingress_workers,
     aws_cloudwatch_log_group.default
   ]
 }

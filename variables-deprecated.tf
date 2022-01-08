@@ -7,3 +7,13 @@ variable "allowed_security_groups" {
     Historical default: `[]`
     EOT
 }
+
+variable "workers_security_group_ids" {
+  type        = list(string)
+  default     = []
+  description = <<-EOT
+  DEPRECATED: Use `allowed_security_group_ids` instead.
+  Historical description: Security Group IDs of the worker nodes.
+  Historical default: `[]`
+  EOT
+}

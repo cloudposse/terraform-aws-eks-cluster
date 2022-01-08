@@ -13,12 +13,6 @@ variable "subnet_ids" {
   type        = list(string)
 }
 
-variable "workers_security_group_ids" {
-  type        = list(string)
-  description = "Security Group IDs of the worker nodes"
-  default     = []
-}
-
 variable "create_eks_service_role" {
   type        = bool
   default     = true
