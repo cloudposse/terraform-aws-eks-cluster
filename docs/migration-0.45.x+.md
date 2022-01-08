@@ -1,9 +1,6 @@
-# Migration from 0.44.x to 0.45.x+
+# Migration to 0.45.x+
 
 Version `0.45.0` of this module introduces potential breaking changes that, without taking additional precautions, could cause the EKS cluster to be recreated.
-
-This is because version `0.45.0` relies on the [terraform-aws-security-group](https://github.com/cloudposse/terraform-aws-security-group)
-module for managing a Security Group for the cluster. This changes the Terraform resource address for the Security Group, which will cause Terraform to recreate it.
 
 ## Background
 
@@ -13,33 +10,38 @@ by the user, to ensure the nodes and control plane can communicate.
 Before version `0.45.0`, this module, by default, created an additional Security Group. Prior to version `0.19.0` of this module, that additional Security Group was the only one exposed by
 this module (because EKS at the time did not create the managed Security Group for the cluster), and it was intended that all worker nodes (managed and unmanaged) be placed in this
 additional Security Group. With version `0.19.0`, this module exposed the managed Security Group created by the EKS cluster, in which all managed node groups are placed by default. We now
-recommend placing non-managed node groups in the EKS-created Security Group as well.
-
-We would want to create a new Security Group only if the EKS cluster is used with unmanaged worker nodes. EKS creates a managed Security Group for the cluster automatically, places the
-control plane and managed nodes into the security group, and allows all communications between the control plane and the managed worker nodes
-
-If only Managed Node Groups are used, we don't need to create a separate Security Group; otherwise we place the cluster in two SGs - one that is created by EKS, the other one that the module
-creates.
+recommend placing non-managed node groups in the EKS-created Security Group as well by using the `allowed_security_group_ids` variable, and not create an additional Security Group.
 
 See https://docs.aws.amazon.com/eks/latest/userguide/sec-group-reqs.html for more details.
 
-## Migration Process
+## Migration process
 
-To circumvent this, after bumping the module version to `0.45.0` (or above), run a terraform plan to retrieve the resource address of the SG that Terraform would like to destroy, and the
-resource address of the SG which Terraform would like to create.
+If you are deploying a new EKS cluster with this module, no special steps need to be taken. Just keep the variable `create_security_group` set to `false` to not create an additional Security
+Group. Don't use the deprecated variables (see `variables-deprecated.tf`).
 
-First, make sure that the following variable is set:
+If you are updating this module to the latest version on existing (already deployed) EKS clusters, set the variable `create_security_group` to `true` to enable the additional Security Group
+and all the rules (which were enabled by default in the previous releases of this module).
+
+## Deprecated variables
+
+Some variables have been deprecated (see `variables-deprecated.tf`), don't use them when creating new EKS clusters.
+
+- Use `allowed_security_group_ids` instead of `allowed_security_groups` and `workers_security_group_ids`
+
+- When using unmanaged worker nodes (e.g. https://github.com/cloudposse/terraform-aws-eks-workers module), provide the worker nodes Security Groups to the cluster using
+  the `allowed_security_group_ids` variable, for example:
 
 ```hcl
-security_group_description = "Security Group for EKS cluster"
+  module "eks_workers" {
+    source = "cloudposse/eks-workers/aws"
+  }
+
+  module "eks_workers_2" {
+    source = "cloudposse/eks-workers/aws"
+  }
+
+  module "eks_cluster" {
+    source = "cloudposse/eks-cluster/aws"
+    allowed_security_group_ids = [module.eks_workers.security_group_id, module.eks_workers_2.security_group_id]
+  }
 ```
-
-Setting `security_group_description` to its "legacy" value will keep the Security Group from being replaced, and hence the EKS cluster from being recreated.
-
-Finally, change the resource address of the existing Security Group.
-
-```bash
-$ terraform state mv  "...aws_security_group.default[0]" "...module.eks_cluster.aws_security_group.default[0]" 
-```
-
-This will result in a Terraform apply that will only destroy SG Rules, but not the Security Group itself or the EKS cluster.
