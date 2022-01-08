@@ -12,7 +12,7 @@ variable "create_security_group" {
     Set to `true` to create and configure an additional Security Group for the cluster.
     Only for backwards compatibility, if you are updating this module to the latest version on existing clusters, not recommended for new clusters.
     EKS creates a managed Security Group for the cluster automatically, places the control plane and managed nodes into the Security Group,
-    and you can allow unmanaged nodes to communicate with the cluster by using the `allowed_security_group_ids` variable.
+    and you can also allow unmanaged nodes to communicate with the cluster by using the `allowed_security_group_ids` variable.
     The additional Security Group is kept in the module for backwards compatibility and will be removed in future releases along with this variable.
     See https://docs.aws.amazon.com/eks/latest/userguide/sec-group-reqs.html for more details.
     EOT
