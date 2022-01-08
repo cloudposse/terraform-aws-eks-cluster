@@ -2,7 +2,7 @@
 #
 
 locals {
-  allowed_security_group_ids = compact(concat(var.allowed_security_groups, var.allowed_security_group_ids, var.workers_security_group_ids))
+  allowed_security_group_ids = concat(var.allowed_security_groups, var.allowed_security_group_ids, var.workers_security_group_ids)
 }
 
 variable "create_security_group" {
