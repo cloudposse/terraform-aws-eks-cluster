@@ -130,7 +130,7 @@ variable "local_exec_interpreter" {
 
 variable "wait_for_cluster_command" {
   type        = string
-  default     = "curl --silent --fail --retry 60 --retry-delay 5 --retry-connrefused --insecure --output /dev/null $ENDPOINT/healthz"
+  default     = "curl --silent --fail --retry 60 --retry-delay 5 --retry-max-time 900 --retry-connrefused --insecure --output /dev/null $ENDPOINT/healthz"
   description = "`local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint are available as environment variable `ENDPOINT`"
 }
 
