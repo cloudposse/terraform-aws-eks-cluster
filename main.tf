@@ -8,7 +8,7 @@ locals {
       join("", aws_kms_key.cluster.*.arn)
     ) : var.cluster_encryption_config_kms_key_id
   }
-    
+
   cloudwatch_log_group_name = "/aws/eks/${module.label.id}/cluster"
 }
 

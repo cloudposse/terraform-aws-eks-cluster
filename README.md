@@ -497,6 +497,7 @@ Available targets:
 
 | Name | Description |
 |------|-------------|
+| <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | n/a |
 | <a name="output_cluster_encryption_config_enabled"></a> [cluster\_encryption\_config\_enabled](#output\_cluster\_encryption\_config\_enabled) | If true, Cluster Encryption Configuration is enabled |
 | <a name="output_cluster_encryption_config_provider_key_alias"></a> [cluster\_encryption\_config\_provider\_key\_alias](#output\_cluster\_encryption\_config\_provider\_key\_alias) | Cluster Encryption Config KMS Key Alias ARN |
 | <a name="output_cluster_encryption_config_provider_key_arn"></a> [cluster\_encryption\_config\_provider\_key\_arn](#output\_cluster\_encryption\_config\_provider\_key\_arn) | Cluster Encryption Config KMS Key ARN |
