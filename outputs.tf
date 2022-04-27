@@ -82,3 +82,8 @@ output "cluster_encryption_config_provider_key_alias" {
   description = "Cluster Encryption Config KMS Key Alias ARN"
   value       = join("", aws_kms_alias.cluster.*.arn)
 }
+
+output "cloudwatch_log_group_name" {
+  description = "The name of the log group created in cloudwatch where cluster logs are forwarded to if enabled"
+  value       = local.cloudwatch_log_group_name
+}

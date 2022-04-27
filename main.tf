@@ -8,6 +8,8 @@ locals {
       join("", aws_kms_key.cluster.*.arn)
     ) : var.cluster_encryption_config_kms_key_id
   }
+
+  cloudwatch_log_group_name = "/aws/eks/${module.label.id}/cluster"
 }
 
 module "label" {
@@ -25,7 +27,7 @@ data "aws_partition" "current" {
 
 resource "aws_cloudwatch_log_group" "default" {
   count             = local.enabled && length(var.enabled_cluster_log_types) > 0 ? 1 : 0
-  name              = "/aws/eks/${module.label.id}/cluster"
+  name              = local.cloudwatch_log_group_name
   retention_in_days = var.cluster_log_retention_period
   tags              = module.label.tags
 }
