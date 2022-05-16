@@ -182,6 +182,12 @@ variable "permissions_boundary" {
   description = "If provided, all IAM roles will be created with this permissions boundary attached."
 }
 
+variable "cloudwatch_log_group_kms_key_id" {
+  type        = string
+  default     = null
+  description = "If provided, the KMS Key ID to use to encrypt AWS CloudWatch logs"
+}
+
 ##################
 # All the following variables are just about configuring the Kubernetes provider
 # to be able to modify the aws-auth ConfigMap. Once EKS provides a normal
