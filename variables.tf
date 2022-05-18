@@ -129,9 +129,11 @@ variable "local_exec_interpreter" {
 }
 
 variable "wait_for_cluster_command" {
-  type        = string
-  default     = "curl --silent --fail --retry 60 --retry-delay 5 --retry-connrefused --insecure --output /dev/null $ENDPOINT/healthz"
-  description = "`local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint are available as environment variable `ENDPOINT`"
+  type = string
+  ## --max-time is per attempt, --retry is the number of attempts
+  ## Approx. total time limit is (max-time + retry-delay) * retry seconds
+  default     = "curl --silent --fail --retry 30 --retry-delay 10 --retry-connrefused --max-time 11 --insecure --output /dev/null $ENDPOINT/healthz"
+  description = "`local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint URL is available as environment variable `ENDPOINT`"
 }
 
 variable "kubernetes_config_map_ignore_role_changes" {
@@ -186,6 +188,17 @@ variable "cloudwatch_log_group_kms_key_id" {
   type        = string
   default     = null
   description = "If provided, the KMS Key ID to use to encrypt AWS CloudWatch logs"
+}
+
+variable "addons" {
+  type = list(object({
+    addon_name               = string
+    addon_version            = string
+    resolve_conflicts        = string
+    service_account_role_arn = string
+  }))
+  default     = []
+  description = "Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources."
 }
 
 ##################
@@ -279,15 +292,4 @@ variable "dummy_kubeapi_server" {
     cause Terraform to fail in several situations unless you provide a valid `kubeconfig` file
     via `kubeconfig_path` and set `kubeconfig_path_enabled` to `true`.
     EOT
-}
-
-variable "addons" {
-  type = list(object({
-    addon_name               = string
-    addon_version            = string
-    resolve_conflicts        = string
-    service_account_role_arn = string
-  }))
-  default     = []
-  description = "Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources."
 }

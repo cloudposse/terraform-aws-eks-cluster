@@ -38,6 +38,9 @@ locals {
   exec_profile = local.kube_exec_auth_enabled && var.kube_exec_auth_aws_profile_enabled ? ["--profile", var.kube_exec_auth_aws_profile] : []
   exec_role    = local.kube_exec_auth_enabled && var.kube_exec_auth_role_arn_enabled ? ["--role-arn", var.kube_exec_auth_role_arn] : []
 
+  cluster_endpoint_data     = join("", aws_eks_cluster.default.*.endpoint)
+  cluster_auth_map_endpoint = var.apply_config_map_aws_auth ? local.cluster_endpoint_data : var.dummy_kubeapi_server
+
   certificate_authority_data_list          = coalescelist(aws_eks_cluster.default.*.certificate_authority, [[{ data : "" }]])
   certificate_authority_data_list_internal = local.certificate_authority_data_list[0]
   certificate_authority_data_map           = local.certificate_authority_data_list_internal[0]
@@ -94,8 +97,8 @@ provider "kubernetes" {
   # so we can proceed with the task of creating or destroying the cluster.
   #
   # If this solution bothers you, you can disable it by setting var.dummy_kubeapi_server = null
-  host                   = local.enabled ? coalesce(aws_eks_cluster.default[0].endpoint, var.dummy_kubeapi_server) : var.dummy_kubeapi_server
-  cluster_ca_certificate = local.enabled ? base64decode(local.certificate_authority_data) : null
+  host                   = local.cluster_auth_map_endpoint
+  cluster_ca_certificate = local.enabled && !local.kubeconfig_path_enabled ? base64decode(local.certificate_authority_data) : null
   token                  = local.kube_data_auth_enabled ? data.aws_eks_cluster_auth.eks[0].token : null
   # The Kubernetes provider will use information from KUBECONFIG if it exists, but if the default cluster
   # in KUBECONFIG is some other cluster, this will cause problems, so we override it always.
