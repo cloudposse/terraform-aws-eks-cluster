@@ -68,13 +68,13 @@ The module provisions the following resources:
   [terraform-aws-eks-fargate-profile](https://github.com/cloudposse/terraform-aws-eks-fargate-profile)
   modules to create a full-blown cluster
 - IAM Role to allow the cluster to access other AWS services
-- Security Group which is used by EKS workers to connect to the cluster and kubelets and pods to receive communication from the cluster control plane
-- The module creates and automatically applies an authentication ConfigMap to allow the workers nodes to join the cluster and to add additional users/roles/accounts
+- Optionally, the module creates and automatically applies an authentication ConfigMap (`aws-auth`) to allow the 
+  worker nodes to join the cluster and to add additional users/roles/accounts. (This option is enabled
+  by default, but has some caveats noted below. Set `apply_config_map_aws_auth` to `false` to avoid these issues.)
 
-__NOTE:__ The module works with [Terraform Cloud](https://www.terraform.io/docs/cloud/index.html).
-
-__NOTE:__ Release `0.45.0` contains some changes that could result in the destruction of your existing EKS cluster.
-To circumvent this, follow the instructions in the [0.45.x+ migration path](./docs/migration-0.45.x+.md).
+__NOTE:__ Release `2.0.0` (previously released as version `0.45.0`) contains some changes that 
+could result in the destruction of your existing EKS cluster.
+To circumvent this, follow the instructions in the [v1 to v2 migration path](./docs/migration-v1-v2.md).
 
 __NOTE:__ Every Terraform module that provisions an EKS cluster has faced the challenge that access to the cluster
 is partly controlled by a resource inside the cluster, a ConfigMap called `aws-auth`. You need to be able to access
@@ -84,24 +84,41 @@ a problem: how do you authenticate to an API endpoint that you have not yet crea
 We use the Terraform Kubernetes provider to access the cluster, and it uses the same underlying library
 that `kubectl` uses, so configuration is very similar. However, every kind of configuration we have tried
 has failed at some point.
-- After creating the EKS cluster, we can generate a `kubeconfig` file that configures access to it.
+- An authentication token can be retrieved using the `aws_eks_cluster_auth` data source. Again, this works, as
+long as the token does not expire while Terraform is running, and the token is refreshed during the "plan"
+phase before trying to refresh the state. Unfortunately, failures of both types have been seen. Nevertheless,
+this is the only method that is compatible with Terraform Cloud, so it is the default.
+- After creating the EKS cluster, you can generate a `KUBECONFIG` file that configures access to it.
 This works most of the time, but if the file was present and used as part of the configuration to create
 the cluster, and then the file is deleted (as would happen in a CI system like Terraform Cloud), Terraform
 would not cause the file to be regenerated in time to use it to refresh Terraform's state and the "plan" phase will fail.
-- An authentication token can be retrieved using the `aws_eks_cluster_auth` data source. Again, this works, as
-long as the token does not expire while Terraform is running, and the token is refreshed during the "plan"
-phase before trying to refresh the state. Unfortunately, failures of both types have been seen.
 - An authentication token can be retrieved on demand by using the `exec` feature of the Kubernetes provider
 to call `aws eks get-token`. This requires that the `aws` CLI be installed and available to Terraform and that it
-has access to sufficient credentials to perform the authentication and is configured to use them.
+has access to sufficient credentials to perform the authentication and is configured to use them. When those
+conditions are met, this is the most reliable method, and the one Cloud Posse prefers to use. However, since 
+it has these requirements that are not always easily met, it is not the default method and it is not 
+fully supported. 
 
 All of the above methods can face additional challenges when using `terraform import` to import
-resources into the Terraform state. The KUBECONFG file is the most reliable, and probably what you
-would want to use when importing objects if your usual method does not work. You will need to create
-the file, of course, but that is easily done with `aws eks update-kubeconfig`.
+resources into the Terraform state. The `KUBECONFIG` file method is the only sure way to `import` resources, due to 
+[Terraform limitations](https://github.com/hashicorp/terraform/issues/27934) on providers. You will need to create
+the file, of course, but that is easily done with `aws eks update-kubeconfig`. Depending on the situation,
+you may also be able to import resources by setting `-var apply_config_map_aws_auth=false` during import.
 
 At the moment, the `exec` option appears to be the most reliable method, so we recommend using it if possible,
 but because of the extra requirements it has, we use the data source as the default authentication method.
+
+__Additional Note:__ All of the above methods require network connectivity between the host running the
+`terraform` command and the EKS endpoint. If your EKS cluster does not have public access enabled, this means
+you need to take extra steps, such as using a VPN to provide access to the private endpoint, or running
+`terraform` on a host in the same VPC as the EKS cluster.
+
+__Failure during `destroy`:__ If the cluster is destroyed (via Terraform or otherwise) before the Terraform resource
+responsible for the `aws-auth` ConfigMap is destroyed, Terraform will get stuck trying to delete the ConfigMap, 
+because it cannot contact the now destroyed cluster. This can show up as a `connection refused` error (usually
+to `https://localhost/`). The easiest ways to handle this is either to add `-var apply_config_map_aws_auth=false` 
+to the `destroy` command or to remove the ConfigMap (`...kubernetes_config_map.aws_auth[0]`) from the Terraform
+state with `terraform state rm`.
 
 __NOTE:__ We give you the `kubernetes_config_map_ignore_role_changes` option and default it to `true` for the following reasons:
 - We provision the EKS cluster
@@ -115,7 +132,8 @@ to provision a managed Node Group
 
 However, it is possible to get the worker node roles from the terraform-aws-eks-node-group via Terraform "remote state"
 and include them with any other roles you want to add (example code to be published later), so we make
-ignoring the role changes optional. If you do not ignore changes then you will have no problem with making future intentional changes.
+ignoring the role changes optional. (This is what we do for Cloud Posse clients.)
+If you do not ignore changes then you will have no problem with making future intentional changes.
 
 The downside of having `kubernetes_config_map_ignore_role_changes` set to true is that if you later want to make changes,
 such as adding other IAM roles to Kubernetes groups, you cannot do so via Terraform, because the role changes are ignored.
@@ -437,6 +455,7 @@ Available targets:
 | <a name="input_associated_security_group_ids"></a> [associated\_security\_group\_ids](#input\_associated\_security\_group\_ids) | A list of IDs of Security Groups to associate the cluster with.<br>These security groups will not be modified. | `list(string)` | `[]` | no |
 | <a name="input_attributes"></a> [attributes](#input\_attributes) | ID element. Additional attributes (e.g. `workers` or `cluster`) to add to `id`,<br>in the order they appear in the list. New attributes are appended to the<br>end of the list. The elements of the list are joined by the `delimiter`<br>and treated as a single ID element. | `list(string)` | `[]` | no |
 | <a name="input_aws_auth_yaml_strip_quotes"></a> [aws\_auth\_yaml\_strip\_quotes](#input\_aws\_auth\_yaml\_strip\_quotes) | If true, remove double quotes from the generated aws-auth ConfigMap YAML to reduce spurious diffs in plans | `bool` | `true` | no |
+| <a name="input_cloudwatch_log_group_kms_key_id"></a> [cloudwatch\_log\_group\_kms\_key\_id](#input\_cloudwatch\_log\_group\_kms\_key\_id) | If provided, the KMS Key ID to use to encrypt AWS CloudWatch logs | `string` | `null` | no |
 | <a name="input_cluster_encryption_config_enabled"></a> [cluster\_encryption\_config\_enabled](#input\_cluster\_encryption\_config\_enabled) | Set to `true` to enable Cluster Encryption Configuration | `bool` | `true` | no |
 | <a name="input_cluster_encryption_config_kms_key_deletion_window_in_days"></a> [cluster\_encryption\_config\_kms\_key\_deletion\_window\_in\_days](#input\_cluster\_encryption\_config\_kms\_key\_deletion\_window\_in\_days) | Cluster Encryption Config KMS Key Resource argument - key deletion windows in days post destruction | `number` | `10` | no |
 | <a name="input_cluster_encryption_config_kms_key_enable_key_rotation"></a> [cluster\_encryption\_config\_kms\_key\_enable\_key\_rotation](#input\_cluster\_encryption\_config\_kms\_key\_enable\_key\_rotation) | Cluster Encryption Config KMS Key Resource argument - enable kms key rotation | `bool` | `true` | no |
@@ -489,7 +508,7 @@ Available targets:
 | <a name="input_tags"></a> [tags](#input\_tags) | Additional tags (e.g. `{'BusinessUnit': 'XYZ'}`).<br>Neither the tag keys nor the tag values will be modified by this module. | `map(string)` | `{}` | no |
 | <a name="input_tenant"></a> [tenant](#input\_tenant) | ID element \_(Rarely used, not included by default)\_. A customer identifier, indicating who this instance of a resource is for | `string` | `null` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID for the EKS cluster | `string` | n/a | yes |
-| <a name="input_wait_for_cluster_command"></a> [wait\_for\_cluster\_command](#input\_wait\_for\_cluster\_command) | `local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint are available as environment variable `ENDPOINT` | `string` | `"curl --silent --fail --retry 60 --retry-delay 5 --retry-connrefused --insecure --output /dev/null $ENDPOINT/healthz"` | no |
+| <a name="input_wait_for_cluster_command"></a> [wait\_for\_cluster\_command](#input\_wait\_for\_cluster\_command) | `local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint URL is available as environment variable `ENDPOINT` | `string` | `"curl --silent --fail --retry 30 --retry-delay 10 --retry-connrefused --max-time 11 --insecure --output /dev/null $ENDPOINT/healthz"` | no |
 | <a name="input_workers_role_arns"></a> [workers\_role\_arns](#input\_workers\_role\_arns) | List of Role ARNs of the worker nodes | `list(string)` | `[]` | no |
 | <a name="input_workers_security_group_ids"></a> [workers\_security\_group\_ids](#input\_workers\_security\_group\_ids) | DEPRECATED: Use `allowed_security_group_ids` instead.<br>Historical description: Security Group IDs of the worker nodes.<br>Historical default: `[]` | `list(string)` | `[]` | no |
 
@@ -497,6 +516,7 @@ Available targets:
 
 | Name | Description |
 |------|-------------|
+| <a name="output_cloudwatch_log_group_kms_key_id"></a> [cloudwatch\_log\_group\_kms\_key\_id](#output\_cloudwatch\_log\_group\_kms\_key\_id) | KMS Key ID to encrypt AWS CloudWatch logs |
 | <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | The name of the log group created in cloudwatch where cluster logs are forwarded to if enabled |
 | <a name="output_cluster_encryption_config_enabled"></a> [cluster\_encryption\_config\_enabled](#output\_cluster\_encryption\_config\_enabled) | If true, Cluster Encryption Configuration is enabled |
 | <a name="output_cluster_encryption_config_provider_key_alias"></a> [cluster\_encryption\_config\_provider\_key\_alias](#output\_cluster\_encryption\_config\_provider\_key\_alias) | Cluster Encryption Config KMS Key Alias ARN |
@@ -671,25 +691,27 @@ Check out [our other projects][github], [follow us on twitter][twitter], [apply 
 ### Contributors
 
 <!-- markdownlint-disable -->
-|  [![Erik Osterman][osterman_avatar]][osterman_homepage]<br/>[Erik Osterman][osterman_homepage] | [![Andriy Knysh][aknysh_avatar]][aknysh_homepage]<br/>[Andriy Knysh][aknysh_homepage] | [![Igor Rodionov][goruha_avatar]][goruha_homepage]<br/>[Igor Rodionov][goruha_homepage] | [![Oscar][osulli_avatar]][osulli_homepage]<br/>[Oscar][osulli_homepage] |
-|---|---|---|---|
+|  [![Erik Osterman][osterman_avatar]][osterman_homepage]<br/>[Erik Osterman][osterman_homepage] | [![Andriy Knysh][aknysh_avatar]][aknysh_homepage]<br/>[Andriy Knysh][aknysh_homepage] | [![Igor Rodionov][goruha_avatar]][goruha_homepage]<br/>[Igor Rodionov][goruha_homepage] | [![Nuru][Nuru_avatar]][Nuru_homepage]<br/>[Nuru][Nuru_homepage] | [![Oscar][osulli_avatar]][osulli_homepage]<br/>[Oscar][osulli_homepage] |
+|---|---|---|---|---|
 <!-- markdownlint-restore -->
 
 
   [osterman_homepage]: https://github.com/osterman
-  [osterman_avatar]: https://s.gravatar.com/avatar/88c480d4f73b813904e00a5695a454cb?s=144
+  [osterman_avatar]: https://s.gravatar.com/avatar/88c480d4f73b813904e00a5695a454cb?s=150
 
 
   [aknysh_homepage]: https://github.com/aknysh/
-  [aknysh_avatar]: https://avatars0.githubusercontent.com/u/7356997?v=4&u=ed9ce1c9151d552d985bdf5546772e14ef7ab617&s=144
+  [aknysh_avatar]: https://avatars0.githubusercontent.com/u/7356997?v=4&u=ed9ce1c9151d552d985bdf5546772e14ef7ab617&s=150
 
 
   [goruha_homepage]: https://github.com/goruha/
-  [goruha_avatar]: https://s.gravatar.com/avatar/bc70834d32ed4517568a1feb0b9be7e2?s=144
+  [goruha_avatar]: https://s.gravatar.com/avatar/bc70834d32ed4517568a1feb0b9be7e2?s=150
 
+  [Nuru_homepage]: https://github.com/Nuru
+  [Nuru_avatar]: https://img.cloudposse.com/150x150/https://github.com/Nuru.png
 
   [osulli_homepage]: https://github.com/osulli/
-  [osulli_avatar]: https://avatars1.githubusercontent.com/u/46930728?v=4&s=144
+  [osulli_avatar]: https://avatars1.githubusercontent.com/u/46930728?v=4&s=150
 
 
 [![README Footer][readme_footer_img]][readme_footer_link]

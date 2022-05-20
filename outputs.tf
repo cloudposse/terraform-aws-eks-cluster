@@ -87,3 +87,8 @@ output "cloudwatch_log_group_name" {
   description = "The name of the log group created in cloudwatch where cluster logs are forwarded to if enabled"
   value       = local.cloudwatch_log_group_name
 }
+
+output "cloudwatch_log_group_kms_key_id" {
+  description = "KMS Key ID to encrypt AWS CloudWatch logs"
+  value       = var.cloudwatch_log_group_kms_key_id
+}
