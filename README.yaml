@@ -66,25 +66,29 @@ introduction: |-
     by default, but has some caveats noted below. Set `apply_config_map_aws_auth` to `false` to avoid these issues.)
 
   __NOTE:__ Release `2.0.0` (previously released as version `0.45.0`) contains some changes that 
-  could result in the destruction of your existing EKS cluster.
-  To circumvent this, follow the instructions in the [v1 to v2 migration path](./docs/migration-v1-v2.md).
+  could result in your existing EKS cluster being replaced (destroyed and recreated).
+  To prevent this, follow the instructions in the [v1 to v2 migration path](./docs/migration-v1-v2.md).
   
   __NOTE:__ Every Terraform module that provisions an EKS cluster has faced the challenge that access to the cluster
   is partly controlled by a resource inside the cluster, a ConfigMap called `aws-auth`. You need to be able to access
-  the cluster through the Kubernetes API to modify the ConfigMap, because there is no AWS API for it. This presents
+  the cluster through the Kubernetes API to modify the ConfigMap, because 
+  [there is no AWS API for it](https://github.com/aws/containers-roadmap/issues/185). This presents
   a problem: how do you authenticate to an API endpoint that you have not yet created?
   
   We use the Terraform Kubernetes provider to access the cluster, and it uses the same underlying library
   that `kubectl` uses, so configuration is very similar. However, every kind of configuration we have tried
   has failed at some point.
-  - An authentication token can be retrieved using the `aws_eks_cluster_auth` data source. Again, this works, as
+  - An authentication token can be retrieved using the `aws_eks_cluster_auth` data source. This works as
   long as the token does not expire while Terraform is running, and the token is refreshed during the "plan"
-  phase before trying to refresh the state. Unfortunately, failures of both types have been seen. Nevertheless,
-  this is the only method that is compatible with Terraform Cloud, so it is the default.
+  phase before trying to refresh the state, and the token does not expire in the interval between
+  "plan" and "apply". Unfortunately, failures of all these types have been seen. Nevertheless,
+  this is the only method that is compatible with Terraform Cloud, so it is the default. It is the only
+  method we fully support until AWS [provides an API for managing `aws-auth`](https://github.com/aws/containers-roadmap/issues/185).
   - After creating the EKS cluster, you can generate a `KUBECONFIG` file that configures access to it.
   This works most of the time, but if the file was present and used as part of the configuration to create
-  the cluster, and then the file is deleted (as would happen in a CI system like Terraform Cloud), Terraform
+  the cluster, and then the file gets deleted (as would happen in a CI system like Terraform Cloud), Terraform
   would not cause the file to be regenerated in time to use it to refresh Terraform's state and the "plan" phase will fail.
+  So any `KUBECONFIG` file has to be managed separately.
   - An authentication token can be retrieved on demand by using the `exec` feature of the Kubernetes provider
   to call `aws eks get-token`. This requires that the `aws` CLI be installed and available to Terraform and that it
   has access to sufficient credentials to perform the authentication and is configured to use them. When those
