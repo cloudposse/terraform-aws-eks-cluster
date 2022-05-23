@@ -14,15 +14,9 @@ module "label" {
 locals {
   # The usage of the specific kubernetes.io/cluster/* resource tags below are required
   # for EKS and Kubernetes to discover and manage networking resources
-  # https://www.terraform.io/docs/providers/aws/guides/eks-getting-started.html#base-vpc-networking
+  # https://aws.amazon.com/premiumsupport/knowledge-center/eks-vpc-subnet-discovery/
+  # https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/main/docs/deploy/subnet_discovery.md
   tags = { "kubernetes.io/cluster/${module.label.id}" = "shared" }
-
-  # Unfortunately, most_recent (https://github.com/cloudposse/terraform-aws-eks-workers/blob/34a43c25624a6efb3ba5d2770a601d7cb3c0d391/main.tf#L141)
-  # variable does not work as expected, if you are not going to use custom ami you should
-  # enforce usage of eks_worker_ami_name_filter variable to set the right kubernetes version for EKS workers,
-  # otherwise will be used the first version of Kubernetes supported by AWS (v1.11) for EKS workers but
-  # EKS control plane will use the version specified by kubernetes_version variable.
-  eks_worker_ami_name_filter = "amazon-eks-node-${var.kubernetes_version}*"
 
   # required tags to make ALB ingress work https://docs.aws.amazon.com/eks/latest/userguide/alb-ingress.html
   public_subnets_additional_tags = {
@@ -35,7 +29,7 @@ locals {
 
 module "vpc" {
   source  = "cloudposse/vpc/aws"
-  version = "0.28.1"
+  version = "1.1.0"
 
   cidr_block = "172.16.0.0/16"
   tags       = local.tags
@@ -45,12 +39,12 @@ module "vpc" {
 
 module "subnets" {
   source  = "cloudposse/dynamic-subnets/aws"
-  version = "0.39.8"
+  version = "2.0.2"
 
   availability_zones              = var.availability_zones
   vpc_id                          = module.vpc.vpc_id
-  igw_id                          = module.vpc.igw_id
-  cidr_block                      = module.vpc.vpc_cidr_block
+  igw_id                          = [module.vpc.igw_id]
+  ipv4_cidr_block                 = [module.vpc.vpc_cidr_block]
   nat_gateway_enabled             = true
   nat_instance_enabled            = false
   tags                            = local.tags
@@ -95,12 +89,17 @@ module "eks_cluster" {
   allowed_security_group_ids = [module.vpc.vpc_default_security_group_id]
   allowed_cidr_blocks        = [module.vpc.vpc_cidr_block]
 
+  # For manual testing. In particular, set `false` if local configuration/state
+  # has a cluster but the cluster was deleted by nightly cleanup, in order for
+  # `terraform destroy` to succeed.
+  apply_config_map_aws_auth = var.apply_config_map_aws_auth
+
   context = module.this.context
 }
 
 module "eks_node_group" {
   source  = "cloudposse/eks-node-group/aws"
-  version = "0.27.1"
+  version = "2.4.0"
 
   subnet_ids        = module.subnets.private_subnet_ids
   cluster_name      = module.eks_cluster.eks_cluster_id

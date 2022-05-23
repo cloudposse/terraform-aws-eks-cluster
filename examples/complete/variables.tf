@@ -140,3 +140,9 @@ variable "addons" {
   default     = []
   description = "Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources."
 }
+
+variable "apply_config_map_aws_auth" {
+  type        = bool
+  default     = true
+  description = "Whether to apply the ConfigMap to allow worker nodes to join the EKS cluster and allow additional users, accounts and roles to acces the cluster"
+}

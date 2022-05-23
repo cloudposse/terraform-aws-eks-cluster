@@ -3,12 +3,12 @@ package test
 import (
 	"encoding/base64"
 	"fmt"
-	"math/rand"
-	"strconv"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 
@@ -57,11 +57,8 @@ func newClientset(cluster *eks.Cluster) (*kubernetes.Clientset, error) {
 
 // Test the Terraform module in examples/complete using Terratest.
 func TestExamplesComplete(t *testing.T) {
-	t.Parallel()
 
-	rand.Seed(time.Now().UnixNano())
-
-	randId := strconv.Itoa(rand.Intn(100000))
+	randId := strings.ToLower(random.UniqueId())
 	attributes := []string{randId}
 
 	terraformOptions := &terraform.Options{
