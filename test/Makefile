@@ -33,11 +33,11 @@ clean:
 all: module examples/complete
 
 ## Run basic sanity checks against the module itself
-module: export TESTS ?= installed lint get-modules module-pinning get-plugins provider-pinning validate terraform-docs input-descriptions output-descriptions
+module: export TESTS ?= installed lint module-pinning provider-pinning validate terraform-docs input-descriptions output-descriptions
 module: deps
 	$(call RUN_TESTS, ../)
 
 ## Run tests against example
-examples/complete: export TESTS ?= installed lint get-modules get-plugins validate
+examples/complete: export TESTS ?= installed lint validate
 examples/complete: deps
 	$(call RUN_TESTS, ../$@)

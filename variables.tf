@@ -9,14 +9,14 @@ variable "vpc_id" {
 }
 
 variable "subnet_ids" {
-  description = "A list of subnet IDs to launch the cluster in"
   type        = list(string)
+  description = "A list of subnet IDs to launch the cluster in"
 }
 
 variable "create_eks_service_role" {
   type        = bool
-  default     = true
   description = "Set `false` to use existing `eks_cluster_service_role_arn` instead of creating one"
+  default     = true
 }
 
 variable "eks_cluster_service_role_arn" {
@@ -37,157 +37,163 @@ variable "workers_role_arns" {
 
 variable "kubernetes_version" {
   type        = string
-  default     = "1.21"
   description = "Desired Kubernetes master version. If you do not specify a value, the latest available version is used"
+  default     = "1.21"
 }
 
 variable "oidc_provider_enabled" {
   type        = bool
+  description = <<-EOT
+    Create an IAM OIDC identity provider for the cluster, then you can create IAM roles to associate with a
+    service account in the cluster, instead of using kiam or kube2iam. For more information,
+    see [EKS User Guide](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html).
+    EOT
   default     = false
-  description = "Create an IAM OIDC identity provider for the cluster, then you can create IAM roles to associate with a service account in the cluster, instead of using kiam or kube2iam. For more information, see https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html"
 }
 
 variable "endpoint_private_access" {
   type        = bool
-  default     = false
   description = "Indicates whether or not the Amazon EKS private API server endpoint is enabled. Default to AWS EKS resource and it is false"
+  default     = false
 }
 
 variable "endpoint_public_access" {
   type        = bool
-  default     = true
   description = "Indicates whether or not the Amazon EKS public API server endpoint is enabled. Default to AWS EKS resource and it is true"
+  default     = true
 }
 
 variable "public_access_cidrs" {
   type        = list(string)
-  default     = ["0.0.0.0/0"]
   description = "Indicates which CIDR blocks can access the Amazon EKS public API server endpoint when enabled. EKS defaults this to a list with 0.0.0.0/0."
+  default     = ["0.0.0.0/0"]
 }
 
 variable "service_ipv4_cidr" {
   type        = string
-  default     = null
   description = <<-EOT
     The CIDR block to assign Kubernetes service IP addresses from.
     You can only specify a custom CIDR block when you create a cluster, changing this value will force a new cluster to be created.
     EOT
+  default     = null
+}
+
+variable "kubernetes_network_ipv6_enabled" {
+  type        = bool
+  description = "Set true to use IPv6 addresses for Kubernetes pods and services"
+  default     = false
 }
 
 variable "enabled_cluster_log_types" {
   type        = list(string)
-  default     = []
   description = "A list of the desired control plane logging to enable. For more information, see https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. Possible values [`api`, `audit`, `authenticator`, `controllerManager`, `scheduler`]"
+  default     = []
 }
 
 variable "cluster_log_retention_period" {
   type        = number
-  default     = 0
   description = "Number of days to retain cluster logs. Requires `enabled_cluster_log_types` to be set. See https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html."
+  default     = 0
 }
 
 variable "apply_config_map_aws_auth" {
   type        = bool
-  default     = true
   description = "Whether to apply the ConfigMap to allow worker nodes to join the EKS cluster and allow additional users, accounts and roles to acces the cluster"
+  default     = true
 }
 
 variable "map_additional_aws_accounts" {
-  description = "Additional AWS account numbers to add to `config-map-aws-auth` ConfigMap"
   type        = list(string)
+  description = "Additional AWS account numbers to add to `config-map-aws-auth` ConfigMap"
   default     = []
 }
 
 variable "map_additional_iam_roles" {
-  description = "Additional IAM roles to add to `config-map-aws-auth` ConfigMap"
-
   type = list(object({
     rolearn  = string
     username = string
     groups   = list(string)
   }))
-
-  default = []
+  description = "Additional IAM roles to add to `config-map-aws-auth` ConfigMap"
+  default     = []
 }
 
 variable "map_additional_iam_users" {
-  description = "Additional IAM users to add to `config-map-aws-auth` ConfigMap"
-
   type = list(object({
     userarn  = string
     username = string
     groups   = list(string)
   }))
-
-  default = []
+  description = "Additional IAM users to add to `config-map-aws-auth` ConfigMap"
+  default     = []
 }
 
 variable "local_exec_interpreter" {
   type        = list(string)
-  default     = ["/bin/sh", "-c"]
   description = "shell to use for local_exec"
+  default     = ["/bin/sh", "-c"]
 }
 
 variable "wait_for_cluster_command" {
-  type = string
+  type        = string
+  description = "`local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint URL is available as environment variable `ENDPOINT`"
   ## --max-time is per attempt, --retry is the number of attempts
   ## Approx. total time limit is (max-time + retry-delay) * retry seconds
-  default     = "curl --silent --fail --retry 30 --retry-delay 10 --retry-connrefused --max-time 11 --insecure --output /dev/null $ENDPOINT/healthz"
-  description = "`local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint URL is available as environment variable `ENDPOINT`"
+  default = "curl --silent --fail --retry 30 --retry-delay 10 --retry-connrefused --max-time 11 --insecure --output /dev/null $ENDPOINT/healthz"
 }
 
 variable "kubernetes_config_map_ignore_role_changes" {
   type        = bool
-  default     = true
   description = "Set to `true` to ignore IAM role changes in the Kubernetes Auth ConfigMap"
+  default     = true
 }
 
 variable "cluster_encryption_config_enabled" {
   type        = bool
-  default     = true
   description = "Set to `true` to enable Cluster Encryption Configuration"
+  default     = true
 }
 
 variable "cluster_encryption_config_kms_key_id" {
   type        = string
-  default     = ""
   description = "KMS Key ID to use for cluster encryption config"
+  default     = ""
 }
 
 variable "cluster_encryption_config_kms_key_enable_key_rotation" {
   type        = bool
-  default     = true
   description = "Cluster Encryption Config KMS Key Resource argument - enable kms key rotation"
+  default     = true
 }
 
 variable "cluster_encryption_config_kms_key_deletion_window_in_days" {
   type        = number
-  default     = 10
   description = "Cluster Encryption Config KMS Key Resource argument - key deletion windows in days post destruction"
+  default     = 10
 }
 
 variable "cluster_encryption_config_kms_key_policy" {
   type        = string
-  default     = null
   description = "Cluster Encryption Config KMS Key Resource argument - key policy"
+  default     = null
 }
 
 variable "cluster_encryption_config_resources" {
   type        = list(any)
-  default     = ["secrets"]
   description = "Cluster Encryption Config Resources to encrypt, e.g. ['secrets']"
+  default     = ["secrets"]
 }
 
 variable "permissions_boundary" {
   type        = string
+  description = "If provided, all IAM roles will be created with this permissions boundary attached"
   default     = null
-  description = "If provided, all IAM roles will be created with this permissions boundary attached."
 }
 
 variable "cloudwatch_log_group_kms_key_id" {
   type        = string
-  default     = null
   description = "If provided, the KMS Key ID to use to encrypt AWS CloudWatch logs"
+  default     = null
 }
 
 variable "addons" {
@@ -197,8 +203,8 @@ variable "addons" {
     resolve_conflicts        = string
     service_account_role_arn = string
   }))
+  description = "Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources"
   default     = []
-  description = "Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources."
 }
 
 ##################
@@ -217,69 +223,69 @@ variable "addons" {
 
 variable "kubeconfig_path_enabled" {
   type        = bool
-  default     = false
   description = "If `true`, configure the Kubernetes provider with `kubeconfig_path` and use it for authenticating to the EKS cluster"
+  default     = false
 }
 
 variable "kubeconfig_path" {
   type        = string
-  default     = ""
   description = "The Kubernetes provider `config_path` setting to use when `kubeconfig_path_enabled` is `true`"
+  default     = ""
 }
 
 variable "kubeconfig_context" {
   type        = string
-  default     = ""
   description = "Context to choose from the Kubernetes kube config file"
+  default     = ""
 }
 
 variable "kube_data_auth_enabled" {
   type        = bool
-  default     = true
   description = <<-EOT
     If `true`, use an `aws_eks_cluster_auth` data source to authenticate to the EKS cluster.
     Disabled by `kubeconfig_path_enabled` or `kube_exec_auth_enabled`.
     EOT
+  default     = true
 }
 
 variable "kube_exec_auth_enabled" {
   type        = bool
-  default     = false
   description = <<-EOT
     If `true`, use the Kubernetes provider `exec` feature to execute `aws eks get-token` to authenticate to the EKS cluster.
     Disabled by `kubeconfig_path_enabled`, overrides `kube_data_auth_enabled`.
     EOT
+  default     = false
 }
 
 
 variable "kube_exec_auth_role_arn" {
   type        = string
-  default     = ""
   description = "The role ARN for `aws eks get-token` to use"
+  default     = ""
 }
 
 variable "kube_exec_auth_role_arn_enabled" {
   type        = bool
-  default     = false
   description = "If `true`, pass `kube_exec_auth_role_arn` as the role ARN to `aws eks get-token`"
+  default     = false
 }
 
 variable "kube_exec_auth_aws_profile" {
   type        = string
-  default     = ""
   description = "The AWS config profile for `aws eks get-token` to use"
+  default     = ""
 }
 
 variable "kube_exec_auth_aws_profile_enabled" {
   type        = bool
-  default     = false
   description = "If `true`, pass `kube_exec_auth_aws_profile` as the `profile` to `aws eks get-token`"
+  default     = false
 }
 
 variable "aws_auth_yaml_strip_quotes" {
   type        = bool
-  default     = true
   description = "If true, remove double quotes from the generated aws-auth ConfigMap YAML to reduce spurious diffs in plans"
+  default     = true
 }
 
 variable "dummy_kubeapi_server" {

@@ -8,6 +8,7 @@ stage = "test"
 
 name = "eks"
 
+# When updating the Kubernetes version, also update the API and client-go version in test/src/go.mod
 kubernetes_version = "1.21"
 
 oidc_provider_enabled = true
