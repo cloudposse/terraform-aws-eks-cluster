@@ -51,6 +51,8 @@ resource "aws_kms_alias" "cluster" {
 }
 
 resource "aws_eks_cluster" "default" {
+  #bridgecrew:skip=BC_AWS_KUBERNETES_1:Allow permissive security group for public access, difficult to restrict without a VPN
+  #bridgecrew:skip=BC_AWS_KUBERNETES_4:Let user decide on control plane logging, not necessary in non-production environments
   count                     = local.enabled ? 1 : 0
   name                      = module.label.id
   tags                      = module.label.tags
@@ -59,6 +61,7 @@ resource "aws_eks_cluster" "default" {
   enabled_cluster_log_types = var.enabled_cluster_log_types
 
   dynamic "encryption_config" {
+    #bridgecrew:skip=BC_AWS_KUBERNETES_3:Let user decide secrets encryption, mainly because changing this value requires completely destroying the cluster
     for_each = var.cluster_encryption_config_enabled ? [local.cluster_encryption_config] : []
     content {
       resources = lookup(encryption_config.value, "resources")
@@ -72,6 +75,7 @@ resource "aws_eks_cluster" "default" {
     security_group_ids      = var.create_security_group ? compact(concat(var.associated_security_group_ids, [join("", aws_security_group.default.*.id)])) : var.associated_security_group_ids
     subnet_ids              = var.subnet_ids
     endpoint_private_access = var.endpoint_private_access
+    #bridgecrew:skip=BC_AWS_KUBERNETES_2:Let user decide on public access
     endpoint_public_access  = var.endpoint_public_access
     public_access_cidrs     = var.public_access_cidrs
   }
