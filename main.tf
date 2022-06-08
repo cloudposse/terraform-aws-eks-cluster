@@ -1,6 +1,8 @@
 locals {
   enabled = module.this.enabled
 
+  use_ipv6 = var.kubernetes_network_ipv6_enabled
+
   cluster_encryption_config = {
     resources = var.cluster_encryption_config_resources
 
@@ -75,9 +77,16 @@ resource "aws_eks_cluster" "default" {
   }
 
   dynamic "kubernetes_network_config" {
-    for_each = compact([var.service_ipv4_cidr])
+    for_each = local.use_ipv6 ? [] : compact([var.service_ipv4_cidr])
     content {
       service_ipv4_cidr = kubernetes_network_config.value
+    }
+  }
+
+  dynamic "kubernetes_network_config" {
+    for_each = local.use_ipv6 ? [true] : []
+    content {
+      ip_family = "ipv6"
     }
   }
 

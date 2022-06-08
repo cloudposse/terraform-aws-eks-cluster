@@ -78,6 +78,12 @@ variable "service_ipv4_cidr" {
   default     = null
 }
 
+variable "kubernetes_network_ipv6_enabled" {
+  type        = bool
+  description = "Set true to use IPv6 addresses for Kubernetes pods and services"
+  default     = false
+}
+
 variable "enabled_cluster_log_types" {
   type        = list(string)
   description = "A list of the desired control plane logging to enable. For more information, see https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. Possible values [`api`, `audit`, `authenticator`, `controllerManager`, `scheduler`]"
@@ -109,7 +115,7 @@ variable "map_additional_iam_roles" {
     groups   = list(string)
   }))
   description = "Additional IAM roles to add to `config-map-aws-auth` ConfigMap"
-  default = []
+  default     = []
 }
 
 variable "map_additional_iam_users" {
@@ -119,7 +125,7 @@ variable "map_additional_iam_users" {
     groups   = list(string)
   }))
   description = "Additional IAM users to add to `config-map-aws-auth` ConfigMap"
-  default = []
+  default     = []
 }
 
 variable "local_exec_interpreter" {
@@ -129,11 +135,11 @@ variable "local_exec_interpreter" {
 }
 
 variable "wait_for_cluster_command" {
-  type = string
+  type        = string
   description = "`local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint URL is available as environment variable `ENDPOINT`"
   ## --max-time is per attempt, --retry is the number of attempts
   ## Approx. total time limit is (max-time + retry-delay) * retry seconds
-  default     = "curl --silent --fail --retry 30 --retry-delay 10 --retry-connrefused --max-time 11 --insecure --output /dev/null $ENDPOINT/healthz"
+  default = "curl --silent --fail --retry 30 --retry-delay 10 --retry-connrefused --max-time 11 --insecure --output /dev/null $ENDPOINT/healthz"
 }
 
 variable "kubernetes_config_map_ignore_role_changes" {
