@@ -128,6 +128,12 @@ variable "map_additional_iam_users" {
   default     = []
 }
 
+variable "manage_aws_auth_configmap" {
+  description = "Determines whether to manage the aws-auth configmap"
+  type        = bool
+  default     = false
+}
+
 variable "local_exec_interpreter" {
   type        = list(string)
   description = "shell to use for local_exec"
@@ -304,4 +310,17 @@ variable "cluster_attributes" {
   type        = list(string)
   description = "Override label module default cluster attributes"
   default     = ["cluster"]
+}
+
+variable "remote_state" {
+  type = object({
+    backend = string
+    config = map(any)
+  })
+  default = null
+  description = <<-EOT
+    The terraform backend config. Can be used to read the previous state of the cluster and find out which
+    roles to add/remove in the aws auth config map.
+    Defaults to null
+  EOT
 }

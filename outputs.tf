@@ -95,3 +95,8 @@ output "cloudwatch_log_group_kms_key_id" {
   description = "KMS Key ID to encrypt AWS CloudWatch logs"
   value       = var.cloudwatch_log_group_kms_key_id
 }
+
+output "map_additional_iam_roles" {
+  description = "Used to read previous cluster state and decide what roles to include/exclude"
+  value       = var.map_additional_iam_roles
+}

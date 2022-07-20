@@ -58,6 +58,24 @@ locals {
       ]
     }
   ]
+
+  previous_map_additional_iam_roles = try(data.terraform_remote_state.eks.outputs.map_additional_iam_roles, [])
+  cluster_current_map_roles = try(yamldecode(data.kubernetes_config_map.existing_aws_auth.data["mapRoles"]), [])
+
+  # Check the "map_additional_iam_roles" from last terraform apply to know if we need to remove any roles
+  roles_removed_from_tf_input = setsubtract(local.previous_map_additional_iam_roles, var.map_additional_iam_roles)
+
+  # Ordering is important here as new items are appended to the config map by AWS
+  merged_roles = distinct(concat(
+    local.map_worker_roles,
+    local.cluster_current_map_roles,
+    var.map_additional_iam_roles
+  ))
+
+  # Manual filtering instead of setsubtract since ordering is lost so terraform always reports changes to the config map
+  cluster_map_roles = [
+    for item in local.merged_roles : item if contains(local.roles_removed_from_tf_input, item) == false
+  ]
 }
 
 resource "null_resource" "wait_for_cluster" {
@@ -115,6 +133,20 @@ provider "kubernetes" {
   }
 }
 
+data "kubernetes_config_map" "existing_aws_auth" {
+  metadata {
+    name      = "aws-auth"
+    namespace = "kube-system"
+  }
+  depends_on = [null_resource.wait_for_cluster[0]]
+}
+
+# Self reference
+data "terraform_remote_state" "eks" {
+  backend = var.remote_state.backend
+  config  = var.remote_state.config
+}
+
 resource "kubernetes_config_map" "aws_auth_ignore_changes" {
   count      = local.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes ? 1 : 0
   depends_on = [null_resource.wait_for_cluster]
@@ -145,8 +177,41 @@ resource "kubernetes_config_map" "aws_auth" {
   }
 
   data = {
-    mapRoles    = replace(yamlencode(distinct(concat(local.map_worker_roles, var.map_additional_iam_roles))), "\"", local.yaml_quote)
+    mapRoles    = replace(yamlencode(local.cluster_map_roles), "\"", local.yaml_quote)
     mapUsers    = replace(yamlencode(var.map_additional_iam_users), "\"", local.yaml_quote)
     mapAccounts = replace(yamlencode(var.map_additional_aws_accounts), "\"", local.yaml_quote)
   }
+
+  lifecycle {
+    # We are ignoring the data here since we will manage it with the resource below
+    # This is only intended to be used in scenarios where the configmap does not exist
+    ignore_changes = [data]
+  }
+}
+
+resource "kubernetes_config_map_v1_data" "aws_auth" {
+  count = local.enabled && var.manage_aws_auth_configmap ? 1 : 0
+
+  force = true
+
+  # This fails because the eks managed node group changes the ownership of the mapRoles in configMap if deployed separately
+  # vpcLambda is the sole owner of it so apply again resets it
+  # Force true will overwrite the node group role
+  //force = false
+
+  metadata {
+    name      = "aws-auth"
+    namespace = "kube-system"
+  }
+
+  data = {
+    mapRoles    = replace(yamlencode(local.cluster_map_roles), "\"", local.yaml_quote)
+    mapUsers    = replace(yamlencode(var.map_additional_iam_users), "\"", local.yaml_quote)
+    mapAccounts = replace(yamlencode(var.map_additional_aws_accounts), "\"", local.yaml_quote)
+  }
+
+  depends_on = [
+    # Required for instances where the configmap does not exist yet to avoid race condition
+    kubernetes_config_map.aws_auth,
+  ]
 }
