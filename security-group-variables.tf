@@ -43,3 +43,11 @@ variable "allowed_cidr_blocks" {
     The length of this list must be known at "plan" time.
     EOT
 }
+
+
+
+variable "custom_ingress_rules" {
+  type = list(object({
+
+  }))
+}
