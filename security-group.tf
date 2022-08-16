@@ -100,6 +100,6 @@ resource "aws_security_group_rule" "custom_ingress_rules" {
   to_port                  = each.value.to_port
   protocol                 = each.value.protocol
   source_security_group_id = each.value.source_security_group_id
-  security_group_id        = join("", aws_security_group.default.*.id)
+  security_group_id        = join("", aws_eks_cluster.default.*.vpc_config.0.cluster_security_group_id)
   type                     = "ingress"
 }
