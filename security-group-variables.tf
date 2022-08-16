@@ -48,6 +48,15 @@ variable "allowed_cidr_blocks" {
 
 variable "custom_ingress_rules" {
   type = list(object({
-
+    description              = string
+    from_port                = number
+    to_port                  = number
+    protocol                 = string
+    source_security_group_id = string
   }))
+  default     = []
+  description = <<-EOT
+    A List of Objects, which are custom security group rules that
+    EOT
+
 }
