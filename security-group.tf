@@ -90,3 +90,16 @@ resource "aws_security_group_rule" "ingress_cidr_blocks" {
   security_group_id = join("", aws_security_group.default.*.id)
   type              = "ingress"
 }
+
+resource "aws_security_group_rule" "custom_ingress_rules" {
+
+  for_each = { for sg_rule in var.custom_ingress_rules : sg_rule.source_security_group_id => sg_rule }
+
+  description              = each.value.description
+  from_port                = each.value.from_port
+  to_port                  = each.value.to_port
+  protocol                 = each.value.protocol
+  source_security_group_id = each.value.source_security_group_id
+  security_group_id        = join("", aws_eks_cluster.default.*.vpc_config.0.cluster_security_group_id)
+  type                     = "ingress"
+}
