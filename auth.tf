@@ -50,7 +50,7 @@ locals {
   # Note that we don't need to do this for managed Node Groups since EKS adds their roles to the ConfigMap automatically
   map_worker_roles = [
     for role_arn in var.workers_role_arns : {
-      rolearn  = role_arn
+      rolearn = role_arn
       username = "system:node:{{EC2PrivateDNSName}}"
       groups = [
         "system:bootstrappers",
@@ -59,7 +59,16 @@ locals {
     }
   ]
 
-  previous_map_additional_iam_roles = try(data.terraform_remote_state.eks.outputs.map_additional_iam_roles, [])
+  ssm_parameter_name = "${coalesce(var.ssm_parameter_path, "/system/terraform/${module.label.id}")}/previous_map_additional_iam_roles"
+
+  # Parameter value can't nest another parameter. Do not use "{{}}" in the value
+  # https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_PutParameter.html#systemsmanager-PutParameter-request-Value
+  param_escape_regex = "/{{(.*)}}/"
+  param_escape_replacement = "{__{$1}__}"
+  param_unescape_regex = "/{__{(.*)}__}/"
+  param_unescape_replacement = "{{$1}}"
+
+  previous_map_additional_iam_roles = jsondecode(replace(data.aws_ssm_parameter.previous.value, local.param_unescape_regex, local.param_unescape_replacement))
   cluster_current_map_roles = try(yamldecode(data.kubernetes_config_map.existing_aws_auth.data["mapRoles"]), [])
 
   # Check the "map_additional_iam_roles" from last terraform apply to know if we need to remove any roles
@@ -141,11 +150,43 @@ data "kubernetes_config_map" "existing_aws_auth" {
   depends_on = [null_resource.wait_for_cluster[0]]
 }
 
-# Self reference
-data "terraform_remote_state" "eks" {
-  backend = var.remote_state.backend
-  config  = var.remote_state.config
+# Need to make sure it exists initially otherwise the data source fails
+resource "aws_ssm_parameter" "initial" {
+  name     = local.ssm_parameter_name
+
+  description = "Test"
+  type        = "String"
+  value       = "[]"
+  overwrite   = true
+  tier        = "Advanced"
+
+  lifecycle {
+    ignore_changes = [
+      value,
+    ]
+  }
 }
+
+# Read the previous map_additional_iam_roles
+data "aws_ssm_parameter" "previous" {
+  name  = local.ssm_parameter_name
+  depends_on = [aws_ssm_parameter.initial]
+}
+
+# Save new value for this apply, make sure the data source runs before this writes the new value using depends_on
+resource "aws_ssm_parameter" "current" {
+  name     = local.ssm_parameter_name
+
+  description = "Test"
+  type        = "String"
+  # Parameter value can't nest another parameter. Do not use "{{}}" in the value
+  value       = replace(jsonencode(var.map_additional_iam_roles), local.param_escape_regex, local.param_escape_replacement)
+  overwrite   = true
+  tier        = "Advanced"
+
+  depends_on = [data.aws_ssm_parameter.previous]
+}
+
 
 resource "kubernetes_config_map" "aws_auth_ignore_changes" {
   count      = local.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes ? 1 : 0

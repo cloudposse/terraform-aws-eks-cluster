@@ -318,9 +318,13 @@ variable "remote_state" {
     config = map(any)
   })
   default = null
+}
+
+variable "ssm_parameter_path" {
+  type = string
+  default = ""
   description = <<-EOT
-    The terraform backend config. Can be used to read the previous state of the cluster and find out which
-    roles to add/remove in the aws auth config map.
-    Defaults to null
+    This module will save the value of var.map_additional_iam_roles from the previous terraform apply in AWS Parameter Store.
+    If not set the module will use a generated one from context 
   EOT
 }
