@@ -89,6 +89,10 @@ module "eks_cluster" {
   allowed_security_group_ids = [module.vpc.vpc_default_security_group_id]
   allowed_cidr_blocks        = [module.vpc.vpc_cidr_block]
 
+  # Using kube_exec_auth for connecting to EKS
+  kube_data_auth_enabled = false
+  kube_exec_auth_enabled = true
+
   # For manual testing. In particular, set `false` if local configuration/state
   # has a cluster but the cluster was deleted by nightly cleanup, in order for
   # `terraform destroy` to succeed.

@@ -108,9 +108,10 @@ provider "kubernetes" {
   dynamic "exec" {
     for_each = local.kube_exec_auth_enabled ? ["exec"] : []
     content {
-      api_version = "client.authentication.k8s.io/v1beta1"
+      api_version = var.kube_exec_auth_api_version
       command     = "aws"
-      args        = concat(local.exec_profile, ["eks", "get-token", "--cluster-name", aws_eks_cluster.default[0].id], local.exec_role)
+      args        = concat(["eks", "get-token", "--cluster-name", aws_eks_cluster.default[0].id, "--region", var.region], local.exec_profile, local.exec_role)
+      env         = var.kube_exec_auth_env
     }
   }
 }

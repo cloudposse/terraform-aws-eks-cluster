@@ -257,6 +257,17 @@ variable "kube_exec_auth_enabled" {
   default     = false
 }
 
+variable "kube_exec_auth_api_version" {
+  type        = string
+  description = "The API version for `aws eks get-token` to use"
+  default     = "client.authentication.k8s.io/v1beta1"
+}
+
+variable "kube_exec_auth_env" {
+  type        = map(string)
+  description = "The env for `aws eks get-token` to use"
+  default     = {}
+}
 
 variable "kube_exec_auth_role_arn" {
   type        = string
