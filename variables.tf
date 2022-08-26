@@ -128,12 +128,6 @@ variable "map_additional_iam_users" {
   default     = []
 }
 
-variable "manage_aws_auth_configmap" {
-  description = "Determines whether to manage the aws-auth configmap"
-  type        = bool
-  default     = false
-}
-
 variable "local_exec_interpreter" {
   type        = list(string)
   description = "shell to use for local_exec"

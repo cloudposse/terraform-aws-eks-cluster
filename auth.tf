@@ -68,7 +68,7 @@ locals {
   param_unescape_regex = "/{__{(.*)}__}/"
   param_unescape_replacement = "{{$1}}"
 
-  previous_map_additional_iam_roles = jsondecode(replace(data.aws_ssm_parameter.previous.value, local.param_unescape_regex, local.param_unescape_replacement))
+  previous_map_additional_iam_roles = jsondecode(replace(try(data.aws_ssm_parameter.previous[0].value, "[]"), local.param_unescape_regex, local.param_unescape_replacement))
   cluster_current_map_roles = try(yamldecode(data.kubernetes_config_map.existing_aws_auth.data["mapRoles"]), [])
 
   # Check the "map_additional_iam_roles" from last terraform apply to know if we need to remove any roles
@@ -152,9 +152,10 @@ data "kubernetes_config_map" "existing_aws_auth" {
 
 # Need to make sure it exists initially otherwise the data source fails
 resource "aws_ssm_parameter" "initial" {
-  name     = local.ssm_parameter_name
+  count = local.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes == false ? 1 : 0
 
-  description = "Test"
+  name        = local.ssm_parameter_name
+  description = "Previous map additional_iam_roles for ${module.label.id}"
   type        = "String"
   value       = "[]"
   overwrite   = true
@@ -169,15 +170,18 @@ resource "aws_ssm_parameter" "initial" {
 
 # Read the previous map_additional_iam_roles
 data "aws_ssm_parameter" "previous" {
+  count = local.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes == false ? 1 : 0
+
   name  = local.ssm_parameter_name
   depends_on = [aws_ssm_parameter.initial]
 }
 
 # Save new value for this apply, make sure the data source runs before this writes the new value using depends_on
 resource "aws_ssm_parameter" "current" {
-  name     = local.ssm_parameter_name
+  count = local.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes == false ? 1 : 0
 
-  description = "Test"
+  name        = local.ssm_parameter_name
+  description = "Previous map additional_iam_roles for ${module.label.id}"
   type        = "String"
   # Parameter value can't nest another parameter. Do not use "{{}}" in the value
   value       = replace(jsonencode(var.map_additional_iam_roles), local.param_escape_regex, local.param_escape_replacement)
@@ -222,37 +226,4 @@ resource "kubernetes_config_map" "aws_auth" {
     mapUsers    = replace(yamlencode(var.map_additional_iam_users), "\"", local.yaml_quote)
     mapAccounts = replace(yamlencode(var.map_additional_aws_accounts), "\"", local.yaml_quote)
   }
-
-  lifecycle {
-    # We are ignoring the data here since we will manage it with the resource below
-    # This is only intended to be used in scenarios where the configmap does not exist
-    ignore_changes = [data]
-  }
-}
-
-resource "kubernetes_config_map_v1_data" "aws_auth" {
-  count = local.enabled && var.manage_aws_auth_configmap ? 1 : 0
-
-  force = true
-
-  # This fails because the eks managed node group changes the ownership of the mapRoles in configMap if deployed separately
-  # vpcLambda is the sole owner of it so apply again resets it
-  # Force true will overwrite the node group role
-  //force = false
-
-  metadata {
-    name      = "aws-auth"
-    namespace = "kube-system"
-  }
-
-  data = {
-    mapRoles    = replace(yamlencode(local.cluster_map_roles), "\"", local.yaml_quote)
-    mapUsers    = replace(yamlencode(var.map_additional_iam_users), "\"", local.yaml_quote)
-    mapAccounts = replace(yamlencode(var.map_additional_aws_accounts), "\"", local.yaml_quote)
-  }
-
-  depends_on = [
-    # Required for instances where the configmap does not exist yet to avoid race condition
-    kubernetes_config_map.aws_auth,
-  ]
 }
