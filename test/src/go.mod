@@ -1,13 +1,13 @@
 module github.com/cloudposse/terraform-aws-eks-cluster
 
-go 1.18
+go 1.19
 
 require (
-	github.com/aws/aws-sdk-go v1.44.62
-	github.com/gruntwork-io/terratest v0.40.18
+	github.com/aws/aws-sdk-go v1.44.116
+	github.com/gruntwork-io/terratest v0.40.23
 	github.com/stretchr/testify v1.8.0
-	k8s.io/api v0.22.1
-	k8s.io/client-go v0.22.1
+	k8s.io/api v0.22.15
+	k8s.io/client-go v0.22.15
 	sigs.k8s.io/aws-iam-authenticator v0.5.9
 )
 
@@ -79,7 +79,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apimachinery v0.22.1 // indirect
+	k8s.io/apimachinery v0.22.15 // indirect
 	k8s.io/klog/v2 v2.9.0 // indirect
 	k8s.io/utils v0.0.0-20211116205334-6203023598ed // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect

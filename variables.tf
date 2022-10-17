@@ -139,7 +139,7 @@ variable "wait_for_cluster_command" {
   description = "`local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint URL is available as environment variable `ENDPOINT`"
   ## --max-time is per attempt, --retry is the number of attempts
   ## Approx. total time limit is (max-time + retry-delay) * retry seconds
-  default = "curl --silent --fail --retry 30 --retry-delay 10 --retry-connrefused --max-time 11 --insecure --output /dev/null $ENDPOINT/healthz"
+  default = "if test -n \"$ENDPOINT\"; then curl --silent --fail --retry 30 --retry-delay 10 --retry-connrefused --max-time 11 --insecure --output /dev/null $ENDPOINT/healthz; fi"
 }
 
 variable "kubernetes_config_map_ignore_role_changes" {

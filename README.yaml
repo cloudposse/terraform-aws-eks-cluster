@@ -157,8 +157,7 @@ usage: |2-
 
   Other examples:
 
-  - [terraform-root-modules/eks](https://github.com/cloudposse/terraform-root-modules/tree/master/aws/eks) - Cloud Posse's service catalog of "root module" invocations for provisioning reference architectures
-  - [terraform-root-modules/eks-backing-services-peering](https://github.com/cloudposse/terraform-root-modules/tree/master/aws/eks-backing-services-peering) - example of VPC peering between the EKS VPC and backing services VPC
+  - [terraform-aws-components/eks/cluster](https://github.com/cloudposse/terraform-aws-components/tree/master/modules/eks/cluster) - Cloud Posse's service catalog of "root module" invocations for provisioning reference architectures
 
   ```hcl
     provider "aws" {
@@ -276,7 +275,7 @@ usage: |2-
       cluster_name                       = module.label.id
       cluster_endpoint                   = module.eks_cluster.eks_cluster_endpoint
       cluster_certificate_authority_data = module.eks_cluster.eks_cluster_certificate_authority_data
-      cluster_security_group_id          = module.eks_cluster.security_group_id
+      cluster_security_group_id          = module.eks_cluster.eks_cluster_managed_security_group_id
 
       # Auto-scaling policies and CloudWatch metric alarms
       autoscaling_policies_enabled           = var.autoscaling_policies_enabled
@@ -303,7 +302,7 @@ usage: |2-
       cluster_name                       = module.label.id
       cluster_endpoint                   = module.eks_cluster.eks_cluster_endpoint
       cluster_certificate_authority_data = module.eks_cluster.eks_cluster_certificate_authority_data
-      cluster_security_group_id          = module.eks_cluster.security_group_id
+      cluster_security_group_id          = module.eks_cluster.eks_cluster_managed_security_group_id
 
       # Auto-scaling policies and CloudWatch metric alarms
       autoscaling_policies_enabled           = var.autoscaling_policies_enabled

@@ -7,7 +7,7 @@ locals {
     resources = var.cluster_encryption_config_resources
 
     provider_key_arn = local.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? (
-      join("", aws_kms_key.cluster.*.arn)
+      one(aws_kms_key.cluster[*].arn)
     ) : var.cluster_encryption_config_kms_key_id
   }
 
@@ -47,7 +47,7 @@ resource "aws_kms_key" "cluster" {
 resource "aws_kms_alias" "cluster" {
   count         = local.enabled && var.cluster_encryption_config_enabled && var.cluster_encryption_config_kms_key_id == "" ? 1 : 0
   name          = format("alias/%v", module.label.id)
-  target_key_id = join("", aws_kms_key.cluster.*.key_id)
+  target_key_id = one(aws_kms_key.cluster[*].key_id)
 }
 
 resource "aws_eks_cluster" "default" {
@@ -72,7 +72,7 @@ resource "aws_eks_cluster" "default" {
   }
 
   vpc_config {
-    security_group_ids      = var.create_security_group ? compact(concat(var.associated_security_group_ids, [join("", aws_security_group.default.*.id)])) : var.associated_security_group_ids
+    security_group_ids      = var.create_security_group ? compact(concat(var.associated_security_group_ids, [one(aws_security_group.default[*].id)])) : var.associated_security_group_ids
     subnet_ids              = var.subnet_ids
     endpoint_private_access = var.endpoint_private_access
     #bridgecrew:skip=BC_AWS_KUBERNETES_2:Let user decide on public access
@@ -118,16 +118,16 @@ resource "aws_eks_cluster" "default" {
 
 data "tls_certificate" "cluster" {
   count = local.enabled && var.oidc_provider_enabled ? 1 : 0
-  url   = join("", aws_eks_cluster.default.*.identity.0.oidc.0.issuer)
+  url   = one(aws_eks_cluster.default[*].identity.0.oidc.0.issuer)
 }
 
 resource "aws_iam_openid_connect_provider" "default" {
   count = local.enabled && var.oidc_provider_enabled ? 1 : 0
-  url   = join("", aws_eks_cluster.default.*.identity.0.oidc.0.issuer)
+  url   = one(aws_eks_cluster.default[*].identity.0.oidc.0.issuer)
   tags  = module.label.tags
 
   client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = [join("", data.tls_certificate.cluster.*.certificates.0.sha1_fingerprint)]
+  thumbprint_list = [one(data.tls_certificate.cluster[*].certificates.0.sha1_fingerprint)]
 }
 
 resource "aws_eks_addon" "cluster" {
@@ -136,7 +136,7 @@ resource "aws_eks_addon" "cluster" {
     addon.addon_name => addon
   } : {}
 
-  cluster_name             = join("", aws_eks_cluster.default.*.name)
+  cluster_name             = one(aws_eks_cluster.default[*].name)
   addon_name               = each.key
   addon_version            = lookup(each.value, "addon_version", null)
   resolve_conflicts        = lookup(each.value, "resolve_conflicts", null)

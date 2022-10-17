@@ -10,7 +10,7 @@ resource "aws_security_group_rule" "managed_ingress_security_groups" {
   to_port                  = 65535
   protocol                 = "-1"
   source_security_group_id = local.allowed_security_group_ids[count.index]
-  security_group_id        = join("", aws_eks_cluster.default.*.vpc_config.0.cluster_security_group_id)
+  security_group_id        = one(aws_eks_cluster.default[*].vpc_config.0.cluster_security_group_id)
   type                     = "ingress"
 }
 
@@ -22,7 +22,7 @@ resource "aws_security_group_rule" "managed_ingress_cidr_blocks" {
   to_port           = 65535
   protocol          = "-1"
   cidr_blocks       = var.allowed_cidr_blocks
-  security_group_id = join("", aws_eks_cluster.default.*.vpc_config.0.cluster_security_group_id)
+  security_group_id = one(aws_eks_cluster.default[*].vpc_config.0.cluster_security_group_id)
   type              = "ingress"
 }
 
@@ -51,7 +51,7 @@ resource "aws_security_group_rule" "egress" {
   to_port           = 0
   protocol          = "-1"
   cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = join("", aws_security_group.default.*.id)
+  security_group_id = one(aws_security_group.default[*].id)
   type              = "egress"
 }
 
@@ -63,7 +63,7 @@ resource "aws_security_group_rule" "ingress_workers" {
   to_port                  = 65535
   protocol                 = "-1"
   source_security_group_id = var.workers_security_group_ids[count.index]
-  security_group_id        = join("", aws_security_group.default.*.id)
+  security_group_id        = one(aws_security_group.default[*].id)
   type                     = "ingress"
 }
 
@@ -75,7 +75,7 @@ resource "aws_security_group_rule" "ingress_security_groups" {
   to_port                  = 65535
   protocol                 = "-1"
   source_security_group_id = var.allowed_security_groups[count.index]
-  security_group_id        = join("", aws_security_group.default.*.id)
+  security_group_id        = one(aws_security_group.default[*].id)
   type                     = "ingress"
 }
 
@@ -87,7 +87,7 @@ resource "aws_security_group_rule" "ingress_cidr_blocks" {
   to_port           = 65535
   protocol          = "-1"
   cidr_blocks       = var.allowed_cidr_blocks
-  security_group_id = join("", aws_security_group.default.*.id)
+  security_group_id = one(aws_security_group.default[*].id)
   type              = "ingress"
 }
 
@@ -100,6 +100,6 @@ resource "aws_security_group_rule" "custom_ingress_rules" {
   to_port                  = each.value.to_port
   protocol                 = each.value.protocol
   source_security_group_id = each.value.source_security_group_id
-  security_group_id        = join("", aws_eks_cluster.default.*.vpc_config.0.cluster_security_group_id)
+  security_group_id        = one(aws_eks_cluster.default[*].vpc_config.0.cluster_security_group_id)
   type                     = "ingress"
 }

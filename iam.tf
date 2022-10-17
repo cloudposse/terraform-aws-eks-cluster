@@ -1,7 +1,7 @@
 locals {
   create_eks_service_role = local.enabled && var.create_eks_service_role
 
-  eks_service_role_arn = local.create_eks_service_role ? join("", aws_iam_role.default.*.arn) : var.eks_cluster_service_role_arn
+  eks_service_role_arn = local.create_eks_service_role ? one(aws_iam_role.default[*].arn) : var.eks_cluster_service_role_arn
 }
 
 data "aws_iam_policy_document" "assume_role" {
@@ -22,7 +22,7 @@ resource "aws_iam_role" "default" {
   count = local.create_eks_service_role ? 1 : 0
 
   name                 = module.label.id
-  assume_role_policy   = join("", data.aws_iam_policy_document.assume_role.*.json)
+  assume_role_policy   = one(data.aws_iam_policy_document.assume_role[*].json)
   tags                 = module.label.tags
   permissions_boundary = var.permissions_boundary
 }
@@ -30,15 +30,15 @@ resource "aws_iam_role" "default" {
 resource "aws_iam_role_policy_attachment" "amazon_eks_cluster_policy" {
   count = local.create_eks_service_role ? 1 : 0
 
-  policy_arn = format("arn:%s:iam::aws:policy/AmazonEKSClusterPolicy", join("", data.aws_partition.current.*.partition))
-  role       = join("", aws_iam_role.default.*.name)
+  policy_arn = format("arn:%s:iam::aws:policy/AmazonEKSClusterPolicy", one(data.aws_partition.current[*].partition))
+  role       = one(aws_iam_role.default[*].name)
 }
 
 resource "aws_iam_role_policy_attachment" "amazon_eks_service_policy" {
   count = local.create_eks_service_role ? 1 : 0
 
-  policy_arn = format("arn:%s:iam::aws:policy/AmazonEKSServicePolicy", join("", data.aws_partition.current.*.partition))
-  role       = join("", aws_iam_role.default.*.name)
+  policy_arn = format("arn:%s:iam::aws:policy/AmazonEKSServicePolicy", one(data.aws_partition.current[*].partition))
+  role       = one(aws_iam_role.default[*].name)
 }
 
 # AmazonEKSClusterPolicy managed policy doesn't contain all necessary permissions to create
@@ -77,12 +77,12 @@ resource "aws_iam_policy" "cluster_elb_service_role" {
   count = local.create_eks_service_role ? 1 : 0
 
   name   = "${module.label.id}-ServiceRole"
-  policy = join("", data.aws_iam_policy_document.cluster_elb_service_role.*.json)
+  policy = one(data.aws_iam_policy_document.cluster_elb_service_role[*].json)
 }
 
 resource "aws_iam_role_policy_attachment" "cluster_elb_service_role" {
   count = local.create_eks_service_role ? 1 : 0
 
-  policy_arn = aws_iam_policy.cluster_elb_service_role[0].arn
-  role       = join("", aws_iam_role.default.*.name)
+  policy_arn = one(aws_iam_policy.cluster_elb_service_role[*].arn)
+  role       = one(aws_iam_role.default[*].name)
 }
