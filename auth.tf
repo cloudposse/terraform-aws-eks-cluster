@@ -38,10 +38,10 @@ locals {
   exec_profile = local.kube_exec_auth_enabled && var.kube_exec_auth_aws_profile_enabled ? ["--profile", var.kube_exec_auth_aws_profile] : []
   exec_role    = local.kube_exec_auth_enabled && var.kube_exec_auth_role_arn_enabled ? ["--role-arn", var.kube_exec_auth_role_arn] : []
 
-  cluster_endpoint_data     = join("", aws_eks_cluster.default.*.endpoint)
+  cluster_endpoint_data     = join("", aws_eks_cluster.default[*].endpoint) # use `join` instead of `one` to keep the value a string
   cluster_auth_map_endpoint = var.apply_config_map_aws_auth ? local.cluster_endpoint_data : var.dummy_kubeapi_server
 
-  certificate_authority_data_list          = coalescelist(aws_eks_cluster.default.*.certificate_authority, [[{ data : "" }]])
+  certificate_authority_data_list          = coalescelist(aws_eks_cluster.default[*].certificate_authority, [[{ data : "" }]])
   certificate_authority_data_list_internal = local.certificate_authority_data_list[0]
   certificate_authority_data_map           = local.certificate_authority_data_list_internal[0]
   certificate_authority_data               = local.certificate_authority_data_map["data"]
@@ -50,9 +50,9 @@ locals {
   # Note that we don't need to do this for managed Node Groups since EKS adds their roles to the ConfigMap automatically
   map_worker_roles = [
     for role_arn in var.workers_role_arns : {
-      rolearn : role_arn
-      username : "system:node:{{EC2PrivateDNSName}}"
-      groups : [
+      rolearn  = role_arn
+      username = "system:node:{{EC2PrivateDNSName}}"
+      groups = [
         "system:bootstrappers",
         "system:nodes"
       ]
@@ -62,13 +62,13 @@ locals {
 
 resource "null_resource" "wait_for_cluster" {
   count      = local.enabled && var.apply_config_map_aws_auth ? 1 : 0
-  depends_on = [aws_eks_cluster.default[0]]
+  depends_on = [aws_eks_cluster.default]
 
   provisioner "local-exec" {
     command     = var.wait_for_cluster_command
     interpreter = var.local_exec_interpreter
     environment = {
-      ENDPOINT = aws_eks_cluster.default[0].endpoint
+      ENDPOINT = local.cluster_endpoint_data
     }
   }
 }
@@ -84,7 +84,7 @@ resource "null_resource" "wait_for_cluster" {
 #
 data "aws_eks_cluster_auth" "eks" {
   count = local.kube_data_auth_enabled ? 1 : 0
-  name  = join("", aws_eks_cluster.default.*.id)
+  name  = one(aws_eks_cluster.default[*].id)
 }
 
 
@@ -99,25 +99,25 @@ provider "kubernetes" {
   # If this solution bothers you, you can disable it by setting var.dummy_kubeapi_server = null
   host                   = local.cluster_auth_map_endpoint
   cluster_ca_certificate = local.enabled && !local.kubeconfig_path_enabled ? base64decode(local.certificate_authority_data) : null
-  token                  = local.kube_data_auth_enabled ? data.aws_eks_cluster_auth.eks[0].token : null
+  token                  = local.kube_data_auth_enabled ? one(data.aws_eks_cluster_auth.eks[*].token) : null
   # The Kubernetes provider will use information from KUBECONFIG if it exists, but if the default cluster
   # in KUBECONFIG is some other cluster, this will cause problems, so we override it always.
   config_path    = local.kubeconfig_path_enabled ? var.kubeconfig_path : ""
   config_context = var.kubeconfig_context
 
   dynamic "exec" {
-    for_each = local.kube_exec_auth_enabled ? ["exec"] : []
+    for_each = local.kube_exec_auth_enabled && length(local.cluster_endpoint_data) > 0 ? ["exec"] : []
     content {
       api_version = "client.authentication.k8s.io/v1beta1"
       command     = "aws"
-      args        = concat(local.exec_profile, ["eks", "get-token", "--cluster-name", aws_eks_cluster.default[0].id], local.exec_role)
+      args        = concat(local.exec_profile, ["eks", "get-token", "--cluster-name", try(aws_eks_cluster.default[0].id, "deleted")], local.exec_role)
     }
   }
 }
 
 resource "kubernetes_config_map" "aws_auth_ignore_changes" {
   count      = local.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes ? 1 : 0
-  depends_on = [null_resource.wait_for_cluster[0]]
+  depends_on = [null_resource.wait_for_cluster]
 
   metadata {
     name      = "aws-auth"
@@ -137,7 +137,7 @@ resource "kubernetes_config_map" "aws_auth_ignore_changes" {
 
 resource "kubernetes_config_map" "aws_auth" {
   count      = local.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes == false ? 1 : 0
-  depends_on = [null_resource.wait_for_cluster[0]]
+  depends_on = [null_resource.wait_for_cluster]
 
   metadata {
     name      = "aws-auth"

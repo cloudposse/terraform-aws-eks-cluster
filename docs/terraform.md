@@ -3,7 +3,7 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.14.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 3.38 |
 | <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 2.7.1 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | >= 2.0 |
@@ -125,7 +125,7 @@
 | <a name="input_tags"></a> [tags](#input\_tags) | Additional tags (e.g. `{'BusinessUnit': 'XYZ'}`).<br>Neither the tag keys nor the tag values will be modified by this module. | `map(string)` | `{}` | no |
 | <a name="input_tenant"></a> [tenant](#input\_tenant) | ID element \_(Rarely used, not included by default)\_. A customer identifier, indicating who this instance of a resource is for | `string` | `null` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID for the EKS cluster | `string` | n/a | yes |
-| <a name="input_wait_for_cluster_command"></a> [wait\_for\_cluster\_command](#input\_wait\_for\_cluster\_command) | `local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint URL is available as environment variable `ENDPOINT` | `string` | `"curl --silent --fail --retry 30 --retry-delay 10 --retry-connrefused --max-time 11 --insecure --output /dev/null $ENDPOINT/healthz"` | no |
+| <a name="input_wait_for_cluster_command"></a> [wait\_for\_cluster\_command](#input\_wait\_for\_cluster\_command) | `local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint URL is available as environment variable `ENDPOINT` | `string` | `"if test -n \"$ENDPOINT\"; then curl --silent --fail --retry 30 --retry-delay 10 --retry-connrefused --max-time 11 --insecure --output /dev/null $ENDPOINT/healthz; fi"` | no |
 | <a name="input_workers_role_arns"></a> [workers\_role\_arns](#input\_workers\_role\_arns) | List of Role ARNs of the worker nodes | `list(string)` | `[]` | no |
 | <a name="input_workers_security_group_ids"></a> [workers\_security\_group\_ids](#input\_workers\_security\_group\_ids) | DEPRECATED: Use `allowed_security_group_ids` instead.<br>Historical description: Security Group IDs of the worker nodes.<br>Historical default: `[]` | `list(string)` | `[]` | no |
 
@@ -145,11 +145,11 @@
 | <a name="output_eks_cluster_id"></a> [eks\_cluster\_id](#output\_eks\_cluster\_id) | The name of the cluster |
 | <a name="output_eks_cluster_identity_oidc_issuer"></a> [eks\_cluster\_identity\_oidc\_issuer](#output\_eks\_cluster\_identity\_oidc\_issuer) | The OIDC Identity issuer for the cluster |
 | <a name="output_eks_cluster_identity_oidc_issuer_arn"></a> [eks\_cluster\_identity\_oidc\_issuer\_arn](#output\_eks\_cluster\_identity\_oidc\_issuer\_arn) | The OIDC Identity issuer ARN for the cluster that can be used to associate IAM roles with a service account |
-| <a name="output_eks_cluster_managed_security_group_id"></a> [eks\_cluster\_managed\_security\_group\_id](#output\_eks\_cluster\_managed\_security\_group\_id) | Security Group ID that was created by EKS for the cluster. EKS creates a Security Group and applies it to ENI that is attached to EKS Control Plane master nodes and to any managed workloads |
+| <a name="output_eks_cluster_managed_security_group_id"></a> [eks\_cluster\_managed\_security\_group\_id](#output\_eks\_cluster\_managed\_security\_group\_id) | Security Group ID that was created by EKS for the cluster.<br>EKS creates a Security Group and applies it to the ENI that are attached to EKS Control Plane master nodes and to any managed workloads. |
 | <a name="output_eks_cluster_role_arn"></a> [eks\_cluster\_role\_arn](#output\_eks\_cluster\_role\_arn) | ARN of the EKS cluster IAM role |
 | <a name="output_eks_cluster_version"></a> [eks\_cluster\_version](#output\_eks\_cluster\_version) | The Kubernetes server version of the cluster |
 | <a name="output_kubernetes_config_map_id"></a> [kubernetes\_config\_map\_id](#output\_kubernetes\_config\_map\_id) | ID of `aws-auth` Kubernetes ConfigMap |
-| <a name="output_security_group_arn"></a> [security\_group\_arn](#output\_security\_group\_arn) | ARN of the created Security Group for the EKS cluster |
-| <a name="output_security_group_id"></a> [security\_group\_id](#output\_security\_group\_id) | ID of the created Security Group for the EKS cluster |
-| <a name="output_security_group_name"></a> [security\_group\_name](#output\_security\_group\_name) | Name of the created Security Group for the EKS cluster |
+| <a name="output_security_group_arn"></a> [security\_group\_arn](#output\_security\_group\_arn) | (Deprecated) ARN of the optionally created additional Security Group for the EKS cluster |
+| <a name="output_security_group_id"></a> [security\_group\_id](#output\_security\_group\_id) | (Deprecated) ID of the optionally created additional Security Group for the EKS cluster |
+| <a name="output_security_group_name"></a> [security\_group\_name](#output\_security\_group\_name) | Name of the optionally created additional Security Group for the EKS cluster |
 <!-- markdownlint-restore -->
