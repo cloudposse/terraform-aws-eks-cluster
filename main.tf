@@ -54,7 +54,7 @@ resource "aws_eks_cluster" "default" {
   #bridgecrew:skip=BC_AWS_KUBERNETES_1:Allow permissive security group for public access, difficult to restrict without a VPN
   #bridgecrew:skip=BC_AWS_KUBERNETES_4:Let user decide on control plane logging, not necessary in non-production environments
   count                     = local.enabled ? 1 : 0
-  name                      = module.label.id
+  name                      = var.cluster_name == null ? module.label.id : var.cluster_name
   tags                      = module.label.tags
   role_arn                  = local.eks_service_role_arn
   version                   = var.kubernetes_version

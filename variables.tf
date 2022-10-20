@@ -299,3 +299,9 @@ variable "dummy_kubeapi_server" {
     via `kubeconfig_path` and set `kubeconfig_path_enabled` to `true`.
     EOT
 }
+
+variable "cluster_name" {
+  type        = string
+  description = "Override module default cluster name (useful for importing resource)"
+  default     = null
+}
