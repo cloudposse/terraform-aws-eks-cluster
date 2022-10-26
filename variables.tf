@@ -300,8 +300,8 @@ variable "dummy_kubeapi_server" {
     EOT
 }
 
-variable "cluster_name" {
-  type        = string
-  description = "Override module default cluster name (useful for importing resource)"
-  default     = null
+variable "cluster_attributes" {
+  type        = list(string)
+  description = "Override label module default cluster attributes"
+  default     = ["cluster"]
 }
