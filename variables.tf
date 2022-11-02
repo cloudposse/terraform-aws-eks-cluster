@@ -299,3 +299,9 @@ variable "dummy_kubeapi_server" {
     via `kubeconfig_path` and set `kubeconfig_path_enabled` to `true`.
     EOT
 }
+
+variable "cluster_attributes" {
+  type        = list(string)
+  description = "Override label module default cluster attributes"
+  default     = ["cluster"]
+}

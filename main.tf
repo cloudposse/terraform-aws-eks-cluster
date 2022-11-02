@@ -18,7 +18,7 @@ module "label" {
   source  = "cloudposse/label/null"
   version = "0.25.0"
 
-  attributes = ["cluster"]
+  attributes = var.cluster_attributes
 
   context = module.this.context
 }
