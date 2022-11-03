@@ -130,6 +130,8 @@ introduction: |-
   
   However this module can now properly handle the ConfigMap by storing the `map_additional_iam_roles` variable in AWS SecretsManager and on next apply
   reading it, comparing with the existing ConfigMap and combining all the roles into a new `map_additional_iam_roles` variable and using that to update the cluster ConfigMap.
+  One thing to take into consideration is the 64 KB secret size limit of AWS SecretsManager.
+  With some rough estimate this module should be able to handle a list of 180 `map_additional_iam_roles`.
   
   The downside of having `kubernetes_config_map_ignore_role_changes` set to true is that if you later want to make changes,
   such as adding other IAM roles to Kubernetes groups, you cannot do so via Terraform, because the role changes are ignored.
