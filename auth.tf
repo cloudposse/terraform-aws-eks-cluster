@@ -50,7 +50,7 @@ locals {
   # Note that we don't need to do this for managed Node Groups since EKS adds their roles to the ConfigMap automatically
   map_worker_roles = [
     for role_arn in var.workers_role_arns : {
-      rolearn = role_arn
+      rolearn  = role_arn
       username = "system:node:{{EC2PrivateDNSName}}"
       groups = [
         "system:bootstrappers",
@@ -60,7 +60,7 @@ locals {
   ]
 
   previous_map_additional_iam_roles = jsondecode(try(data.aws_secretsmanager_secret_version.previous[0].secret_string, "[]"))
-  cluster_current_map_roles = try(yamldecode(data.kubernetes_config_map.existing_aws_auth.data["mapRoles"]), [])
+  cluster_current_map_roles         = try(yamldecode(data.kubernetes_config_map.existing_aws_auth.data["mapRoles"]), [])
 
   # Check the "map_additional_iam_roles" from last terraform apply to know if we need to remove any roles
   roles_removed_from_tf_input = setsubtract(local.previous_map_additional_iam_roles, var.map_additional_iam_roles)
@@ -176,7 +176,7 @@ resource "aws_secretsmanager_secret_version" "initial" {
 data "aws_secretsmanager_secret_version" "previous" {
   count = local.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes == false ? 1 : 0
 
-  secret_id = one(aws_secretsmanager_secret.map_additional_iam_roles[*].id)
+  secret_id  = one(aws_secretsmanager_secret.map_additional_iam_roles[*].id)
   depends_on = [aws_secretsmanager_secret_version.initial]
 }
 
