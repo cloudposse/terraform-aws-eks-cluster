@@ -59,16 +59,7 @@ locals {
     }
   ]
 
-  ssm_parameter_name = "${coalesce(var.ssm_parameter_path, "/system/terraform/${module.label.id}")}/previous_map_additional_iam_roles"
-
-  # Parameter value can't nest another parameter. Do not use "{{}}" in the value
-  # https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_PutParameter.html#systemsmanager-PutParameter-request-Value
-  param_escape_regex = "/{{(.*)}}/"
-  param_escape_replacement = "{__{$1}__}"
-  param_unescape_regex = "/{__{(.*)}__}/"
-  param_unescape_replacement = "{{$1}}"
-
-  previous_map_additional_iam_roles = jsondecode(replace(try(data.aws_ssm_parameter.previous[0].value, "[]"), local.param_unescape_regex, local.param_unescape_replacement))
+  previous_map_additional_iam_roles = jsondecode(try(data.aws_secretsmanager_secret_version.previous[0].secret_string, "[]"))
   cluster_current_map_roles = try(yamldecode(data.kubernetes_config_map.existing_aws_auth.data["mapRoles"]), [])
 
   # Check the "map_additional_iam_roles" from last terraform apply to know if we need to remove any roles
@@ -150,45 +141,54 @@ data "kubernetes_config_map" "existing_aws_auth" {
   depends_on = [null_resource.wait_for_cluster[0]]
 }
 
-# Need to make sure it exists initially otherwise the data source fails
-resource "aws_ssm_parameter" "initial" {
+module "secrets_label" {
+  source  = "cloudposse/label/null"
+  version = "0.25.0"
+
+  attributes = ["previous", "map", "additional", "iam", "roles"]
+
+  context = module.this.context
+}
+
+resource "aws_secretsmanager_secret" "map_additional_iam_roles" {
   count = local.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes == false ? 1 : 0
 
-  name        = local.ssm_parameter_name
-  description = "Previous map additional_iam_roles for ${module.label.id}"
-  type        = "String"
-  value       = "[]"
-  overwrite   = true
-  tier        = "Advanced"
+  name        = module.secrets_label.id
+  description = "Map additional_iam_roles for ${module.label.id} EKS cluster"
+  tags        = module.secrets_label.tags
+}
+
+# Need to make sure it exists initially otherwise the data source fails
+resource "aws_secretsmanager_secret_version" "initial" {
+  count = local.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes == false ? 1 : 0
+
+  secret_id     = one(aws_secretsmanager_secret.map_additional_iam_roles[*].id)
+  secret_string = "[]"
 
   lifecycle {
     ignore_changes = [
-      value,
+      secret_string,
     ]
   }
 }
 
 # Read the previous map_additional_iam_roles
-data "aws_ssm_parameter" "previous" {
+data "aws_secretsmanager_secret_version" "previous" {
   count = local.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes == false ? 1 : 0
 
-  name  = local.ssm_parameter_name
-  depends_on = [aws_ssm_parameter.initial]
+  secret_id = one(aws_secretsmanager_secret.map_additional_iam_roles[*].id)
+  depends_on = [aws_secretsmanager_secret_version.initial]
 }
 
+
 # Save new value for this apply, make sure the data source runs before this writes the new value using depends_on
-resource "aws_ssm_parameter" "current" {
+resource "aws_secretsmanager_secret_version" "current" {
   count = local.enabled && var.apply_config_map_aws_auth && var.kubernetes_config_map_ignore_role_changes == false ? 1 : 0
 
-  name        = local.ssm_parameter_name
-  description = "Previous map additional_iam_roles for ${module.label.id}"
-  type        = "String"
-  # Parameter value can't nest another parameter. Do not use "{{}}" in the value
-  value       = replace(jsonencode(var.map_additional_iam_roles), local.param_escape_regex, local.param_escape_replacement)
-  overwrite   = true
-  tier        = "Advanced"
+  secret_id     = one(aws_secretsmanager_secret.map_additional_iam_roles[*].id)
+  secret_string = jsonencode(var.map_additional_iam_roles)
 
-  depends_on = [data.aws_ssm_parameter.previous]
+  depends_on = [data.aws_secretsmanager_secret_version.previous]
 }
 
 

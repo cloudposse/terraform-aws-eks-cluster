@@ -305,20 +305,3 @@ variable "cluster_attributes" {
   description = "Override label module default cluster attributes"
   default     = ["cluster"]
 }
-
-variable "remote_state" {
-  type = object({
-    backend = string
-    config = map(any)
-  })
-  default = null
-}
-
-variable "ssm_parameter_path" {
-  type = string
-  default = ""
-  description = <<-EOT
-    This module will save the value of var.map_additional_iam_roles from the previous terraform apply in AWS Parameter Store.
-    If not set the module will use a generated one from context 
-  EOT
-}

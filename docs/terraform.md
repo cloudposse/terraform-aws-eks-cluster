@@ -4,8 +4,8 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 3.38 |
-| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 2.7.1 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 3.38, !=4.18.0, !=4.19.0, !=4.20.0, !=4.21.0, !=4.22.0, !=4.23.0, !=4.24.0, !=4.25.0, !=4.26.0, !=4.27.0, !=4.28.0, !=4.29.0, !=4.30.0, !=4.31.0, !=4.32.0 |
+| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 2.10 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | >= 2.0 |
 | <a name="requirement_tls"></a> [tls](#requirement\_tls) | >= 3.1.0, != 4.0.0 |
 
@@ -13,8 +13,8 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 3.38 |
-| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | >= 2.7.1 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 3.38, !=4.18.0, !=4.19.0, !=4.20.0, !=4.21.0, !=4.22.0, !=4.23.0, !=4.24.0, !=4.25.0, !=4.26.0, !=4.27.0, !=4.28.0, !=4.29.0, !=4.30.0, !=4.31.0, !=4.32.0 |
+| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | >= 2.10 |
 | <a name="provider_null"></a> [null](#provider\_null) | >= 2.0 |
 | <a name="provider_tls"></a> [tls](#provider\_tls) | >= 3.1.0, != 4.0.0 |
 
@@ -23,6 +23,7 @@
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_label"></a> [label](#module\_label) | cloudposse/label/null | 0.25.0 |
+| <a name="module_secrets_label"></a> [secrets\_label](#module\_secrets\_label) | cloudposse/label/null | 0.25.0 |
 | <a name="module_this"></a> [this](#module\_this) | cloudposse/label/null | 0.25.0 |
 
 ## Resources
@@ -40,6 +41,9 @@
 | [aws_iam_role_policy_attachment.cluster_elb_service_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_kms_alias.cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
 | [aws_kms_key.cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
+| [aws_secretsmanager_secret.map_additional_iam_roles](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
+| [aws_secretsmanager_secret_version.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
+| [aws_secretsmanager_secret_version.initial](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
 | [aws_security_group.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_security_group_rule.custom_ingress_rules](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_security_group_rule.egress](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
@@ -55,6 +59,8 @@
 | [aws_iam_policy_document.assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.cluster_elb_service_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_partition.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition) | data source |
+| [aws_secretsmanager_secret_version.previous](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/secretsmanager_secret_version) | data source |
+| [kubernetes_config_map.existing_aws_auth](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/data-sources/config_map) | data source |
 | [tls_certificate.cluster](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/data-sources/certificate) | data source |
 
 ## Inputs
@@ -150,6 +156,7 @@
 | <a name="output_eks_cluster_role_arn"></a> [eks\_cluster\_role\_arn](#output\_eks\_cluster\_role\_arn) | ARN of the EKS cluster IAM role |
 | <a name="output_eks_cluster_version"></a> [eks\_cluster\_version](#output\_eks\_cluster\_version) | The Kubernetes server version of the cluster |
 | <a name="output_kubernetes_config_map_id"></a> [kubernetes\_config\_map\_id](#output\_kubernetes\_config\_map\_id) | ID of `aws-auth` Kubernetes ConfigMap |
+| <a name="output_map_additional_iam_roles"></a> [map\_additional\_iam\_roles](#output\_map\_additional\_iam\_roles) | Used to read previous cluster state and decide what roles to include/exclude |
 | <a name="output_security_group_arn"></a> [security\_group\_arn](#output\_security\_group\_arn) | (Deprecated) ARN of the optionally created additional Security Group for the EKS cluster |
 | <a name="output_security_group_id"></a> [security\_group\_id](#output\_security\_group\_id) | (Deprecated) ID of the optionally created additional Security Group for the EKS cluster |
 | <a name="output_security_group_name"></a> [security\_group\_name](#output\_security\_group\_name) | Name of the optionally created additional Security Group for the EKS cluster |

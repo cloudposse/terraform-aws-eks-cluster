@@ -113,9 +113,10 @@ introduction: |-
   __Failure during `destroy`:__ If the cluster is destroyed (via Terraform or otherwise) before the Terraform resource
   responsible for the `aws-auth` ConfigMap is destroyed, Terraform will get stuck trying to delete the ConfigMap, 
   because it cannot contact the now destroyed cluster. This can show up as a `connection refused` error (usually
-  to `https://localhost/`). The easiest ways to handle this is either to add `-var apply_config_map_aws_auth=false` 
+  to `https://localhost/`) and/or `Error: Unauthorized`. The easiest ways to handle this is either to add `-var apply_config_map_aws_auth=false`
   to the `destroy` command or to remove the ConfigMap (`...kubernetes_config_map.aws_auth[0]`) from the Terraform
-  state with `terraform state rm`.
+  state with `terraform state rm`. If still not working after removing the ConfigMap from state you can try to run `destroy -refresh=false`.
+  Some official opened bugs related to this are (1028)[https://github.com/hashicorp/terraform-provider-kubernetes/issues/1028] and (1479)[https://github.com/hashicorp/terraform-provider-kubernetes/issues/1479]
 
   __NOTE:__ We give you the `kubernetes_config_map_ignore_role_changes` option and default it to `true` for the following reasons:
   - We provision the EKS cluster
@@ -127,10 +128,8 @@ introduction: |-
   - Since the ConfigMap is modified outside of Terraform state, Terraform wants to update it to to remove the worker roles EKS added
   - If you update the ConfigMap without including the worker nodes that EKS added, you will disconnect them from the cluster
   
-  However, it is possible to get the worker node roles from the terraform-aws-eks-node-group via Terraform "remote state"
-  and include them with any other roles you want to add (example code to be published later), so we make
-  ignoring the role changes optional. (This is what we do for Cloud Posse clients.)
-  If you do not ignore changes then you will have no problem with making future intentional changes.
+  However this module can now properly handle the ConfigMap by storing the `map_additional_iam_roles` variable in AWS SecretsManager and on next apply
+  reading it, comparing with the existing ConfigMap and combining all the roles into a new `map_additional_iam_roles` variable and using that to update the cluster ConfigMap.
   
   The downside of having `kubernetes_config_map_ignore_role_changes` set to true is that if you later want to make changes,
   such as adding other IAM roles to Kubernetes groups, you cannot do so via Terraform, because the role changes are ignored.
