@@ -145,7 +145,7 @@ module "secrets_label" {
   source  = "cloudposse/label/null"
   version = "0.25.0"
 
-  attributes = ["previous", "map", "additional", "iam", "roles"]
+  attributes = ["map", "additional", "iam", "roles"]
 
   context = module.this.context
 }
@@ -155,6 +155,10 @@ resource "aws_secretsmanager_secret" "map_additional_iam_roles" {
 
   name        = module.secrets_label.id
   description = "Map additional_iam_roles for ${module.label.id} EKS cluster"
+
+  # Force deletion of secret as we don't want any recovery
+  recovery_window_in_days = 0
+
   tags        = module.secrets_label.tags
 }
 
