@@ -159,7 +159,7 @@ resource "aws_secretsmanager_secret" "map_additional_iam_roles" {
   # Force deletion of secret as we don't want any recovery
   recovery_window_in_days = 0
 
-  tags        = module.secrets_label.tags
+  tags = module.secrets_label.tags
 }
 
 # Need to make sure it exists initially otherwise the data source fails
