@@ -61,6 +61,11 @@ output "eks_cluster_role_arn" {
   value       = local.eks_service_role_arn
 }
 
+output "eks_cluster_ipv6_service_cidr" {
+  description = "The IPv6 CIDR block that Kubernetes pod and service IP addresses are assigned from if `var.kubernetes_network_ipv6_enabled` is set to true"
+  value       = one(aws_eks_cluster.default[*].kubernetes_network_config.0.service_ipv6_cidr)
+}
+
 output "kubernetes_config_map_id" {
   description = "ID of `aws-auth` Kubernetes ConfigMap"
   value       = var.kubernetes_config_map_ignore_role_changes ? one(kubernetes_config_map.aws_auth_ignore_changes[*].id) : one(kubernetes_config_map.aws_auth[*].id)
