@@ -43,6 +43,11 @@ output "eks_cluster_managed_security_group_id" {
   value       = module.eks_cluster.eks_cluster_managed_security_group_id
 }
 
+output "eks_cluster_ipv6_service_cidr" {
+  description = "The IPv6 CIDR block that Kubernetes pod and service IP addresses are assigned from if `var.kubernetes_network_ipv6_enabled` is set to true. If set to false this output will be null"
+  value       = module.eks_cluster.eks_cluster_ipv6_service_cidr
+}
+
 output "eks_node_group_role_arn" {
   description = "ARN of the worker nodes IAM role"
   value       = module.eks_node_group.eks_node_group_role_arn
