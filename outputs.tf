@@ -62,7 +62,7 @@ output "eks_cluster_role_arn" {
 }
 
 output "eks_cluster_ipv6_service_cidr" {
-  description = "The IPv6 CIDR block that Kubernetes pod and service IP addresses are assigned from if `var.kubernetes_network_ipv6_enabled` is set to true"
+  description = "The IPv6 CIDR block that Kubernetes pod and service IP addresses are assigned from if `var.kubernetes_network_ipv6_enabled` is set to true. If set to false this output will be null"
   value       = one(aws_eks_cluster.default[*].kubernetes_network_config.0.service_ipv6_cidr)
 }
 
