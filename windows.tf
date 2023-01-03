@@ -8,7 +8,7 @@ resource "kubernetes_config_map" "aws_amazon_vpc_cni" {
   }
 
   data = {
-    enable-windows-ipam    = "true"
+    enable-windows-ipam = "true"
   }
 
 }
