@@ -34,6 +34,13 @@ resource "aws_iam_role_policy_attachment" "amazon_eks_cluster_policy" {
   role       = one(aws_iam_role.default[*].name)
 }
 
+resource "aws_iam_role_policy_attachment" "amazon_eks_vpc_resource_controller_policy" {
+  count = local.create_eks_service_role && var.windows_support ? 1 : 0
+
+  policy_arn = format("arn:%s:iam::aws:policy/AmazonEKSVPCResourceController", one(data.aws_partition.current[*].partition))
+  role       = one(aws_iam_role.default[*].name)
+}
+
 resource "aws_iam_role_policy_attachment" "amazon_eks_service_policy" {
   count = local.create_eks_service_role ? 1 : 0
 

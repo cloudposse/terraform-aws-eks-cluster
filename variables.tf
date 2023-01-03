@@ -19,6 +19,12 @@ variable "create_eks_service_role" {
   default     = true
 }
 
+variable "windows_support" {
+  type        = bool
+  description = "If the module is creating the clusters IAM role the required `AmazonEKSVPCResourceController` will be attached"
+  default     = false
+}
+
 variable "eks_cluster_service_role_arn" {
   type        = string
   description = <<-EOT
@@ -31,14 +37,14 @@ variable "eks_cluster_service_role_arn" {
 
 variable "workers_role_arns" {
   type        = list(string)
-  description = "List of Role ARNs of the worker nodes"
+  description = "List of Role ARNs of the *unmananaged* worker nodes (Note that we don't need to do this for managed Node Groups since EKS adds their roles to the ConfigMap automatically)"
   default     = []
 }
 
 variable "kubernetes_version" {
   type        = string
   description = "Desired Kubernetes master version. If you do not specify a value, the latest available version is used"
-  default     = "1.21"
+  default     = "1.24"
 }
 
 variable "oidc_provider_enabled" {
