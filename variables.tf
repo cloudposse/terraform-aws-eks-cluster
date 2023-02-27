@@ -21,7 +21,7 @@ variable "create_eks_service_role" {
 
 variable "windows_support" {
   type        = bool
-  description = "If the module is creating the clusters IAM role the required `AmazonEKSVPCResourceController` will be attached"
+  description = "If the module is creating the clusters IAM role the required `AmazonEKSVPCResourceController` will be attached and amazon-vpc-cni policy will be added to the amazon-vpc-cni configmap"
   default     = false
 }
 
