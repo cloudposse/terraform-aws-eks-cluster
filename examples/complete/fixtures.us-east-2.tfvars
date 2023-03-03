@@ -35,5 +35,7 @@ addons = [
     addon_version            = null
     resolve_conflicts        = "NONE"
     service_account_role_arn = null
+    configuration_values     = null
+    preserve                 = false
   }
 ]
