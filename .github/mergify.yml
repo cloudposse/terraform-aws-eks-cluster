@@ -4,13 +4,17 @@ pull_request_rules:
 - name: "approve automated PRs that have passed checks"
   conditions:
   - "author~=^(cloudpossebot|renovate\\[bot\\])$"
-  - "base=master"
   - "-closed"
   - "head~=^(auto-update|renovate)/.*"
   - "check-success=test/bats"
   - "check-success=test/readme"
   - "check-success=test/terratest"
   - "check-success=validate-codeowners"
+  - or:
+    - "base=master"
+    - "base=main"
+    - "base~=^release/v\\d{1,2}$"
+
   actions:
     review:
       type: "APPROVE"
@@ -20,7 +24,6 @@ pull_request_rules:
 - name: "merge automated PRs when approved and tests pass"
   conditions:
   - "author~=^(cloudpossebot|renovate\\[bot\\])$"
-  - "base=master"
   - "-closed"
   - "head~=^(auto-update|renovate)/.*"
   - "check-success=test/bats"
@@ -30,6 +33,11 @@ pull_request_rules:
   - "#approved-reviews-by>=1"
   - "#changes-requested-reviews-by=0"
   - "#commented-reviews-by=0"
+  - or:
+    - "base=master"
+    - "base=main"
+    - "base~=^release/v\\d{1,2}$"
+
   actions:
     merge:
       method: "squash"
@@ -50,7 +58,10 @@ pull_request_rules:
 
 - name: "remove outdated reviews"
   conditions:
-  - "base=master"
+  - or:
+    - "base=master"
+    - "base=main"
+    - "base~=^release/v\\d{1,2}$"
   actions:
     dismiss_reviews:
       changes_requested: true
