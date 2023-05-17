@@ -3,6 +3,7 @@
     "config:base",
     ":preserveSemverRanges"
   ],
+  "baseBranches": ["main", "master", "/^release\\/v\\d{1,2}$/"],
   "labels": ["auto-update"],
   "dependencyDashboardAutoclose": true,
   "enabledManagers": ["terraform"],
