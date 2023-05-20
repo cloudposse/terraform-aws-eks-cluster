@@ -35,7 +35,7 @@ output "eks_cluster_version" {
 
 output "eks_cluster_identity_oidc_issuer" {
   description = "The OIDC Identity issuer for the cluster"
-  value       = one(aws_eks_cluster.default[*].identity.0.oidc.0.issuer)
+  value       = one(aws_eks_cluster.default[*].identity[0].oidc[0].issuer)
 }
 
 output "eks_cluster_identity_oidc_issuer_arn" {
@@ -53,7 +53,7 @@ output "eks_cluster_managed_security_group_id" {
     Security Group ID that was created by EKS for the cluster.
     EKS creates a Security Group and applies it to the ENI that are attached to EKS Control Plane master nodes and to any managed workloads.
     EOT
-  value       = one(aws_eks_cluster.default[*].vpc_config.0.cluster_security_group_id)
+  value       = one(aws_eks_cluster.default[*].vpc_config[0].cluster_security_group_id)
 }
 
 output "eks_cluster_role_arn" {

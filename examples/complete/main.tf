@@ -29,22 +29,23 @@ locals {
 
 module "vpc" {
   source  = "cloudposse/vpc/aws"
-  version = "1.1.0"
+  version = "2.1.0"
 
-  cidr_block = "172.16.0.0/16"
-  tags       = local.tags
+  ipv4_primary_cidr_block = "172.16.0.0/16"
+  tags                    = local.tags
 
   context = module.this.context
 }
 
 module "subnets" {
   source  = "cloudposse/dynamic-subnets/aws"
-  version = "2.0.2"
+  version = "2.3.0"
 
   availability_zones              = var.availability_zones
   vpc_id                          = module.vpc.vpc_id
   igw_id                          = [module.vpc.igw_id]
   ipv4_cidr_block                 = [module.vpc.vpc_cidr_block]
+  max_nats                        = 1
   nat_gateway_enabled             = true
   nat_instance_enabled            = false
   tags                            = local.tags
@@ -57,7 +58,6 @@ module "subnets" {
 module "eks_cluster" {
   source = "../../"
 
-  region                       = var.region
   vpc_id                       = module.vpc.vpc_id
   subnet_ids                   = concat(module.subnets.private_subnet_ids, module.subnets.public_subnet_ids)
   kubernetes_version           = var.kubernetes_version
@@ -73,7 +73,8 @@ module "eks_cluster" {
   cluster_encryption_config_kms_key_policy                  = var.cluster_encryption_config_kms_key_policy
   cluster_encryption_config_resources                       = var.cluster_encryption_config_resources
 
-  addons = var.addons
+  addons            = var.addons
+  addons_depends_on = [module.eks_node_group]
 
   # We need to create a new Security Group only if the EKS cluster is used with unmanaged worker nodes.
   # EKS creates a managed Security Group for the cluster automatically, places the control plane and managed nodes into the security group,
@@ -95,6 +96,8 @@ module "eks_cluster" {
   apply_config_map_aws_auth = var.apply_config_map_aws_auth
 
   context = module.this.context
+
+  cluster_depends_on = [module.subnets]
 }
 
 module "eks_node_group" {
