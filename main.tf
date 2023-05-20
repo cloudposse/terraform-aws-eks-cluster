@@ -95,14 +95,20 @@ resource "aws_eks_cluster" "default" {
   }
 
   depends_on = [
+    aws_iam_role.default,
+    aws_iam_role_policy_attachment.cluster_elb_service_role,
     aws_iam_role_policy_attachment.amazon_eks_cluster_policy,
     aws_iam_role_policy_attachment.amazon_eks_service_policy,
+    aws_kms_alias.cluster,
     aws_security_group.default,
     aws_security_group_rule.egress,
     aws_security_group_rule.ingress_cidr_blocks,
     aws_security_group_rule.ingress_security_groups,
     aws_security_group_rule.ingress_workers,
-    aws_cloudwatch_log_group.default
+    aws_cloudwatch_log_group.default,
+    var.associated_security_group_ids,
+    var.cluster_depends_on,
+    var.subnet_ids,
   ]
 }
 
@@ -118,16 +124,16 @@ resource "aws_eks_cluster" "default" {
 
 data "tls_certificate" "cluster" {
   count = local.enabled && var.oidc_provider_enabled ? 1 : 0
-  url   = one(aws_eks_cluster.default[*].identity.0.oidc.0.issuer)
+  url   = one(aws_eks_cluster.default[*].identity[0].oidc[0].issuer)
 }
 
 resource "aws_iam_openid_connect_provider" "default" {
   count = local.enabled && var.oidc_provider_enabled ? 1 : 0
-  url   = one(aws_eks_cluster.default[*].identity.0.oidc.0.issuer)
+  url   = one(aws_eks_cluster.default[*].identity[0].oidc[0].issuer)
   tags  = module.label.tags
 
   client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = [one(data.tls_certificate.cluster[*].certificates.0.sha1_fingerprint)]
+  thumbprint_list = [one(data.tls_certificate.cluster[*].certificates[0].sha1_fingerprint)]
 }
 
 resource "aws_eks_addon" "cluster" {
@@ -143,4 +149,12 @@ resource "aws_eks_addon" "cluster" {
   service_account_role_arn = lookup(each.value, "service_account_role_arn", null)
 
   tags = module.label.tags
+
+  depends_on = [
+    var.addons_depends_on,
+    aws_eks_cluster.default,
+    # OIDC provider is prerequisite for some addons. See, for example,
+    # https://docs.aws.amazon.com/eks/latest/userguide/managing-vpc-cni.html
+    aws_iam_openid_connect_provider.default,
+  ]
 }

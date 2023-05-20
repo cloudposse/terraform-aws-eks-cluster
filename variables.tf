@@ -1,6 +1,8 @@
+# tflint-ignore: terraform_unused_declarations
 variable "region" {
   type        = string
-  description = "AWS Region"
+  description = "OBSOLETE (not needed): AWS Region"
+  default     = null
 }
 
 variable "vpc_id" {
@@ -11,6 +13,15 @@ variable "vpc_id" {
 variable "subnet_ids" {
   type        = list(string)
   description = "A list of subnet IDs to launch the cluster in"
+}
+
+variable "cluster_depends_on" {
+  type        = any
+  description = <<-EOT
+    If provided, the EKS will depend on this object, and therefore not be created until this object is finalized.
+    This is useful if you want to ensure that the cluster is not created before some other condition is met, e.g. VPNs into the subnet are created.
+    EOT
+  default     = null
 }
 
 variable "create_eks_service_role" {
@@ -205,6 +216,16 @@ variable "addons" {
   }))
   description = "Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources"
   default     = []
+}
+
+variable "addons_depends_on" {
+  type        = any
+  description = <<-EOT
+    If provided, all addons will depend on this object, and therefore not be installed until this object is finalized.
+    This is useful if you want to ensure that addons are not applied before some other condition is met, e.g. node groups are created.
+    See [issue #170](https://github.com/cloudposse/terraform-aws-eks-cluster/issues/170) for more details.
+    EOT
+  default     = null
 }
 
 ##################
