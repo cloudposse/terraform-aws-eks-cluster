@@ -19,7 +19,7 @@ variable "cluster_depends_on" {
   type        = any
   description = <<-EOT
     If provided, the EKS will depend on this object, and therefore not be created until this object is finalized.
-    This is useful if you want to ensure that the cluster is not create before some other condition is met, e.g. VPNs into the subnet are created.
+    This is useful if you want to ensure that the cluster is not created before some other condition is met, e.g. VPNs into the subnet are created.
     EOT
   default     = null
 }
