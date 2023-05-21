@@ -44,8 +44,6 @@ variable "allowed_cidr_blocks" {
     EOT
 }
 
-
-
 variable "custom_ingress_rules" {
   type = list(object({
     description              = string
