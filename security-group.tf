@@ -48,9 +48,8 @@ resource "aws_security_group_rule" "custom_ingress_rules" {
 # -----------------------------------------------------------------------
 
 locals {
-  create_security_group        = local.enabled && var.create_security_group
-  security_group_rules_enabled = local.create_security_group && var.security_group_rules_enabled
-  security_group_id            = one(aws_security_group.default[*].id)
+  create_security_group = local.enabled && var.create_security_group
+  security_group_id     = one(aws_security_group.default[*].id)
 }
 
 resource "aws_security_group" "default" {
@@ -63,7 +62,7 @@ resource "aws_security_group" "default" {
 }
 
 resource "aws_security_group_rule" "egress" {
-  count = local.security_group_rules_enabled ? 1 : 0
+  count = local.create_security_group ? 1 : 0
 
   description       = "Allow all egress traffic"
   from_port         = 0
@@ -75,7 +74,7 @@ resource "aws_security_group_rule" "egress" {
 }
 
 resource "aws_security_group_rule" "ingress_workers" {
-  count = local.security_group_rules_enabled ? length(var.workers_security_group_ids) : 0
+  count = local.create_security_group ? length(var.workers_security_group_ids) : 0
 
   description              = "Allow the cluster to receive communication from the worker nodes"
   from_port                = 0
@@ -87,7 +86,7 @@ resource "aws_security_group_rule" "ingress_workers" {
 }
 
 resource "aws_security_group_rule" "ingress_security_groups" {
-  count = local.security_group_rules_enabled ? length(var.allowed_security_groups) : 0
+  count = local.create_security_group ? length(var.allowed_security_groups) : 0
 
   description              = "Allow inbound traffic from existing Security Groups"
   from_port                = 0
@@ -99,7 +98,7 @@ resource "aws_security_group_rule" "ingress_security_groups" {
 }
 
 resource "aws_security_group_rule" "ingress_cidr_blocks" {
-  count = local.security_group_rules_enabled && length(var.allowed_cidr_blocks) > 0 ? 1 : 0
+  count = local.create_security_group && length(var.allowed_cidr_blocks) > 0 ? 1 : 0
 
   description       = "Allow inbound traffic from CIDR blocks"
   from_port         = 0
