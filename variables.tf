@@ -326,3 +326,15 @@ variable "cluster_attributes" {
   description = "Override label module default cluster attributes"
   default     = ["cluster"]
 }
+
+variable "managed_security_group_rules_enabled" {
+  type        = bool
+  description = "Flag to enable/disable the ingress and egress rules for the EKS managed Security Group"
+  default     = true
+}
+
+variable "security_group_rules_enabled" {
+  type        = bool
+  description = "Flag to enable/disable the ingress and egress rules for the additional Security Group"
+  default     = true
+}

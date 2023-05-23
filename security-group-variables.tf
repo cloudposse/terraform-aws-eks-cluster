@@ -56,5 +56,4 @@ variable "custom_ingress_rules" {
   description = <<-EOT
     A List of Objects, which are custom security group rules that
     EOT
-
 }
