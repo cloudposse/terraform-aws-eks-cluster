@@ -102,7 +102,7 @@ provider "kubernetes" {
   token                  = local.kube_data_auth_enabled ? one(data.aws_eks_cluster_auth.eks[*].token) : null
   # The Kubernetes provider will use information from KUBECONFIG if it exists, but if the default cluster
   # in KUBECONFIG is some other cluster, this will cause problems, so we override it always.
-  config_path    = local.kubeconfig_path_enabled ? var.kubeconfig_path : ""
+  config_path    = local.kubeconfig_path_enabled ? var.kubeconfig_path : null
   config_context = var.kubeconfig_context
 
   dynamic "exec" {
