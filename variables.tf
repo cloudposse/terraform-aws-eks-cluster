@@ -210,9 +210,13 @@ variable "cloudwatch_log_group_kms_key_id" {
 variable "addons" {
   type = list(object({
     addon_name               = string
-    addon_version            = string
+    addon_version            = optional(string, null)
+    configuration_values     = optional(string, null)
     resolve_conflicts        = string
-    service_account_role_arn = string
+    service_account_role_arn = optional(string, null)
+    create_timeout           = optional(string, null)
+    update_timeout           = optional(string, null)
+    delete_timeout           = optional(string, null)
   }))
   description = "Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources"
   default     = []

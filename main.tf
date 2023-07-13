@@ -145,6 +145,7 @@ resource "aws_eks_addon" "cluster" {
   cluster_name             = one(aws_eks_cluster.default[*].name)
   addon_name               = each.key
   addon_version            = lookup(each.value, "addon_version", null)
+  configuration_values     = lookup(each.value, "configuration_values", null)
   resolve_conflicts        = lookup(each.value, "resolve_conflicts", null)
   service_account_role_arn = lookup(each.value, "service_account_role_arn", null)
 
@@ -157,4 +158,10 @@ resource "aws_eks_addon" "cluster" {
     # https://docs.aws.amazon.com/eks/latest/userguide/managing-vpc-cni.html
     aws_iam_openid_connect_provider.default,
   ]
+
+  timeouts {
+    create = each.value.create_timeout
+    update = each.value.update_timeout
+    delete = each.value.delete_timeout
+  }
 }
