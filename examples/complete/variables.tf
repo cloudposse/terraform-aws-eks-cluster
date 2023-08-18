@@ -132,11 +132,11 @@ variable "cluster_encryption_config_resources" {
 
 variable "addons" {
   type = list(object({
-    addon_name               = string
-    addon_version            = string
+    addon_name                  = string
+    addon_version               = string
     resolve_conflicts_on_create = string
     resolve_conflicts_on_update = string
-    service_account_role_arn = string
+    service_account_role_arn    = string
   }))
   default     = []
   description = "Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources."
