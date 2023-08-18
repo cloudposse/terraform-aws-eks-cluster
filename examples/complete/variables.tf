@@ -134,7 +134,8 @@ variable "addons" {
   type = list(object({
     addon_name               = string
     addon_version            = string
-    resolve_conflicts        = string
+    resolve_conflicts_on_create = string
+    resolve_conflicts_on_update = string
     service_account_role_arn = string
   }))
   default     = []

@@ -33,23 +33,26 @@ kubernetes_version = "1.26"
 addons = [
   // https://docs.aws.amazon.com/eks/latest/userguide/managing-vpc-cni.html#vpc-cni-latest-available-version
   {
-    addon_name               = "vpc-cni"
-    addon_version            = null
-    resolve_conflicts        = "NONE"
-    service_account_role_arn = null
+    addon_name                  = "vpc-cni"
+    addon_version               = null
+    resolve_conflicts_on_create = "NONE"
+    resolve_conflicts_on_update = "NONE"
+    service_account_role_arn    = null
   },
   // https://docs.aws.amazon.com/eks/latest/userguide/managing-kube-proxy.html
   {
-    addon_name               = "kube-proxy"
-    addon_version            = null
-    resolve_conflicts        = "NONE"
-    service_account_role_arn = null
+    addon_name                  = "kube-proxy"
+    addon_version               = null
+    resolve_conflicts_on_create = "NONE"
+    resolve_conflicts_on_update = "NONE"
+    service_account_role_arn    = null
   },
   // https://docs.aws.amazon.com/eks/latest/userguide/managing-coredns.html
   {
-    addon_name               = "coredns"
-    addon_version            = null
-    resolve_conflicts        = "NONE"
-    service_account_role_arn = null
+    addon_name                  = "coredns"
+    addon_version               = null
+    resolve_conflicts_on_create = "NONE"
+    resolve_conflicts_on_update = "NONE"
+    service_account_role_arn    = null
   },
 ]

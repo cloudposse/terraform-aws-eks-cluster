@@ -247,21 +247,24 @@ usage: |2-
         {
           addon_name               = "vpc-cni"
           addon_version            = var.vpc_cni_version
-          resolve_conflicts        = "NONE"
+          resolve_conflicts_on_create = "NONE"
+          resolve_conflicts_on_update = "NONE"
           service_account_role_arn = null
         },
         // https://docs.aws.amazon.com/eks/latest/userguide/managing-kube-proxy.html
         {
           addon_name               = "kube-proxy"
           addon_version            = var.kube_proxy_version
-          resolve_conflicts        = "NONE"
+          resolve_conflicts_on_create = "NONE"
+          resolve_conflicts_on_update = "NONE"
           service_account_role_arn = null
         },
         // https://docs.aws.amazon.com/eks/latest/userguide/managing-coredns.html
         {
           addon_name               = "coredns"
           addon_version            = var.coredns_version
-          resolve_conflicts        = "NONE"
+          resolve_conflicts_on_create = "NONE"
+          resolve_conflicts_on_update = "NONE"
           service_account_role_arn = null
         },
       ]
