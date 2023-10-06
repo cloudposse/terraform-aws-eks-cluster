@@ -1,13 +1,14 @@
 {
   "extends": [
     "config:base",
-    ":preserveSemverRanges"
+    ":preserveSemverRanges",
+    ":rebaseStalePrs"
   ],
-  "baseBranches": ["main", "master", "/^release\\/v\\d{1,2}$/"],
+  "baseBranches": ["main"],
   "labels": ["auto-update"],
   "dependencyDashboardAutoclose": true,
   "enabledManagers": ["terraform"],
   "terraform": {
-    "ignorePaths": ["**/context.tf", "examples/**"]
+    "ignorePaths": ["**/context.tf"]
   }
 }

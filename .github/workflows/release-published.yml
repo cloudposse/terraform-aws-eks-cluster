@@ -11,4 +11,4 @@ permissions:
 
 jobs:
   terraform-module:
-    uses: cloudposse/github-actions-workflows-terraform-module/.github/workflows/release.yml@main
+    uses: cloudposse/github-actions-workflows-terraform-module/.github/workflows/release-published.yml@main
