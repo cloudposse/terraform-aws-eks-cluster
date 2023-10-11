@@ -79,8 +79,13 @@ locals {
 }
 
 resource "null_resource" "wait_for_cluster" {
-  count      = local.enabled && var.apply_config_map_aws_auth ? 1 : 0
-  depends_on = [aws_eks_cluster.default]
+  count = local.enabled && var.apply_config_map_aws_auth ? 1 : 0
+  depends_on = [
+    aws_eks_cluster.default,
+    aws_security_group_rule.custom_ingress_rules,
+    aws_security_group_rule.managed_ingress_security_groups,
+    aws_security_group_rule.managed_ingress_cidr_blocks,
+  ]
 
   provisioner "local-exec" {
     command     = var.wait_for_cluster_command

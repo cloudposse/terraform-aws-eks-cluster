@@ -1,6 +1,8 @@
+# tflint-ignore: terraform_unused_declarations
 variable "region" {
   type        = string
-  description = "AWS Region"
+  description = "OBSOLETE (not needed): AWS Region"
+  default     = null
 }
 
 variable "vpc_id" {
@@ -11,6 +13,15 @@ variable "vpc_id" {
 variable "subnet_ids" {
   type        = list(string)
   description = "A list of subnet IDs to launch the cluster in"
+}
+
+variable "cluster_depends_on" {
+  type        = any
+  description = <<-EOT
+    If provided, the EKS will depend on this object, and therefore not be created until this object is finalized.
+    This is useful if you want to ensure that the cluster is not created before some other condition is met, e.g. VPNs into the subnet are created.
+    EOT
+  default     = null
 }
 
 variable "create_eks_service_role" {
@@ -198,13 +209,28 @@ variable "cloudwatch_log_group_kms_key_id" {
 
 variable "addons" {
   type = list(object({
-    addon_name               = string
-    addon_version            = string
-    resolve_conflicts        = string
-    service_account_role_arn = string
+    addon_name                  = string
+    addon_version               = optional(string, null)
+    configuration_values        = optional(string, null)
+    resolve_conflicts_on_create = optional(string, null)
+    resolve_conflicts_on_update = optional(string, null)
+    service_account_role_arn    = optional(string, null)
+    create_timeout              = optional(string, null)
+    update_timeout              = optional(string, null)
+    delete_timeout              = optional(string, null)
   }))
   description = "Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources"
   default     = []
+}
+
+variable "addons_depends_on" {
+  type        = any
+  description = <<-EOT
+    If provided, all addons will depend on this object, and therefore not be installed until this object is finalized.
+    This is useful if you want to ensure that addons are not applied before some other condition is met, e.g. node groups are created.
+    See [issue #170](https://github.com/cloudposse/terraform-aws-eks-cluster/issues/170) for more details.
+    EOT
+  default     = null
 }
 
 ##################
@@ -304,4 +330,10 @@ variable "cluster_attributes" {
   type        = list(string)
   description = "Override label module default cluster attributes"
   default     = ["cluster"]
+}
+
+variable "managed_security_group_rules_enabled" {
+  type        = bool
+  description = "Flag to enable/disable the ingress and egress rules for the EKS managed Security Group"
+  default     = true
 }

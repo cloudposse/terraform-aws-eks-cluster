@@ -44,8 +44,6 @@ variable "allowed_cidr_blocks" {
     EOT
 }
 
-
-
 variable "custom_ingress_rules" {
   type = list(object({
     description              = string
@@ -58,5 +56,4 @@ variable "custom_ingress_rules" {
   description = <<-EOT
     A List of Objects, which are custom security group rules that
     EOT
-
 }
