@@ -29,7 +29,7 @@ locals {
 
 module "vpc" {
   source  = "cloudposse/vpc/aws"
-  version = "2.1.0"
+  version = "2.1.1"
 
   ipv4_primary_cidr_block = "172.16.0.0/16"
   tags                    = local.tags
@@ -39,7 +39,7 @@ module "vpc" {
 
 module "subnets" {
   source  = "cloudposse/dynamic-subnets/aws"
-  version = "2.3.0"
+  version = "2.4.1"
 
   availability_zones              = var.availability_zones
   vpc_id                          = module.vpc.vpc_id
@@ -102,7 +102,7 @@ module "eks_cluster" {
 
 module "eks_node_group" {
   source  = "cloudposse/eks-node-group/aws"
-  version = "2.4.0"
+  version = "2.12.0"
 
   subnet_ids        = module.subnets.private_subnet_ids
   cluster_name      = module.eks_cluster.eks_cluster_id
