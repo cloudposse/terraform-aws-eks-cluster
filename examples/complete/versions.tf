@@ -8,7 +8,7 @@ terraform {
     }
     kubernetes = {
       source = "hashicorp/kubernetes"
-      # Limited the provider to versions less than `1.25.0` since major changes were introduced in `2.25.0` that broke the `terraform-aws-eks-cluster` module.
+      # Limited the provider to versions less than `2.25.0` since major changes were introduced in `2.25.0` that broke the `terraform-aws-eks-cluster` module.
       # The `kubernetes` provider was updated to use the `terraform-plugin-framework`, which does not support computed lists in the `exec` block:
       # dynamic "exec" {
       #   content {
