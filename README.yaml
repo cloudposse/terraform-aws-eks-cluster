@@ -68,15 +68,16 @@ introduction: |-
     worker nodes to join the cluster and to add additional users/roles/accounts. (This option is enabled
     by default, but has some caveats noted below. Set `apply_config_map_aws_auth` to `false` to avoid these issues.)
 
-  __NOTE:__ Release `2.0.0` (previously released as version `0.45.0`) contains some changes that 
-  could result in your existing EKS cluster being replaced (destroyed and recreated).
-  To prevent this, follow the instructions in the [v1 to v2 migration path](./docs/migration-v1-v2.md).
+  > [!NOTE]
+  > Release `2.0.0` (previously released as version `0.45.0`) contains some changes that 
+  > could result in your existing EKS cluster being replaced (destroyed and recreated).
+  > To prevent this, follow the instructions in the [v1 to v2 migration path](./docs/migration-v1-v2.md).
   
-  __NOTE:__ Every Terraform module that provisions an EKS cluster has faced the challenge that access to the cluster
-  is partly controlled by a resource inside the cluster, a ConfigMap called `aws-auth`. You need to be able to access
-  the cluster through the Kubernetes API to modify the ConfigMap, because 
-  [there is no AWS API for it](https://github.com/aws/containers-roadmap/issues/185). This presents
-  a problem: how do you authenticate to an API endpoint that you have not yet created?
+  > [!NOTE] Every Terraform module that provisions an EKS cluster has faced the challenge that access to the cluster
+  > is partly controlled by a resource inside the cluster, a ConfigMap called `aws-auth`. You need to be able to access
+  > the cluster through the Kubernetes API to modify the ConfigMap, because 
+  > [there is no AWS API for it](https://github.com/aws/containers-roadmap/issues/185). This presents
+  > a problem: how do you authenticate to an API endpoint that you have not yet created?
   
   We use the Terraform Kubernetes provider to access the cluster, and it uses the same underlying library
   that `kubectl` uses, so configuration is very similar. However, every kind of configuration we have tried
@@ -113,12 +114,15 @@ introduction: |-
   you need to take extra steps, such as using a VPN to provide access to the private endpoint, or running
   `terraform` on a host in the same VPC as the EKS cluster.
   
-  __Failure during `destroy`:__ If the cluster is destroyed (via Terraform or otherwise) before the Terraform resource
-  responsible for the `aws-auth` ConfigMap is destroyed, Terraform will get stuck trying to delete the ConfigMap, 
-  because it cannot contact the now destroyed cluster. This can show up as a `connection refused` error (usually
-  to `https://localhost/`). The easiest ways to handle this is either to add `-var apply_config_map_aws_auth=false` 
-  to the `destroy` command or to remove the ConfigMap (`...kubernetes_config_map.aws_auth[0]`) from the Terraform
-  state with `terraform state rm`.
+  > [!WARNING]
+  > ### Failure during `destroy`
+  >
+  > If the cluster is destroyed (via Terraform or otherwise) before the Terraform resource
+  > responsible for the `aws-auth` ConfigMap is destroyed, Terraform will get stuck trying to delete the ConfigMap, 
+  > because it cannot contact the now destroyed cluster. This can show up as a `connection refused` error (usually
+  > to `https://localhost/`). The easiest ways to handle this is either to add `-var apply_config_map_aws_auth=false` 
+  > to the `destroy` command or to remove the ConfigMap (`...kubernetes_config_map.aws_auth[0]`) from the Terraform
+  > state with `terraform state rm`.
 
   __NOTE:__ We give you the `kubernetes_config_map_ignore_role_changes` option and default it to `true` for the following reasons:
   - We provision the EKS cluster
