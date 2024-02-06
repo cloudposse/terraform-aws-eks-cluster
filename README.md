@@ -1,6 +1,7 @@
 
 <!-- markdownlint-disable -->
 # terraform-aws-eks-cluster <a href="https://cpco.io/homepage"><img align="right" src="https://cloudposse.com/logo-300x69.svg" width="150" /></a>
+  
 <a href="https://github.com/cloudposse/terraform-aws-eks-cluster/releases/latest"><img src="https://img.shields.io/github/release/cloudposse/terraform-aws-eks-cluster.svg?style=for-the-badge" alt="Latest Release"/></a><a href="https://github.com/cloudposse/terraform-aws-eks-cluster/commits/main/"><img src="https://img.shields.io/github/last-commit/cloudposse/terraform-aws-eks-cluster/main?style=for-the-badge" alt="Last Update"/></a><a href="https://slack.cloudposse.com"><img src="https://slack.cloudposse.com/for-the-badge.svg" alt="Slack Community"/></a>
 <!-- markdownlint-restore -->
 
@@ -32,6 +33,7 @@ Terraform module to provision an [EKS](https://aws.amazon.com/eks/) cluster on A
 ---
 > [!NOTE]
 > This project is part of Cloud Posse's comprehensive ["SweetOps"](https://cpco.io/sweetops) approach towards DevOps.
+> <details><summary>Learn More</summary>
 > <a href="https://cpco.io/terraform-modules">
 >   <picture>
 >     <source media="(prefers-color-scheme: dark)" srcset="https://docs.cloudposse.com/images/terraform-open-source-modules-light.svg">
@@ -44,6 +46,7 @@ Terraform module to provision an [EKS](https://aws.amazon.com/eks/) cluster on A
 > It's 100% Open Source and licensed under the [APACHE2](LICENSE).
 >
 > We literally have [*hundreds of terraform modules*][terraform_modules] that are Open Source and well-maintained. Check them out!
+> </details>
 
 [![README Header][readme_header_img]][readme_header_link]
 
