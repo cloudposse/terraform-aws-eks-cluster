@@ -6,10 +6,13 @@ github_repo: cloudposse/terraform-aws-eks-cluster
 
 badges:
   - name: Latest Release
-    image: https://img.shields.io/github/release/cloudposse/terraform-aws-eks-cluster.svg
+    image: https://img.shields.io/github/release/cloudposse/terraform-aws-eks-cluster.svg?style=for-the-badge
     url: https://github.com/cloudposse/terraform-aws-eks-cluster/releases/latest
+  - name: "Last Update"
+    image: https://img.shields.io/github/last-commit/cloudposse/terraform-aws-eks-cluster/main?style=for-the-badge
+    url: https://github.com/cloudposse/terraform-aws-eks-cluster/commits/main/
   - name: Slack Community
-    image: https://slack.cloudposse.com/badge.svg
+    image: https://slack.cloudposse.com/for-the-badge.svg
     url: https://slack.cloudposse.com
 
 related:
