@@ -1,10 +1,8 @@
 
 <!-- markdownlint-disable -->
 # terraform-aws-eks-cluster <a href="https://cpco.io/homepage"><img align="right" src="https://cloudposse.com/logo-300x69.svg" width="150" /></a>
-  
 <a href="https://github.com/cloudposse/terraform-aws-eks-cluster/releases/latest"><img src="https://img.shields.io/github/release/cloudposse/terraform-aws-eks-cluster.svg?style=for-the-badge" alt="Latest Release"/></a><a href="https://github.com/cloudposse/terraform-aws-eks-cluster/commits/main/"><img src="https://img.shields.io/github/last-commit/cloudposse/terraform-aws-eks-cluster/main?style=for-the-badge" alt="Last Update"/></a><a href="https://slack.cloudposse.com"><img src="https://slack.cloudposse.com/for-the-badge.svg" alt="Slack Community"/></a>
 <!-- markdownlint-restore -->
-
 
 <!--
 
