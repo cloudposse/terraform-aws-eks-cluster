@@ -62,12 +62,13 @@ The module provisions the following resources:
   worker nodes to join the cluster and to add additional users/roles/accounts. (This option is enabled
   by default, but has some caveats noted below. Set `apply_config_map_aws_auth` to `false` to avoid these issues.)
 
-> [!NOTE]
+> [!IMPORTANT]
 > Release `2.0.0` (previously released as version `0.45.0`) contains some changes that 
 > could result in your existing EKS cluster being replaced (destroyed and recreated).
 > To prevent this, follow the instructions in the [v1 to v2 migration path](./docs/migration-v1-v2.md).
 
-> [!NOTE] Every Terraform module that provisions an EKS cluster has faced the challenge that access to the cluster
+> [!INFO] 
+> Every Terraform module that provisions an EKS cluster has faced the challenge that access to the cluster
 > is partly controlled by a resource inside the cluster, a ConfigMap called `aws-auth`. You need to be able to access
 > the cluster through the Kubernetes API to modify the ConfigMap, because 
 > [there is no AWS API for it](https://github.com/aws/containers-roadmap/issues/185). This presents
@@ -103,10 +104,11 @@ you may also be able to import resources by setting `-var apply_config_map_aws_a
 At the moment, the `exec` option appears to be the most reliable method, so we recommend using it if possible,
 but because of the extra requirements it has, we use the data source as the default authentication method.
 
-__Additional Note:__ All of the above methods require network connectivity between the host running the
-`terraform` command and the EKS endpoint. If your EKS cluster does not have public access enabled, this means
-you need to take extra steps, such as using a VPN to provide access to the private endpoint, or running
-`terraform` on a host in the same VPC as the EKS cluster.
+> [!IMPORTANT]
+> All of the above methods require network connectivity between the host running the
+> `terraform` command and the EKS endpoint. If your EKS cluster does not have public access enabled, this means
+> you need to take extra steps, such as using a VPN to provide access to the private endpoint, or running
+> `terraform` on a host in the same VPC as the EKS cluster.
 
 > [!WARNING]
 > ### Failure during `destroy`
@@ -118,15 +120,16 @@ you need to take extra steps, such as using a VPN to provide access to the priva
 > to the `destroy` command or to remove the ConfigMap (`...kubernetes_config_map.aws_auth[0]`) from the Terraform
 > state with `terraform state rm`.
 
-__NOTE:__ We give you the `kubernetes_config_map_ignore_role_changes` option and default it to `true` for the following reasons:
-- We provision the EKS cluster
-- Then we wait for the cluster to become available (see `null_resource.wait_for_cluster` in [auth.tf](auth.tf)
-- Then we provision the Kubernetes Auth ConfigMap to map and add additional roles/users/accounts to Kubernetes groups
-- That is all we do in this module, but after that, we expect you to use [terraform-aws-eks-node-group](https://github.com/cloudposse/terraform-aws-eks-node-group)
-to provision a managed Node Group
-- Then EKS updates the Auth ConfigMap and adds worker roles to it (for the worker nodes to join the cluster)
-- Since the ConfigMap is modified outside of Terraform state, Terraform wants to update it to to remove the worker roles EKS added
-- If you update the ConfigMap without including the worker nodes that EKS added, you will disconnect them from the cluster
+> [!INFO]
+> We give you the `kubernetes_config_map_ignore_role_changes` option and default it to `true` for the following reasons:
+> - We provision the EKS cluster
+> - Then we wait for the cluster to become available (see `null_resource.wait_for_cluster` in [auth.tf](auth.tf)
+> - Then we provision the Kubernetes Auth ConfigMap to map and add additional roles/users/accounts to Kubernetes groups
+> - That is all we do in this module, but after that, we expect you to use [terraform-aws-eks-node-group](https://github.com/cloudposse/terraform-aws-eks-node-group)
+>   to provision a managed Node Group
+> - Then EKS updates the Auth ConfigMap and adds worker roles to it (for the worker nodes to join the cluster)
+> - Since the ConfigMap is modified outside of Terraform state, Terraform wants to update it to to remove the worker roles EKS added
+> - If you update the ConfigMap without including the worker nodes that EKS added, you will disconnect them from the cluster
 
 However, it is possible to get the worker node roles from the terraform-aws-eks-node-group via Terraform "remote state"
 and include them with any other roles you want to add (example code to be published later), so we make
