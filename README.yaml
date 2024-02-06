@@ -68,12 +68,12 @@ introduction: |-
     worker nodes to join the cluster and to add additional users/roles/accounts. (This option is enabled
     by default, but has some caveats noted below. Set `apply_config_map_aws_auth` to `false` to avoid these issues.)
 
-  > [!IMPORTANT]
+  > [!WARNING]
   > Release `2.0.0` (previously released as version `0.45.0`) contains some changes that 
   > could result in your existing EKS cluster being replaced (destroyed and recreated).
   > To prevent this, follow the instructions in the [v1 to v2 migration path](./docs/migration-v1-v2.md).
   
-  > [!INFO] 
+  > [!NOTE]
   > Every Terraform module that provisions an EKS cluster has faced the challenge that access to the cluster
   > is partly controlled by a resource inside the cluster, a ConfigMap called `aws-auth`. You need to be able to access
   > the cluster through the Kubernetes API to modify the ConfigMap, because 
@@ -126,7 +126,7 @@ introduction: |-
   > to the `destroy` command or to remove the ConfigMap (`...kubernetes_config_map.aws_auth[0]`) from the Terraform
   > state with `terraform state rm`.
 
-  > [!INFO]
+  > [!NOTE]
   > We give you the `kubernetes_config_map_ignore_role_changes` option and default it to `true` for the following reasons:
   > - We provision the EKS cluster
   > - Then we wait for the cluster to become available (see `null_resource.wait_for_cluster` in [auth.tf](auth.tf)
