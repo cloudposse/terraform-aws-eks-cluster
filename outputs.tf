@@ -1,18 +1,3 @@
-output "security_group_id" {
-  description = "(Deprecated) ID of the optionally created additional Security Group for the EKS cluster"
-  value       = one(aws_security_group.default[*].id)
-}
-
-output "security_group_arn" {
-  description = "(Deprecated) ARN of the optionally created additional Security Group for the EKS cluster"
-  value       = one(aws_security_group.default[*].arn)
-}
-
-output "security_group_name" {
-  description = "Name of the optionally created additional Security Group for the EKS cluster"
-  value       = one(aws_security_group.default[*].name)
-}
-
 output "eks_cluster_id" {
   description = "The name of the cluster"
   value       = one(aws_eks_cluster.default[*].id)
@@ -61,9 +46,12 @@ output "eks_cluster_role_arn" {
   value       = local.eks_service_role_arn
 }
 
-output "kubernetes_config_map_id" {
-  description = "ID of `aws-auth` Kubernetes ConfigMap"
-  value       = var.kubernetes_config_map_ignore_role_changes ? one(kubernetes_config_map.aws_auth_ignore_changes[*].id) : one(kubernetes_config_map.aws_auth[*].id)
+output "eks_cluster_ipv6_service_cidr" {
+  description = <<-EOT
+    The IPv6 CIDR block that Kubernetes pod and service IP addresses are assigned from
+    if `kubernetes_network_ipv6_enabled` is set to true. If set to false this output will be null.
+    EOT
+  value       = one(aws_eks_cluster.default[*].kubernetes_network_config[0].service_ipv6_cidr)
 }
 
 output "cluster_encryption_config_enabled" {

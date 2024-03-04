@@ -28,24 +28,28 @@ kubernetes_labels = {}
 cluster_encryption_config_enabled = true
 
 # When updating the Kubernetes version, also update the API and client-go version in test/src/go.mod
-kubernetes_version = "1.29"
-
-private_ipv6_enabled = false
+kubernetes_version = "1.26"
 
 addons = [
-  # https://docs.aws.amazon.com/eks/latest/userguide/managing-kube-proxy.html
+  // https://docs.aws.amazon.com/eks/latest/userguide/managing-vpc-cni.html#vpc-cni-latest-available-version
   {
-    addon_name                  = "kube-proxy"
-    addon_version               = null
-    resolve_conflicts_on_create = "OVERWRITE"
-    resolve_conflicts_on_update = "PRESERVE"
-    service_account_role_arn    = null
+    addon_name               = "vpc-cni"
+    addon_version            = null
+    resolve_conflicts        = "OVERWRITE"
+    service_account_role_arn = null
   },
-  # https://docs.aws.amazon.com/eks/latest/userguide/managing-coredns.html
+  // https://docs.aws.amazon.com/eks/latest/userguide/managing-kube-proxy.html
+  {
+    addon_name               = "kube-proxy"
+    addon_version            = null
+    resolve_conflicts        = "OVERWRITE"
+    service_account_role_arn = null
+  },
+  // https://docs.aws.amazon.com/eks/latest/userguide/managing-coredns.html
   {
     addon_name               = "coredns"
     addon_version            = null
-    resolve_conflicts        = "NONE"
+    resolve_conflicts        = "OVERWRITE"
     service_account_role_arn = null
   },
 ]
