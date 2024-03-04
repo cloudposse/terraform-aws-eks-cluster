@@ -1,18 +1,23 @@
 # tflint-ignore: terraform_unused_declarations
 variable "region" {
+
   type        = string
   description = "OBSOLETE (not needed): AWS Region"
   default     = null
 }
 
-variable "vpc_id" {
-  type        = string
-  description = "VPC ID for the EKS cluster"
-}
-
 variable "subnet_ids" {
   type        = list(string)
   description = "A list of subnet IDs to launch the cluster in"
+}
+
+variable "associated_security_group_ids" {
+  type        = list(string)
+  default     = []
+  description = <<-EOT
+    A list of IDs of Security Groups to associate the cluster with.
+    These security groups will not be modified.
+    EOT
 }
 
 variable "cluster_depends_on" {
@@ -40,11 +45,6 @@ variable "eks_cluster_service_role_arn" {
   default     = null
 }
 
-variable "workers_role_arns" {
-  type        = list(string)
-  description = "List of Role ARNs of the worker nodes"
-  default     = []
-}
 
 variable "kubernetes_version" {
   type        = string
@@ -107,58 +107,6 @@ variable "cluster_log_retention_period" {
   default     = 0
 }
 
-variable "apply_config_map_aws_auth" {
-  type        = bool
-  description = "Whether to apply the ConfigMap to allow worker nodes to join the EKS cluster and allow additional users, accounts and roles to acces the cluster"
-  default     = true
-}
-
-variable "map_additional_aws_accounts" {
-  type        = list(string)
-  description = "Additional AWS account numbers to add to `config-map-aws-auth` ConfigMap"
-  default     = []
-}
-
-variable "map_additional_iam_roles" {
-  type = list(object({
-    rolearn  = string
-    username = string
-    groups   = list(string)
-  }))
-  description = "Additional IAM roles to add to `config-map-aws-auth` ConfigMap"
-  default     = []
-}
-
-variable "map_additional_iam_users" {
-  type = list(object({
-    userarn  = string
-    username = string
-    groups   = list(string)
-  }))
-  description = "Additional IAM users to add to `config-map-aws-auth` ConfigMap"
-  default     = []
-}
-
-variable "local_exec_interpreter" {
-  type        = list(string)
-  description = "shell to use for local_exec"
-  default     = ["/bin/sh", "-c"]
-}
-
-variable "wait_for_cluster_command" {
-  type        = string
-  description = "`local-exec` command to execute to determine if the EKS cluster is healthy. Cluster endpoint URL is available as environment variable `ENDPOINT`"
-  ## --max-time is per attempt, --retry is the number of attempts
-  ## Approx. total time limit is (max-time + retry-delay) * retry seconds
-  default = "if test -n \"$ENDPOINT\"; then curl --silent --fail --retry 30 --retry-delay 10 --retry-connrefused --max-time 11 --insecure --output /dev/null $ENDPOINT/healthz; fi"
-}
-
-variable "kubernetes_config_map_ignore_role_changes" {
-  type        = bool
-  description = "Set to `true` to ignore IAM role changes in the Kubernetes Auth ConfigMap"
-  default     = true
-}
-
 variable "cluster_encryption_config_enabled" {
   type        = bool
   description = "Set to `true` to enable Cluster Encryption Configuration"
@@ -209,9 +157,12 @@ variable "cloudwatch_log_group_kms_key_id" {
 
 variable "addons" {
   type = list(object({
-    addon_name                  = string
-    addon_version               = optional(string, null)
-    configuration_values        = optional(string, null)
+    addon_name           = string
+    addon_version        = optional(string, null)
+    configuration_values = optional(string, null)
+    # resolve_conflicts is deprecated, but we keep it for backwards compatibility
+    # and because if not declared, Terraform will silently ignore it.
+    resolve_conflicts           = optional(string, null)
     resolve_conflicts_on_create = optional(string, null)
     resolve_conflicts_on_update = optional(string, null)
     service_account_role_arn    = optional(string, null)
@@ -219,7 +170,14 @@ variable "addons" {
     update_timeout              = optional(string, null)
     delete_timeout              = optional(string, null)
   }))
-  description = "Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources"
+  description = <<-EOT
+    Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources.
+    Note: `resolve_conflicts` is deprecated. If `resolve_conflicts` is set and
+    `resolve_conflicts_on_create` or `resolve_conflicts_on_update` is not set,
+    `resolve_conflicts` will be used instead. If `resolve_conflicts_on_create` is
+    not set and `resolve_conflicts` is `PRESERVE`, `resolve_conflicts_on_create`
+    will be set to `NONE`.
+    EOT
   default     = []
 }
 
@@ -233,107 +191,162 @@ variable "addons_depends_on" {
   default     = null
 }
 
-##################
-# All the following variables are just about configuring the Kubernetes provider
-# to be able to modify the aws-auth ConfigMap. Once EKS provides a normal
-# AWS API for modifying it, we can do away with all of this.
-#
-# The reason there are so many options is because at various times, each
-# one of them has had problems, so we give you a choice.
-#
-# The reason there are so many "enabled" inputs rather than automatically
-# detecting whether or not they are enabled based on the value of the input
-# is that any logic based on input values requires the values to be known during
-# the "plan" phase of Terraform, and often they are not, which causes problems.
-#
-
-variable "kubeconfig_path_enabled" {
-  type        = bool
-  description = "If `true`, configure the Kubernetes provider with `kubeconfig_path` and use it for authenticating to the EKS cluster"
-  default     = false
-}
-
-variable "kubeconfig_path" {
-  type        = string
-  description = "The Kubernetes provider `config_path` setting to use when `kubeconfig_path_enabled` is `true`"
-  default     = ""
-}
-
-variable "kubeconfig_context" {
-  type        = string
-  description = "Context to choose from the Kubernetes kube config file"
-  default     = ""
-}
-
-variable "kube_data_auth_enabled" {
-  type        = bool
-  description = <<-EOT
-    If `true`, use an `aws_eks_cluster_auth` data source to authenticate to the EKS cluster.
-    Disabled by `kubeconfig_path_enabled` or `kube_exec_auth_enabled`.
-    EOT
-  default     = true
-}
-
-variable "kube_exec_auth_enabled" {
-  type        = bool
-  description = <<-EOT
-    If `true`, use the Kubernetes provider `exec` feature to execute `aws eks get-token` to authenticate to the EKS cluster.
-    Disabled by `kubeconfig_path_enabled`, overrides `kube_data_auth_enabled`.
-    EOT
-  default     = false
-}
-
-
-variable "kube_exec_auth_role_arn" {
-  type        = string
-  description = "The role ARN for `aws eks get-token` to use"
-  default     = ""
-}
-
-variable "kube_exec_auth_role_arn_enabled" {
-  type        = bool
-  description = "If `true`, pass `kube_exec_auth_role_arn` as the role ARN to `aws eks get-token`"
-  default     = false
-}
-
-variable "kube_exec_auth_aws_profile" {
-  type        = string
-  description = "The AWS config profile for `aws eks get-token` to use"
-  default     = ""
-}
-
-variable "kube_exec_auth_aws_profile_enabled" {
-  type        = bool
-  description = "If `true`, pass `kube_exec_auth_aws_profile` as the `profile` to `aws eks get-token`"
-  default     = false
-}
-
-variable "aws_auth_yaml_strip_quotes" {
-  type        = bool
-  description = "If true, remove double quotes from the generated aws-auth ConfigMap YAML to reduce spurious diffs in plans"
-  default     = true
-}
-
-variable "dummy_kubeapi_server" {
-  type        = string
-  default     = "https://jsonplaceholder.typicode.com"
-  description = <<-EOT
-    URL of a dummy API server for the Kubernetes server to use when the real one is unknown.
-    This is a workaround to ignore connection failures that break Terraform even though the results do not matter.
-    You can disable it by setting it to `null`; however, as of Kubernetes provider v2.3.2, doing so _will_
-    cause Terraform to fail in several situations unless you provide a valid `kubeconfig` file
-    via `kubeconfig_path` and set `kubeconfig_path_enabled` to `true`.
-    EOT
-}
-
 variable "cluster_attributes" {
   type        = list(string)
   description = "Override label module default cluster attributes"
   default     = ["cluster"]
 }
 
+variable "access_config" {
+  type = object({
+    authentication_mode                         = optional(string, "API")
+    bootstrap_cluster_creator_admin_permissions = optional(bool, false)
+  })
+  description = "Access configuration for the EKS cluster."
+  default     = {}
+  nullable    = false
+
+  validation {
+    condition     = !contains(["CONFIG_MAP"], var.access_config.authentication_mode)
+    error_message = "The CONFIG_MAP authentication_mode is not supported."
+  }
+}
+
+variable "access_entry_map" {
+  type = map(object({
+    # key is principal_arn
+    user_name = optional(string)
+    # Cannot assign "system:*" groups to IAM users, use ClusterAdmin and Admin instead
+    kubernetes_groups = optional(list(string), [])
+    type              = optional(string, "STANDARD")
+    access_policy_associations = optional(map(object({
+      # key is policy_arn or policy_name
+      access_scope = optional(object({
+        type       = optional(string, "cluster")
+        namespaces = optional(list(string))
+      }), {}) # access_scope
+    })), {})  # access_policy_associations
+  }))         # access_entry_map
+  description = <<-EOT
+    Map of IAM Principal ARNs to access configuration.
+    Preferred over other inputs as this configuration remains stable
+    when elements are added or removed, but it requires that the Principal ARNs
+    and Policy ARNs are known at plan time.
+    Can be used along with other `access_*` inputs, but do not duplicate entries.
+    Map `access_policy_associations` keys are policy ARNs, policy
+    full name (AmazonEKSViewPolicy), or short name (View).
+    It is recommended to use the default `user_name` because the default includes
+    IAM role or user name and the session name for assumed roles.
+    As a special case in support of backwards compatibility, membership in the
+    `system:masters` group is is translated to an association with the ClusterAdmin policy.
+    In all other cases, including any `system:*` group in `kubernetes_groups` is prohibited.
+    EOT
+  default     = {}
+  nullable    = false
+}
+
+variable "access_entries" {
+  type = list(object({
+    principal_arn     = string
+    user_name         = optional(string, null)
+    kubernetes_groups = optional(list(string), null)
+  }))
+  description = <<-EOT
+    List of IAM principles to allow to access the EKS cluster.
+    It is recommended to use the default `user_name` because the default includes
+    the IAM role or user name and the session name for assumed roles.
+    Use when Principal ARN is not known at plan time.
+    EOT
+  default     = []
+  nullable    = false
+}
+
+variable "access_policy_associations" {
+  type = list(object({
+    principal_arn = string
+    policy_arn    = string
+    access_scope = object({
+      type       = optional(string, "cluster")
+      namespaces = optional(list(string))
+    })
+  }))
+  description = <<-EOT
+    List of AWS managed EKS access policies to associate with IAM principles.
+    Use when Principal ARN or Policy ARN is not known at plan time.
+    `policy_arn` can be the full ARN, the full name (AmazonEKSViewPolicy) or short name (View).
+    EOT
+  default     = []
+  nullable    = false
+}
+
+variable "access_entries_for_nodes" {
+  # We use a map instead of an object because if a user supplies
+  # an object with an unexpected key, Terraform simply ignores it,
+  # leaving us with no way to detect the error.
+  type        = map(list(string))
+  description = <<-EOT
+    Map of list of IAM roles for the EKS non-managed worker nodes.
+    The map key is the node type, either `EC2_LINUX` or `EC2_WINDOWS`,
+    and the list contains the IAM roles of the nodes of that type.
+    There is no need for or utility in creating Fargate access entries, as those
+    are always created automatically by AWS, just as with managed nodes.
+    Use when Principal ARN is not known at plan time.
+    EOT
+  default     = {}
+  nullable    = false
+  validation {
+    condition = length([for k in keys(var.access_entries_for_nodes) : k if !contains(["EC2_LINUX", "EC2_WINDOWS"], k)]) == 0
+    error_message = format(<<-EOS
+      The access_entries_for_nodes object can only contain the EC2_LINUX and EC2_WINDOWS attributes:
+      Keys "%s" not allowed.
+      EOS
+    , join("\", \"", [for k in keys(var.access_entries_for_nodes) : k if !contains(["EC2_LINUX", "EC2_WINDOWS"], k)]))
+  }
+  validation {
+    condition     = !(contains(keys(var.access_entries_for_nodes), "FARGATE_LINUX"))
+    error_message = <<-EOM
+      Access entries of type "FARGATE_LINUX" are not supported because they are
+      automatically created by AWS EKS and should not be managed by Terraform.
+      EOM
+  }
+}
+
+## Limited support for modifying the EKS-managed Security Group
+## In the future, even this limited support may be removed
+
 variable "managed_security_group_rules_enabled" {
   type        = bool
   description = "Flag to enable/disable the ingress and egress rules for the EKS managed Security Group"
   default     = true
+}
+
+variable "allowed_security_group_ids" {
+  type        = list(string)
+  default     = []
+  description = <<-EOT
+    A list of IDs of Security Groups to allow access to the cluster.
+    EOT
+}
+
+variable "allowed_cidr_blocks" {
+  type        = list(string)
+  default     = []
+  description = <<-EOT
+    A list of IPv4 CIDRs to allow access to the cluster.
+    The length of this list must be known at "plan" time.
+    EOT
+}
+
+variable "custom_ingress_rules" {
+  type = list(object({
+    description              = string
+    from_port                = number
+    to_port                  = number
+    protocol                 = string
+    source_security_group_id = string
+  }))
+  default     = []
+  description = <<-EOT
+    A List of Objects, which are custom security group rules that
+    EOT
 }

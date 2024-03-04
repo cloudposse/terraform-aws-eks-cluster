@@ -1,3 +1,10 @@
+
+##################################################################
+## This example shows how to use version 2.9.0 of this module.  ##
+## It is provided for reference only.                           ##
+## Use version 4.0.0 or later for new deployments.              ##
+##################################################################
+
 provider "aws" {
   region = var.region
 }
@@ -11,17 +18,7 @@ module "label" {
   context = module.this.context
 }
 
-data "aws_caller_identity" "current" {}
-
-data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
-}
-
 locals {
-  enabled = module.this.enabled
-
-  private_ipv6_enabled = var.private_ipv6_enabled
-
   # The usage of the specific kubernetes.io/cluster/* resource tags below are required
   # for EKS and Kubernetes to discover and manage networking resources
   # https://aws.amazon.com/premiumsupport/knowledge-center/eks-vpc-subnet-discovery/
@@ -35,34 +32,11 @@ locals {
   private_subnets_additional_tags = {
     "kubernetes.io/role/internal-elb" : 1
   }
-
-  # Enable the IAM user creating the cluster to administer it,
-  # without using the bootstrap_cluster_creator_admin_permissions option,
-  # as a way to test the access_entry_map feature.
-  access_entry_map = {
-    (data.aws_iam_session_context.current.issuer_arn) = {
-      access_policy_associations = {
-        ClusterAdmin = {}
-      }
-    }
-  }
-
-  # https://docs.aws.amazon.com/eks/latest/userguide/managing-vpc-cni.html#vpc-cni-latest-available-version
-  vpc_cni_addon = {
-    addon_name               = "vpc-cni"
-    addon_version            = null
-    resolve_conflicts        = "OVERWRITE"
-    service_account_role_arn = one(module.vpc_cni_eks_iam_role[*].service_account_role_arn)
-  }
-
-  addons = concat([
-    local.vpc_cni_addon
-  ], var.addons)
 }
 
 module "vpc" {
   source  = "cloudposse/vpc/aws"
-  version = "2.1.1"
+  version = "2.1.0"
 
   ipv4_primary_cidr_block = "172.16.0.0/16"
   tags                    = local.tags
@@ -72,30 +46,30 @@ module "vpc" {
 
 module "subnets" {
   source  = "cloudposse/dynamic-subnets/aws"
-  version = "2.4.1"
+  version = "2.3.0"
 
   availability_zones              = var.availability_zones
   vpc_id                          = module.vpc.vpc_id
   igw_id                          = [module.vpc.igw_id]
   ipv4_cidr_block                 = [module.vpc.vpc_cidr_block]
-  ipv6_cidr_block                 = [module.vpc.vpc_ipv6_cidr_block]
-  ipv6_enabled                    = true
   max_nats                        = 1
   nat_gateway_enabled             = true
   nat_instance_enabled            = false
   tags                            = local.tags
   public_subnets_additional_tags  = local.public_subnets_additional_tags
-  private_subnets_enabled         = true
   private_subnets_additional_tags = local.private_subnets_additional_tags
 
   context = module.this.context
 }
 
 module "eks_cluster" {
-  source = "../../"
+  source  = "cloudposse/eks-cluster/aws"
+  version = "2.9.0"
 
+  vpc_id                       = module.vpc.vpc_id
   subnet_ids                   = concat(module.subnets.private_subnet_ids, module.subnets.public_subnet_ids)
   kubernetes_version           = var.kubernetes_version
+  local_exec_interpreter       = var.local_exec_interpreter
   oidc_provider_enabled        = var.oidc_provider_enabled
   enabled_cluster_log_types    = var.enabled_cluster_log_types
   cluster_log_retention_period = var.cluster_log_retention_period
@@ -107,21 +81,27 @@ module "eks_cluster" {
   cluster_encryption_config_kms_key_policy                  = var.cluster_encryption_config_kms_key_policy
   cluster_encryption_config_resources                       = var.cluster_encryption_config_resources
 
-  addons            = local.addons
+  addons            = var.addons
   addons_depends_on = [module.eks_node_group]
 
-  access_entry_map = local.access_entry_map
-  access_config = {
-    authentication_mode                         = "API"
-    bootstrap_cluster_creator_admin_permissions = false
-  }
+  # We need to create a new Security Group only if the EKS cluster is used with unmanaged worker nodes.
+  # EKS creates a managed Security Group for the cluster automatically, places the control plane and managed nodes into the security group,
+  # and allows all communications between the control plane and the managed worker nodes
+  # (EKS applies it to ENIs that are attached to EKS Control Plane master nodes and to any managed workloads).
+  # If only Managed Node Groups are used, we don't need to create a separate Security Group;
+  # otherwise we place the cluster in two SGs - one that is created by EKS, the other one that the module creates.
+  # See https://docs.aws.amazon.com/eks/latest/userguide/sec-group-reqs.html for more details.
+  create_security_group = false
 
   # This is to test `allowed_security_group_ids` and `allowed_cidr_blocks`
   # In a real cluster, these should be some other (existing) Security Groups and CIDR blocks to allow access to the cluster
   allowed_security_group_ids = [module.vpc.vpc_default_security_group_id]
   allowed_cidr_blocks        = [module.vpc.vpc_cidr_block]
 
-  kubernetes_network_ipv6_enabled = local.private_ipv6_enabled
+  # For manual testing. In particular, set `false` if local configuration/state
+  # has a cluster but the cluster was deleted by nightly cleanup, in order for
+  # `terraform destroy` to succeed.
+  apply_config_map_aws_auth = var.apply_config_map_aws_auth
 
   context = module.this.context
 
@@ -130,7 +110,7 @@ module "eks_cluster" {
 
 module "eks_node_group" {
   source  = "cloudposse/eks-node-group/aws"
-  version = "2.12.0"
+  version = "2.4.0"
 
   subnet_ids        = module.subnets.private_subnet_ids
   cluster_name      = module.eks_cluster.eks_cluster_id
@@ -139,6 +119,9 @@ module "eks_node_group" {
   min_size          = var.min_size
   max_size          = var.max_size
   kubernetes_labels = var.kubernetes_labels
+
+  # Prevent the node groups from being created before the Kubernetes aws-auth ConfigMap
+  module_depends_on = module.eks_cluster.kubernetes_config_map_id
 
   context = module.this.context
 }

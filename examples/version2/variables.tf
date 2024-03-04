@@ -10,7 +10,7 @@ variable "availability_zones" {
 
 variable "kubernetes_version" {
   type        = string
-  default     = "1.29"
+  default     = "1.21"
   description = "Desired Kubernetes master version. If you do not specify a value, the latest available version is used"
 }
 
@@ -26,10 +26,46 @@ variable "cluster_log_retention_period" {
   description = "Number of days to retain cluster logs. Requires `enabled_cluster_log_types` to be set. See https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html."
 }
 
+variable "map_additional_aws_accounts" {
+  description = "Additional AWS account numbers to add to `config-map-aws-auth` ConfigMap"
+  type        = list(string)
+  default     = []
+}
+
+variable "map_additional_iam_roles" {
+  description = "Additional IAM roles to add to `config-map-aws-auth` ConfigMap"
+
+  type = list(object({
+    rolearn  = string
+    username = string
+    groups   = list(string)
+  }))
+
+  default = []
+}
+
+variable "map_additional_iam_users" {
+  description = "Additional IAM users to add to `config-map-aws-auth` ConfigMap"
+
+  type = list(object({
+    userarn  = string
+    username = string
+    groups   = list(string)
+  }))
+
+  default = []
+}
+
 variable "oidc_provider_enabled" {
   type        = bool
   default     = true
   description = "Create an IAM OIDC identity provider for the cluster, then you can create IAM roles to associate with a service account in the cluster, instead of using `kiam` or `kube2iam`. For more information, see https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html"
+}
+
+variable "local_exec_interpreter" {
+  type        = list(string)
+  default     = ["/bin/sh", "-c"]
+  description = "shell to use for local_exec"
 }
 
 variable "instance_types" {
@@ -96,21 +132,17 @@ variable "cluster_encryption_config_resources" {
 
 variable "addons" {
   type = list(object({
-    addon_name    = string
-    addon_version = string
-    # resolve_conflicts is deprecated, but we keep it for backwards compatibility
-    # and because if not declared, Terraform will silently ignore it.
-    resolve_conflicts           = optional(string, null)
-    resolve_conflicts_on_create = optional(string, null)
-    resolve_conflicts_on_update = optional(string, null)
-    service_account_role_arn    = string
+    addon_name               = string
+    addon_version            = string
+    resolve_conflicts        = string
+    service_account_role_arn = string
   }))
   default     = []
   description = "Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources."
 }
 
-variable "private_ipv6_enabled" {
+variable "apply_config_map_aws_auth" {
   type        = bool
-  default     = false
-  description = "Whether to use IPv6 addresses for the pods in the node group"
+  default     = true
+  description = "Whether to apply the ConfigMap to allow worker nodes to join the EKS cluster and allow additional users, accounts and roles to acces the cluster"
 }

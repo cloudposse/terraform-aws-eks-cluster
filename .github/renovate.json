@@ -9,6 +9,6 @@
   "dependencyDashboardAutoclose": true,
   "enabledManagers": ["terraform"],
   "terraform": {
-    "ignorePaths": ["**/context.tf"]
+    "ignorePaths": ["**/context.tf", "**/examples/version2/**"]
   }
 }
