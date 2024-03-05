@@ -246,14 +246,16 @@ straightforward as we would like.
 > [!WARNING]
 > Previously, when using the `aws-auth` ConfigMap, the path component in any
 > IAM Principal ARN had to be removed from the ARN, and the modified ARN was
-> used in the ConfigMap. This was a workaround for a limitation in the AWS
+> used in the ConfigMap. Quoting from the [AWS EKS documentation](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html#aws-auth-users): 
+> > The role ARN can't include a path such as `role/my-team/developers/my-role`. The format of the ARN must be `arn:aws:iam::111122223333:role/my-role`. In this example, `my-team/developers/` needs to be removed.
+> This was a workaround for a limitation in the AWS
 > Implementation. With full AWS API support for access control, the path
 > component is no longer removed, and the full ARN is required.
 > 
 > If you had been using the `aws-auth` ConfigMap, you should have been 
 > removing the path component either manually as part of your static 
-> configuration, or programmatically. You will need to undo these 
-> transformations and provide the full ARN in the new configuration.
+> configuration, or programmatically. **You will need to undo these 
+> transformations and provide the full ARN in the new configuration.**
 
 #### Migrating from Kubernetes RBAC Groups to EKS Access Policies
 
@@ -329,6 +331,69 @@ The `access_entries_for_nodes` input roughly corresponds to the removed
 Windows workers. There is no longer a need to configure Fargate nodes at all,
 as that is fully automatic in the same way that EKS managed nodes are.
 
+### Example Access Entry Migration
+
+Here is an example of how you might migrate access configuration from version 
+3 to version 4. If you previously had a configuration like this:
+
+```hcl
+  map_additional_iam_roles = [
+  {
+    rolearn  = replace(data.aws_iam_role.administrator_access.arn, "${data.aws_iam_role.administrator_access.path}/", "")
+    username = "devops"
+    groups   = ["system:masters", "devops"]
+  },
+  {
+    rolearn  = data.aws_iam_role.gitlab_ci.arn
+    username = "gitlab-ci"
+    groups   = ["system:masters", "ci"]
+  },
+  {
+    rolearn  = aws_iam_role.karpenter_node.arn
+    username = "system:node:{{EC2PrivateDNSName}}"
+    groups   = ["system:bootstrappers", "system:nodes"]
+  },
+  {
+    rolearn  = aws_iam_role.fargate.arn
+    username = "system:node:{{SessionName}}"
+    groups   = ["system:bootstrappers", "system:nodes", "system:node-proxier"]
+  },
+]
+```
+
+You can migrate it as follows. Remember, you have the option of keeping 
+`systems:masters` as a Kubernetes group when using `access_entry_map`, but we 
+do not recommend that as it is provided for backwards compatibility and is 
+otherwise a confusing wart.
+
+Also note that we have removed the username for `devops` as a [best practice 
+when using roles](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html#creating-access-entries), 
+and we recommend you only use usernames for users. We kept the username for
+`gitlab-ci` only so you would have an example.
+
+The new map-based configuration, using defaults, and showing how to set up 
+ClusterAdmin with and without `systems:masters`:
+
+```hcl
+  access_entry_map = {
+    # Note that we no longer remove the path!
+    (data.aws_iam_role.administrator_access.arn) = {
+      kubernetes_groups = ["devops"]
+      access_policy_associations = {
+        ClusterAdmin = {}
+      }
+    }
+    (data.aws_iam_role.gitlab_ci.arn) = {
+      kubernetes_groups = ["systems:masters", "ci"]
+      user_name = "gitlab-ci"
+    }
+  }
+  # Use access_entries_for_nodes for self-managed node groups
+  access_entries_for_nodes = {
+    EC2_LINUX = [aws_iam_role.karpenter_node.arn]
+  }
+  # No need to configure Fargate nodes
+```
 
 ## Cluster Migration Steps
 
@@ -616,6 +681,31 @@ terraform import -var-file <configuration-file> <resource address> <access entry
 
 After successfully importing the resource, run `terraform apply` again to 
 add tags to the entry and verify that no other changes are outstanding.
+
+#### Verify access to the cluster
+
+Verify that you still have the access to the cluster that you expect.
+
+- Assume an IAM role (or set your `AWS_PROFILE` environment variable) so that 
+  you are using credentials that should have Cluster Admin access to the 
+  cluster
+- Set your `AWS_DEFAULT_REGION` to the region where the cluster is located
+- Run `aws eks update-kubeconfig --name <cluster-name>` to configure `kubectl`
+  to reference the cluster
+- Run `kubectl get nodes` to verify that you can see the nodes in the cluster
+
+You might further explore your access using other tools. The simplest, if 
+you are a Cluster Admin, is to run:
+
+```shell
+kubectl auth can-i '*' '*'
+```
+
+which will return `yes` if you have full access to the cluster.
+
+For a more detailed report, you can use [rakkess](https://github.com/corneliusweig/rakkess),
+which is available via many avenues, including Cloud Posse's package repository,
+and is installed by default on some versions of Geodesic.
 
 #### Clean up
 
