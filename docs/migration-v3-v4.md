@@ -24,6 +24,26 @@ It consists of 3 parts:
 
 #### Usage notes
 
+> [!CAUTION]
+> Hopefully, and likely, the following does not apply to you, but just in case:
+>
+> It has always been considered a bad practice to manage resources
+> created by one resource (in this case, the EKS cluster) with another
+> resource (in this case resources provided by the `kubernetes` or
+> `helm` providers) in the same Terraform configuration, because of
+> issues with lifecycle management, timing, atomicity, etc. This
+> `eks-cluster` module used to do it anyway because it was the only
+> way to manage access control for the EKS cluster, but it did suffer
+> from those issues. Now that it is no longer necessary, the module no
+> longer does it, and it is a requirement that you remove the
+> "kubernetes" and "helm" providers from your root module or
+> component, if present, and therefore any `kubernetes_*` or `helm_*`
+> resources that were being managed by it. In most cases, this will be a 
+> non-issue, because you should already be managing such resources 
+> elsewhere, but if you had been integrating Kubernetes deployments into your 
+> EKS cluster configuration and find changing that too challenging, then you 
+> should delay the upgrade to version 4 of this module until you can address it.
+
 - We recommend leaving `bootstrap_cluster_creator_admin_permissions` set to
   `false`. When set to `true`, EKS automatically adds an access entry for the
   EKS cluster creator during creation, but this interferes with Terraform's
@@ -43,9 +63,10 @@ It consists of 3 parts:
   issue 474](https://github.com/aws/containers-roadmap/issues/474) for 
   updates on features that will mitigate this issue.
 - For new clusters, we recommend setting `access_config.authentication_mode 
-  = "API"` to use the new access control API exclusively. By default, the 
-  module enables both the API and the `aws-auth` ConfigMap to allow for a 
-  smooth transition from the old method to the new one.   
+  = "API"` to use the new access control API exclusively, so that is the 
+  default. However, AWS does not support a direct upgrade from the legacy 
+  `CONFIG_MAP` mode to the `API` mode, so when upgrading an existing EKS 
+  cluster, you must manually configure the `API_AND_CONFIG_MAP` mode for the initial upgrade.
 
 ## Summary and Background
 
@@ -204,7 +225,7 @@ These list-based inputs only require you know the number of entries at plan
 time, not the specific entries themselves. However, this still means you cannot
 use functions that can modify the length of the list, such as `compact` or, 
 [prior to Terraform v1.6.0, `sort`](https://github.com/hashicorp/terraform/issues/31035).
-See [Explicit Transformations of Lists]https://docs.cloudposse.com/reference/terraform-in-depth/terraform-unknown-at-plan-time/#explicit-transformations-of-lists)
+See [Explicit Transformations of Lists](https://docs.cloudposse.com/reference/terraform-in-depth/terraform-unknown-at-plan-time/#explicit-transformations-of-lists)
 for more information on limitations on list transformations.
 
 ### Migrating Access for Standard Users
@@ -315,8 +336,34 @@ as that is fully automatic in the same way that EKS managed nodes are.
 
 #### Ensure your cluster satisfies the prerequisites
 
-Verify that your cluster satisfies [the prerequisites](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.
-html#access-entries-prerequisites) for using the new access control API.
+Verify that your cluster satisfies [the AWS prerequisites](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html#access-entries-prerequisites) for using the new access control API.
+
+Verify that you are not using the `kubernetes` or `helm` provider in your root 
+module, or managing any Kubernetes resources (including Helm charts). Run:
+
+```shell
+terraform state list | grep -E 'helm_|kubernetes_'
+```
+
+> [!NOTE]
+> If you are using `atmos`, you can use the following commands to 
+> set up your environment to run Terraform commands:
+> 
+> ```shell
+> cd $(atmos describe component <component> -s <stack> -f json \
+>  | jq -r '.component_info.terraform_config.path')
+> atmos terraform shell <component> -s <stack>
+> ```
+
+There should only be one resource output from this command, either `aws_auth[0]` 
+or `aws_auth_ignore_changes[0]`, which is created by earlier versions 
+of this module. If there are more resources listed, you need to investigate 
+further to find and remove the source of the resource. Any other
+`kubernetes_*` resources (and any `helm_*` resources) are coming from other 
+places and need to be moved or removed before upgrading. You should not 
+attempt an upgrade to version 4 until you have moved or removed management 
+of these resources. See the "Caution" under [Usage notes](#usage-notes) 
+above for details.
 
 #### Migrate your access control configuration
 
@@ -328,8 +375,7 @@ Follow the guidance provided above under [Configuration Migration Steps](#config
 
 For historical reasons, this module previously supported creating an
 additional Security Group, with the idea that it would be used for worker 
-nodes. You can find some more information about this in the [Migration From 
-v1 to v2](migration-v1-v2.md#background) document.
+nodes. You can find some more information about this in the [Migration From v1 to v2](migration-v1-v2.md#background) document.
 
 If you had **not** set `create_security_group = true` in version 2 (you 
 either set it to `false` or left it at its default value), you 
@@ -443,9 +489,16 @@ Error: Provider configuration not present
 | its original provider configuration at ... is required, but it has been removed.
 ```
 
+or
+
+```plaintext
+│ Error: Get “http://localhost/api/v1/namespaces/kube-system/configmaps/aws-auth”: dial tcp [::1]:80: connect: connection refused
+```
+
 #### Remove the `auth-map` from the Terraform state
 
-Take the "resource address" of the `auth-map` from the error message (the 
+If you got the error message about the `auth-map` being an orphan, then
+take the "resource address" of the `auth-map` from the error message (the 
 part before "`(orphan)`") and remove it from the terraform state. Using the 
 address from the error message above, you would run:
 
@@ -455,6 +508,20 @@ terraform state rm 'module.eks_cluster.kubernetes_config_map.aws_auth[0]'
 
 It is important to include the single quotes around the address, because 
 otherwise `[0]` would be interpreted as a shell glob.
+
+If you got the "connection refused" error message, then you need to find the 
+resource(s) to remove from the state. You can do this by running:
+
+```shell
+terraform state list | grep kubernetes_
+```
+
+There should only be one resource output from this command. If there are 
+more, then review the "Caution" under [Usage notes](#usage-notes) and the
+[Prerequisites](#ensure-your-cluster-satisfies-the-prerequisites) above.
+
+Use the address output from the above command to remove the resource from 
+the Terraform state, as shown above.
 
 Run `terraform plan` again, at which point you should see no errors.
 
