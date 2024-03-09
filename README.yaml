@@ -5,40 +5,38 @@ license: APACHE2
 github_repo: cloudposse/terraform-aws-eks-cluster
 
 badges:
-  - name: Latest Release
-    image: https://img.shields.io/github/release/cloudposse/terraform-aws-eks-cluster.svg?style=for-the-badge
-    url: https://github.com/cloudposse/terraform-aws-eks-cluster/releases/latest
   - name: "Last Update"
     image: https://img.shields.io/github/last-commit/cloudposse/terraform-aws-eks-cluster/main?style=for-the-badge
     url: https://github.com/cloudposse/terraform-aws-eks-cluster/commits/main/
+  - name: Latest Release
+    image: https://img.shields.io/github/release/cloudposse/terraform-aws-eks-cluster.svg?style=for-the-badge
+    url: https://github.com/cloudposse/terraform-aws-eks-cluster/releases/latest
+  - name: Last Updated
+    image: https://img.shields.io/github/last-commit/cloudposse/terraform-aws-eks-cluster.svg?style=for-the-badge
+    url: https://github.com/cloudposse/terraform-aws-eks-cluster/commits
   - name: Slack Community
     image: https://slack.cloudposse.com/for-the-badge.svg
     url: https://slack.cloudposse.com
 
+# List any related terraform modules that this module may be used with or that this module depends on.
 related:
   - name: terraform-aws-eks-workers
-    description: Terraform module to provision an AWS AutoScaling Group, IAM Role, and
-      Security Group for EKS Workers
+    description: Terraform module to provision an AWS AutoScaling Group, IAM Role, and Security Group for EKS Workers
     url: https://github.com/cloudposse/terraform-aws-eks-workers
   - name: terraform-aws-ec2-autoscale-group
-    description: Terraform module to provision Auto Scaling Group and Launch Template
-      on AWS
+    description: Terraform module to provision Auto Scaling Group and Launch Template on AWS
     url: https://github.com/cloudposse/terraform-aws-ec2-autoscale-group
   - name: terraform-aws-ecs-container-definition
-    description: Terraform module to generate well-formed JSON documents (container
-      definitions) that are passed to the  aws_ecs_task_definition Terraform resource
+    description: Terraform module to generate well-formed JSON documents (container definitions) that are passed to the  aws_ecs_task_definition Terraform resource
     url: https://github.com/cloudposse/terraform-aws-ecs-container-definition
   - name: terraform-aws-ecs-alb-service-task
-    description: Terraform module which implements an ECS service which exposes a web
-      service via ALB
+    description: Terraform module which implements an ECS service which exposes a web service via ALB
     url: https://github.com/cloudposse/terraform-aws-ecs-alb-service-task
   - name: terraform-aws-ecs-web-app
-    description: Terraform module that implements a web app on ECS and supports autoscaling,
-      CI/CD, monitoring, ALB integration, and much more
+    description: Terraform module that implements a web app on ECS and supports autoscaling, CI/CD, monitoring, ALB integration, and much more
     url: https://github.com/cloudposse/terraform-aws-ecs-web-app
   - name: terraform-aws-ecs-codepipeline
-    description: Terraform module for CI/CD with AWS Code Pipeline and Code Build for
-      ECS
+    description: Terraform module for CI/CD with AWS Code Pipeline and Code Build for ECS
     url: https://github.com/cloudposse/terraform-aws-ecs-codepipeline
   - name: terraform-aws-ecs-cloudwatch-autoscaling
     description: Terraform module to autoscale ECS Service based on CloudWatch metrics
@@ -50,8 +48,7 @@ related:
     description: Terraform module for providing a general purpose EC2 instance
     url: https://github.com/cloudposse/terraform-aws-ec2-instance
   - name: terraform-aws-ec2-instance-group
-    description: Terraform module for provisioning multiple general purpose EC2 hosts
-      for stateful applications
+    description: Terraform module for provisioning multiple general purpose EC2 hosts for stateful applications
     url: https://github.com/cloudposse/terraform-aws-ec2-instance-group
 
 description: Terraform module to provision an [EKS](https://aws.amazon.com/eks/) cluster on AWS.
@@ -72,14 +69,14 @@ introduction: |-
   > Release `2.0.0` (previously released as version `0.45.0`) contains some changes that 
   > could result in your existing EKS cluster being replaced (destroyed and recreated).
   > To prevent this, follow the instructions in the [v1 to v2 migration path](./docs/migration-v1-v2.md).
-  
+
   > [!NOTE]
   > Every Terraform module that provisions an EKS cluster has faced the challenge that access to the cluster
   > is partly controlled by a resource inside the cluster, a ConfigMap called `aws-auth`. You need to be able to access
   > the cluster through the Kubernetes API to modify the ConfigMap, because 
   > [there is no AWS API for it](https://github.com/aws/containers-roadmap/issues/185). This presents
   > a problem: how do you authenticate to an API endpoint that you have not yet created?
-  
+
   We use the Terraform Kubernetes provider to access the cluster, and it uses the same underlying library
   that `kubectl` uses, so configuration is very similar. However, every kind of configuration we have tried
   has failed at some point.
@@ -100,22 +97,22 @@ introduction: |-
   conditions are met, this is the most reliable method, and the one Cloud Posse prefers to use. However, since 
   it has these requirements that are not always easily met, it is not the default method and it is not 
   fully supported. 
-  
+
   All of the above methods can face additional challenges when using `terraform import` to import
   resources into the Terraform state. The `KUBECONFIG` file method is the only sure way to `import` resources, due to 
   [Terraform limitations](https://github.com/hashicorp/terraform/issues/27934) on providers. You will need to create
   the file, of course, but that is easily done with `aws eks update-kubeconfig`. Depending on the situation,
   you may also be able to import resources by setting `-var apply_config_map_aws_auth=false` during import.
-  
+
   At the moment, the `exec` option appears to be the most reliable method, so we recommend using it if possible,
   but because of the extra requirements it has, we use the data source as the default authentication method.
-  
+
   > [!IMPORTANT]
   > All of the above methods require network connectivity between the host running the
   > `terraform` command and the EKS endpoint. If your EKS cluster does not have public access enabled, this means
   > you need to take extra steps, such as using a VPN to provide access to the private endpoint, or running
   > `terraform` on a host in the same VPC as the EKS cluster.
-  
+
   > [!WARNING]
   > ### Failure during `destroy`
   >
@@ -136,12 +133,12 @@ introduction: |-
   > - Then EKS updates the Auth ConfigMap and adds worker roles to it (for the worker nodes to join the cluster)
   > - Since the ConfigMap is modified outside of Terraform state, Terraform wants to update it to to remove the worker roles EKS added
   > - If you update the ConfigMap without including the worker nodes that EKS added, you will disconnect them from the cluster
-  
+
   However, it is possible to get the worker node roles from the terraform-aws-eks-node-group via Terraform "remote state"
   and include them with any other roles you want to add (example code to be published later), so we make
   ignoring the role changes optional. (This is what we do for Cloud Posse clients.)
   If you do not ignore changes then you will have no problem with making future intentional changes.
-  
+
   The downside of having `kubernetes_config_map_ignore_role_changes` set to true is that if you later want to make changes,
   such as adding other IAM roles to Kubernetes groups, you cannot do so via Terraform, because the role changes are ignored.
   Because of Terraform restrictions, you cannot simply change `kubernetes_config_map_ignore_role_changes` from `true`
@@ -251,7 +248,7 @@ usage: |2-
 
       kubernetes_version    = var.kubernetes_version
       oidc_provider_enabled = true
-  
+
       addons = [
         // https://docs.aws.amazon.com/eks/latest/userguide/managing-vpc-cni.html#vpc-cni-latest-available-version
         {
@@ -281,7 +278,7 @@ usage: |2-
       addons_depends_on = [module.eks_node_group]
 
       context = module.label.context
-  
+
       cluster_depends_on = [module.subnets]
     }
   ```
