@@ -78,21 +78,6 @@ introduction: |-
   - IAM Role to allow the cluster to access other AWS services
   - EKS access entries to allow IAM users to access and administer the cluster
 
-  > [!WARNING]
-  > Release `4.0.0` contains major breaking changes that will require you to update your existing EKS cluster
-  > and configuration to use this module. Please see the [v3 to v4 migration path](./docs/migration-v3-v4.md) for more information.
-  > Release `2.0.0` (previously released as version `0.45.0`) contains some changes that,
-  > if applied to a cluster created with an earlier version of this module,
-  > could result in your existing EKS cluster being replaced (destroyed and recreated).
-  > To prevent this, follow the instructions in the [v1 to v2 migration path](./docs/migration-v1-v2.md).
-  
-  > [!NOTE]
-  > Prior to v4 of this module, AWS did not provide an API to manage access to the EKS cluster, 
-  > causing numerous challenges. With v4 of this module, it exclusively uses the AWS API, resolving
-  > many issues you may read about that had affected prior versions. See the version 2 README and release notes 
-  > for more information on the challenges and workarounds that were required prior to v3.
-  
-  
 usage: |-
   For a complete example, see [examples/complete](examples/complete).
 
@@ -325,6 +310,20 @@ usage: |-
       context = module.label.context
     }
   ```
+
+  > [!WARNING]
+  > Release `4.0.0` contains major breaking changes that will require you to update your existing EKS cluster
+  > and configuration to use this module. Please see the [v3 to v4 migration path](./docs/migration-v3-v4.md) for more information.
+  > Release `2.0.0` (previously released as version `0.45.0`) contains some changes that,
+  > if applied to a cluster created with an earlier version of this module,
+  > could result in your existing EKS cluster being replaced (destroyed and recreated).
+  > To prevent this, follow the instructions in the [v1 to v2 migration path](./docs/migration-v1-v2.md).
+  
+  > [!NOTE]
+  > Prior to v4 of this module, AWS did not provide an API to manage access to the EKS cluster, 
+  > causing numerous challenges. With v4 of this module, it exclusively uses the AWS API, resolving
+  > many issues you may read about that had affected prior versions. See the version 2 README and release notes 
+  > for more information on the challenges and workarounds that were required prior to v3.
 
 include:
   - docs/targets.md
