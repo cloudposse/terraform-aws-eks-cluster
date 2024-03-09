@@ -14,6 +14,9 @@ badges:
   - name: Last Updated
     image: https://img.shields.io/github/last-commit/cloudposse/terraform-aws-eks-cluster.svg?style=for-the-badge
     url: https://github.com/cloudposse/terraform-aws-eks-cluster/commits
+  - name: Last Updated
+    image: https://img.shields.io/github/last-commit/cloudposse/terraform-aws-eks-cluster.svg?style=for-the-badge
+    url: https://github.com/cloudposse/terraform-aws-eks-cluster/commits
   - name: Latest Release
     image: https://img.shields.io/github/release/cloudposse/terraform-aws-eks-cluster.svg?style=for-the-badge
     url: https://github.com/cloudposse/terraform-aws-eks-cluster/releases/latest
