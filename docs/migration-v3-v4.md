@@ -247,10 +247,14 @@ straightforward as we would like.
 > Previously, when using the `aws-auth` ConfigMap, the path component in any
 > IAM Principal ARN had to be removed from the ARN, and the modified ARN was
 > used in the ConfigMap. Quoting from the [AWS EKS documentation](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html#aws-auth-users): 
-> > The role ARN can't include a path such as `role/my-team/developers/my-role`. The format of the ARN must be `arn:aws:iam::111122223333:role/my-role`. In this example, `my-team/developers/` needs to be removed.
-> This was a workaround for a limitation in the AWS
-> Implementation. With full AWS API support for access control, the path
-> component is no longer removed, and the full ARN is required.
+> > The role ARN [used in `aws-auth`] can't include a path such as 
+> >`role/my-team/developers/my-role`. The format of the ARN must be 
+> >`arn:aws:iam::111122223333:role/my-role`. In this example, 
+> > `my-team/developers/` needs to be removed.
+> 
+> This was a workaround for a limitation in the AWS Implementation. With 
+> full AWS API support for access control, the path component is no longer 
+> removed, and the full ARN is required.
 > 
 > If you had been using the `aws-auth` ConfigMap, you should have been 
 > removing the path component either manually as part of your static 
@@ -363,8 +367,8 @@ Here is an example of how you might migrate access configuration from version
 
 You can migrate it as follows. Remember, you have the option of keeping 
 `systems:masters` as a Kubernetes group when using `access_entry_map`, but we 
-do not recommend that as it is provided for backwards compatibility and is 
-otherwise a confusing wart.
+do not recommend that, as it is only provided for backwards compatibility, 
+and is otherwise a confusing wart that may eventually be removed.
 
 Also note that we have removed the username for `devops` as a [best practice 
 when using roles](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html#creating-access-entries), 
