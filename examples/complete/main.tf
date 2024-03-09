@@ -102,7 +102,7 @@ module "eks_cluster" {
 
 module "eks_node_group" {
   source  = "cloudposse/eks-node-group/aws"
-  version = "2.4.0"
+  version = "2.12.0"
 
   subnet_ids        = module.subnets.private_subnet_ids
   cluster_name      = module.eks_cluster.eks_cluster_id
