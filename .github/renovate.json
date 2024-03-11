@@ -1,6 +1,6 @@
 {
   "extends": [
-    "config:base",
+    "config:recommended",
     ":preserveSemverRanges",
     ":rebaseStalePrs"
   ],
@@ -10,5 +10,17 @@
   "enabledManagers": ["terraform"],
   "terraform": {
     "ignorePaths": ["**/context.tf", "**/examples/obsolete*/**"]
-  }
+  },
+  "timezone": "America/New_York",
+  "packageRules": [
+    {
+      "matchFileNames": [
+        "/*.tf",
+        "examples/complete/*.tf"
+      ],
+      "groupName": "all",
+      "schedule": ["every 4 weeks on wednesday at 04:00 am"],
+      "groupSlug": "monthly"
+    }
+  ]
 }
