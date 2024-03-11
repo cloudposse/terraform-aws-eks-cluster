@@ -39,6 +39,9 @@ locals {
   # Enable the IAM user creating the cluster to administer it,
   # without using the bootstrap_cluster_creator_admin_permissions option,
   # as a way to test the access_entry_map feature.
+  # In general, this is not recommended. Instead, you should
+  # create the access_entry_map statically, with the ARNs you want to
+  # have access to the cluster. We do it dynamically here just for testing purposes.
   access_entry_map = {
     (data.aws_iam_session_context.current.issuer_arn) = {
       access_policy_associations = {

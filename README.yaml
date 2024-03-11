@@ -71,17 +71,18 @@ description: Terraform module to provision an [EKS](https://aws.amazon.com/eks/)
 introduction: |-
   The module provisions the following resources:
 
-  - EKS cluster of master nodes that can be used together with the [terraform-aws-eks-workers](https://github.com/cloudposse/terraform-aws-eks-workers),
+  - EKS cluster of master nodes that can be used together with the
     [terraform-aws-eks-node-group](https://github.com/cloudposse/terraform-aws-eks-node-group) and
     [terraform-aws-eks-fargate-profile](https://github.com/cloudposse/terraform-aws-eks-fargate-profile)
-    modules to create a full-blown cluster
+    modules to create a full-blown EKS/Kubernetes cluster. You can also use the [terraform-aws-eks-workers](https://github.com/cloudposse/terraform-aws-eks-workers)
+    module to provision worker nodes for the cluster, but it is now rare for that to be a better choice than to use `terraform-aws-eks-node-group`.
   - IAM Role to allow the cluster to access other AWS services
   - EKS access entries to allow IAM users to access and administer the cluster
 
 usage: |-
   For a complete example, see [examples/complete](examples/complete).
 
-  For automated tests of the complete example using [bats](https://github.com/bats-core/bats-core) and [Terratest](https://github.com/gruntwork-io/terratest) (which tests and deploys the example on AWS), see [test](test).
+  For automated tests of the complete example using [bats](https://github.com/bats-core/bats-core) and [Terratest](https://github.com/gruntwork-io/terratest) (which tests and deploys the example on AWS), see [test/src](test/scc).
 
   Other examples:
 
@@ -92,8 +93,13 @@ usage: |-
       region = var.region
     }
 
+    # Note: This example creates an explicit access entry for the current user,
+    # but in practice, you should use a static map of IAM users or roles that should have access to the cluster.
+    # Granting access to the current user in this way is not recommended for production use.
     data "aws_caller_identity" "current" {}
     
+    # IAM session context converts an assumed role ARN into an IAM Role ARN.
+    # Again, this is primarily to simplify the example, and in practice, you should use a static map of IAM users or roles.
     data "aws_iam_session_context" "current" {
       arn = data.aws_caller_identity.current.arn
     }
@@ -116,6 +122,9 @@ usage: |-
       # Enable the IAM user creating the cluster to administer it,
       # without using the bootstrap_cluster_creator_admin_permissions option,
       # as an example of how to use the access_entry_map feature.
+      # In practice, this should be replaced with a static map of IAM users or roles
+      # that should have access to the cluster, but we use the current user
+      # to simplify the example.
       access_entry_map = {
         (data.aws_iam_session_context.current.issuer_arn) = {
           access_policy_associations = {
@@ -155,11 +164,11 @@ usage: |-
 
       availability_zones   = var.availability_zones
       vpc_id               = module.vpc.vpc_id
-      igw_id                          = [module.vpc.igw_id]
-      ipv4_cidr_block                 = [module.vpc.vpc_cidr_block]
+      igw_id               = [module.vpc.igw_id]
+      ipv4_cidr_block      = [module.vpc.vpc_cidr_block]
       nat_gateway_enabled  = true
       nat_instance_enabled = false
-      tags                            = local.tags
+  
       public_subnets_additional_tags  = local.public_subnets_additional_tags
       private_subnets_additional_tags = local.private_subnets_additional_tags
 
@@ -172,12 +181,12 @@ usage: |-
       # Cloud Posse recommends pinning every module to a specific version
       # version     = "x.x.x"
 
-      instance_types                     = [var.instance_type]
-      subnet_ids                         = module.subnets.private_subnet_ids
-      health_check_type                  = var.health_check_type
-      min_size                           = var.min_size
-      max_size                           = var.max_size
-      cluster_name                       = module.eks_cluster.eks_cluster_id
+      instance_types    = [var.instance_type]
+      subnet_ids        = module.subnets.private_subnet_ids
+      health_check_type = var.health_check_type
+      min_size          = var.min_size
+      max_size          = var.max_size
+      cluster_name      = module.eks_cluster.eks_cluster_id
 
       # Enable the Kubernetes cluster auto-scaler to find the auto-scaling group
       cluster_autoscaler_enabled = var.autoscaling_policies_enabled
@@ -215,8 +224,8 @@ usage: |-
         {
           addon_name                  = "coredns"
           addon_version               = var.coredns_version
-          resolve_conflicts_on_create = "NONE"
-          resolve_conflicts_on_update = "NONE"
+          resolve_conflicts_on_create = "OVERWRITE"
+          resolve_conflicts_on_update = "OVERWRITE"
           service_account_role_arn    = null
         },
       ]

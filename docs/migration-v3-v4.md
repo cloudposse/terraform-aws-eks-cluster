@@ -2,7 +2,10 @@
 
 Users new to this module can skip this document and proceed to the main README.
 This document is for users who are updating from version 2 or 3 to version 4.
-It consists of 3 parts:
+Unfortunately, there is no "tl;dr" for this document, as the changes are
+substantial and require careful consideration.
+
+This guild consists of 4 parts:
 
 1. [Summary and Background](#summary-and-background): A brief overview of the 
    changes in version 4, what motivated them, and what they mean for you.
@@ -11,10 +14,10 @@ It consists of 3 parts:
    configuration to update to version 4. The inputs to this module have
    changed substantially, and you will need to update your configuration to
    match the new inputs.
-2. [Configuration Migration Details](#configuration-migration-details): A
+3. [Configuration Migration Details](#configuration-migration-details): A
    detailed explanation of the changes you will need to make to your
    configuration to update to version 4. 
-3. [Cluster Migration Steps](#cluster-migration-steps): Detailed instructions 
+4. [Cluster Migration Steps](#cluster-migration-steps): Detailed instructions 
    for migrating your EKS cluster to be managed by version 4. After you have 
    updated your configuration, you will still need to take some additional 
    manual steps to have Terraform upgrade and manage your existing EKS 
