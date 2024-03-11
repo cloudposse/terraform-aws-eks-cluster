@@ -3,6 +3,8 @@ locals {
 
   use_ipv6 = var.kubernetes_network_ipv6_enabled
 
+  eks_cluster_id = one(aws_eks_cluster.default[*].id)
+
   cluster_encryption_config = {
     resources = var.cluster_encryption_config_resources
 
@@ -60,19 +62,31 @@ resource "aws_eks_cluster" "default" {
   version                   = var.kubernetes_version
   enabled_cluster_log_types = var.enabled_cluster_log_types
 
+  access_config {
+    authentication_mode                         = var.access_config.authentication_mode
+    bootstrap_cluster_creator_admin_permissions = var.access_config.bootstrap_cluster_creator_admin_permissions
+  }
+
+  lifecycle {
+    # bootstrap_cluster_creator_admin_permissions is documented as only applying
+    # to the initial creation of the cluster, and being unreliable afterward,
+    # so we want to ignore it except at cluster creation time.
+    ignore_changes = [access_config[0].bootstrap_cluster_creator_admin_permissions]
+  }
+
   dynamic "encryption_config" {
     #bridgecrew:skip=BC_AWS_KUBERNETES_3:Let user decide secrets encryption, mainly because changing this value requires completely destroying the cluster
     for_each = var.cluster_encryption_config_enabled ? [local.cluster_encryption_config] : []
     content {
-      resources = lookup(encryption_config.value, "resources")
+      resources = encryption_config.value.resources
       provider {
-        key_arn = lookup(encryption_config.value, "provider_key_arn")
+        key_arn = encryption_config.value.provider_key_arn
       }
     }
   }
 
   vpc_config {
-    security_group_ids      = var.create_security_group ? compact(concat(var.associated_security_group_ids, [one(aws_security_group.default[*].id)])) : var.associated_security_group_ids
+    security_group_ids      = var.associated_security_group_ids
     subnet_ids              = var.subnet_ids
     endpoint_private_access = var.endpoint_private_access
     #bridgecrew:skip=BC_AWS_KUBERNETES_2:Let user decide on public access
@@ -100,11 +114,6 @@ resource "aws_eks_cluster" "default" {
     aws_iam_role_policy_attachment.amazon_eks_cluster_policy,
     aws_iam_role_policy_attachment.amazon_eks_service_policy,
     aws_kms_alias.cluster,
-    aws_security_group.default,
-    aws_security_group_rule.egress,
-    aws_security_group_rule.ingress_cidr_blocks,
-    aws_security_group_rule.ingress_security_groups,
-    aws_security_group_rule.ingress_workers,
     aws_cloudwatch_log_group.default,
     var.associated_security_group_ids,
     var.cluster_depends_on,
@@ -146,8 +155,8 @@ resource "aws_eks_addon" "cluster" {
   addon_name                  = each.key
   addon_version               = lookup(each.value, "addon_version", null)
   configuration_values        = lookup(each.value, "configuration_values", null)
-  resolve_conflicts_on_create = lookup(each.value, "resolve_conflicts_on_create", null)
-  resolve_conflicts_on_update = lookup(each.value, "resolve_conflicts_on_update", null)
+  resolve_conflicts_on_create = lookup(each.value, "resolve_conflicts_on_create", try(replace(each.value.resolve_conflicts, "PRESERVE", "NONE"), null))
+  resolve_conflicts_on_update = lookup(each.value, "resolve_conflicts_on_update", lookup(each.value, "resolve_conflicts", null))
   service_account_role_arn    = lookup(each.value, "service_account_role_arn", null)
 
   tags = module.label.tags

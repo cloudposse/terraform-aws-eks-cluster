@@ -10,7 +10,9 @@ by the user, to ensure the nodes and control plane can communicate.
 Before version 2, this module, by default, created an additional Security Group. Prior to version `0.19.0` of this module, that additional Security Group was the only one exposed by
 this module (because EKS at the time did not create the managed Security Group for the cluster), and it was intended that all worker nodes (managed and unmanaged) be placed in this
 additional Security Group. With version `0.19.0`, this module exposed the managed Security Group created by the EKS cluster, in which all managed node groups are placed by default. We now
-recommend placing non-managed node groups in the EKS-created Security Group as well by using the `allowed_security_group_ids` variable, and not create an additional Security Group.
+recommend placing non-managed node groups in the EKS-created Security Group 
+as well by using the `eks_cluster_managed_security_group_id` output to 
+associate the node groups with it, and not create an additional Security Group.
 
 See https://docs.aws.amazon.com/eks/latest/userguide/sec-group-reqs.html for more details.
 
