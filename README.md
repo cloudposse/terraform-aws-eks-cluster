@@ -27,6 +27,11 @@
 -->
 
 Terraform module to provision an [EKS](https://aws.amazon.com/eks/) cluster on AWS.
+<br/><br/>
+This Terraform module provisions a fully-configured AWS [EKS](https://aws.amazon.com/eks/) (Elastic Kubernetes Service) cluster. 
+It's engineered to integrate smoothly with [Karpenter](https://karpenter.sh/) and [EKS addons](https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html), 
+forming a critical part of [Cloud Posse's reference architecture](https://cloudposse.com/reference-architecture). 
+Ideal for teams looking to deploy scalable and manageable Kubernetes clusters on AWS with minimal fuss.
 
 
 > [!TIP]
