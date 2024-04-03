@@ -118,6 +118,7 @@
 | <a name="output_cluster_encryption_config_provider_key_alias"></a> [cluster\_encryption\_config\_provider\_key\_alias](#output\_cluster\_encryption\_config\_provider\_key\_alias) | Cluster Encryption Config KMS Key Alias ARN |
 | <a name="output_cluster_encryption_config_provider_key_arn"></a> [cluster\_encryption\_config\_provider\_key\_arn](#output\_cluster\_encryption\_config\_provider\_key\_arn) | Cluster Encryption Config KMS Key ARN |
 | <a name="output_cluster_encryption_config_resources"></a> [cluster\_encryption\_config\_resources](#output\_cluster\_encryption\_config\_resources) | Cluster Encryption Config Resources |
+| <a name="output_eks_addons_versions"></a> [eks\_addons\_versions](#output\_eks\_addons\_versions) | Map of enabled EKS Addons names and versions |
 | <a name="output_eks_cluster_arn"></a> [eks\_cluster\_arn](#output\_eks\_cluster\_arn) | The Amazon Resource Name (ARN) of the cluster |
 | <a name="output_eks_cluster_certificate_authority_data"></a> [eks\_cluster\_certificate\_authority\_data](#output\_eks\_cluster\_certificate\_authority\_data) | The Kubernetes cluster certificate authority data |
 | <a name="output_eks_cluster_endpoint"></a> [eks\_cluster\_endpoint](#output\_eks\_cluster\_endpoint) | The endpoint for the Kubernetes API server |
