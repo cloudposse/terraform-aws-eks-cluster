@@ -5,7 +5,7 @@ This document is for users who are updating from version 2 or 3 to version 4.
 Unfortunately, there is no "tl;dr" for this document, as the changes are
 substantial and require careful consideration.
 
-This guild consists of 4 parts:
+This guide consists of 4 parts:
 
 1. [Summary and Background](#summary-and-background): A brief overview of the 
    changes in version 4, what motivated them, and what they mean for you.
