@@ -54,6 +54,14 @@ output "eks_cluster_ipv6_service_cidr" {
   value       = one(aws_eks_cluster.default[*].kubernetes_network_config[0].service_ipv6_cidr)
 }
 
+output "eks_addons_versions" {
+  description = "Map of enabled EKS Addons names and versions"
+  value = local.enabled ? {
+    for addon in aws_eks_addon.cluster :
+    addon.addon_name => addon.addon_version
+  } : {}
+}
+
 output "cluster_encryption_config_enabled" {
   description = "If true, Cluster Encryption Configuration is enabled"
   value       = var.cluster_encryption_config_enabled
