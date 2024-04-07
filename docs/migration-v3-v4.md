@@ -25,11 +25,13 @@ This guide consists of 4 parts:
    you can tolerate simply creating a new EKS cluster and deleting the old one.
 
 
-#### Usage notes
+## Usage notes
 
 > [!CAUTION]
+> #### Close security loophole by migrating all the way to "API" mode
+>
 > In order for automatic conversions to take place, AWS requires that you
-> migrate in 2 steps: first to "API_AND_CONFIG_MAP" and then to "API".
+> migrate in 2 steps: first to `API_AND_CONFIG_MAP` mode and then to `API` mode.
 > In the migration steps documented here, we abandon the `aws-auth` ConfigMap
 > in place, with its existing contents, and add the new access control
 > entries. In order to remove any access granted by the `aws-auth` ConfigMap,
@@ -37,6 +39,8 @@ This guide consists of 4 parts:
 > ConfigMap will still exist, but it will be ignored. You can then delete it manually.
 
 > [!WARNING]
+> #### WARNING: Do not manage Kubernetes resources in the same configuration
+>
 > Hopefully, and likely, the following does not apply to you, but just in case:
 >
 > It has always been considered a bad practice to manage resources
@@ -199,7 +203,10 @@ configuration for new clusters. However, existing clusters will be using the
 "CONFIG_MAP" configuration (previously the only option available), and AWS
 does not support direct upgrade from "CONFIG_MAP" to "API". Therefore:
 
+
 > [!NOTE]
+> #### You cannot directly upgrade from "CONFIG_MAP" to "API"
+>
 > When updating an existing cluster, you will need to set `authentication_mode`
 > to "API_AND_CONFIG_MAP" in your configuration, and then update the cluster.
 > After the cluster has been updated, you can set `authentication_mode` to
@@ -253,9 +260,9 @@ RBAC Groups, you can now also associate IAM Principals with EKS Access Policies.
 Unfortunately, migration from the old method to the new one is not as
 straightforward as we would like.
 
-#### Restoration of the Path Component in IAM Principal ARNs
-
 > [!WARNING]
+> #### Restoration of the Path Component in IAM Principal ARNs
+>
 > Previously, when using the `aws-auth` ConfigMap, the path component in any
 > IAM Principal ARN had to be removed from the ARN, and the modified ARN was
 > used in the ConfigMap. Quoting from the [AWS EKS documentation](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html#aws-auth-users):
@@ -273,9 +280,9 @@ straightforward as we would like.
 > configuration, or programmatically. **You will need to undo these
 > transformations and provide the full ARN in the new configuration.**
 
-#### Migrating from Kubernetes RBAC Groups to EKS Access Policies
+### Migrating from Kubernetes RBAC Groups to EKS Access Policies
 
-##### EKS Access Policy ARNs, Names, and Abbreviations
+#### EKS Access Policy ARNs, Names, and Abbreviations
 
 Previously, the only way to specify access to the EKS cluster was to assign
 IAM Principals to Kubernetes RBAC Groups. Now, you can also associate IAM
@@ -292,7 +299,7 @@ abbreviated name (e.g. "Admin"). The abbreviated name is the `$1` part of the
 regex `^AmazonEKS(.*)Policy$`. This document will usually use the abbreviated
 name.
 
-##### Changes to Kubernetes RBAC Groups
+#### Changes to Kubernetes RBAC Groups
 
 Previously, we created cluster administrators by assigning them to
 the `system:masters` group. With the new AWS API, we can no longer assign any
@@ -300,12 +307,16 @@ users to any of the `system:*` groups. We have to create Cluster Administrators
 by associating the ClusterAdmin policy with them, with type `cluster`.
 
 > [!TIP]
+> ##### This module gives legacy support to the `system:masters` group
+>
 > As a special case, the `system:masters` Kubernetes group is still supported by
 > this module, but only when using `access_entry_map` and `type = "STANDARD"`. In
 > this case, the `system:masters` group is automatically replaced with an
 > association with the `ClusterAdmin` policy.
 
 > [!NOTE]
+> #### Special support is not provided for `access_entries`
+>
 > Note that this substitution is not done for `access_entries` because the
 > use case for `access_entries` is when values are not known at plan time,
 > and the substitution requires knowing the value at plan time.
@@ -347,7 +358,7 @@ The `access_entries_for_nodes` input roughly corresponds to the removed
 Windows workers. There is no longer a need to configure Fargate nodes at all,
 as that is fully automatic in the same way that EKS managed nodes are.
 
-### Example Access Entry Migration
+#### Example Access Entry Migration
 
 Here is an example of how you might migrate access configuration from version
 3 to version 4. If you previously had a configuration like this:
@@ -415,6 +426,47 @@ ClusterAdmin with and without `systems:masters`:
 
 ### Pt. 1: Prepare Your Configuration
 
+> [!NOTE]
+> #### Usage note: Using `terraform` or `atmos`
+>
+> If you are using `atmos`, you have a choice of running every command under
+> `atmos`, or running the `atmos terraform shell` command to set up your
+> environment to run Terraform commands. Normally, we recommend `atmos`
+> users run all the commands under `atmos`, but this document needs to
+> support users not using `atmos` and instead using `terraform` only.
+>
+> Terraform users are expected to add any necessary steps or arguments (such
+> as selecting a workspace or adding a `-var-file` argument) to the commands
+> given. Atmos users need to substitute the component and stack names in
+> each command. If you are using `atmos`, you can use the following command to
+> set up your environment to run Terraform commands:
+>
+> ```shell
+> atmos terraform shell <component> -s <stack>
+> ```
+>
+> After running this command, you will be in a subshell with the necessary
+> environment variables set to run Terraform without extra arguments. You can
+> exit the subshell by typing `exit`.
+>
+> One caveat is that if you want to run `terraform apply <planfile>` you
+> will need to temporarily unset the `TF_CLI_ARGS_apply` environment variable,
+> which sets a `-var-file` argument that is not allowed when applying a plan:
+>
+> ```
+> # inside the atmos subshell
+> $ terraform apply <planfile>
+> │ Error: Can't set variables when applying a saved plan
+> │
+> │ The -var and -var-file options cannot be used when applying a saved plan
+> file, because a saved plan includes the variable values that were set when it was created.
+>
+> $ TF_CLI_ARGS_apply= terraform apply <planfile>
+> # command runs as normal
+> ```
+>
+
+
 #### Ensure your cluster satisfies the prerequisites
 
 Verify that your cluster satisfies [the AWS prerequisites](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html#access-entries-prerequisites) for using the new access control API.
@@ -426,13 +478,6 @@ module, or managing any Kubernetes resources (including Helm charts). Run:
 terraform state list | grep -E 'helm_|kubernetes_'
 ```
 
-> [!NOTE]
-> If you are using `atmos`, you can use the following commands to
-> set up your environment to run Terraform commands:
->
-> ```shell
-> atmos terraform shell <component> -s <stack>
-> ```
 
 There should only be one resource output from this command, either `aws_auth[0]`
 or `aws_auth_ignore_changes[0]`, which is created by earlier versions
@@ -547,6 +592,8 @@ feature:
 ### Pt. 2: No Going Back
 
 > [!WARNING]
+> #### Once you set `API_AND_CONFIG_MAP` mode, there is no going back
+>
 > Once you proceed with the following steps, there is no going back.
 > AWS will not allow you to disable the new access control API once it is
 > enabled, and restoring this modules access to the `aws-auth` ConfigMap
@@ -750,13 +797,12 @@ configuration that you used to deploy the cluster, and run a command like
 terraform import -var-file <configuration-file> '<resource address>' '<access entry ID>'
 ```
 
-:::important Use single quotes around the resource address and access entry ID
-
-It is critical to use single quotes around the resource address and access
-entry ID to prevent the shell from interpreting the square brackets and colons
-and to preserve the double quotes in the resource address.
-
-:::
+> [!IMPORTANT]
+> #### Use single quotes around the resource address and access entry ID
+>
+> It is critical to use single quotes around the resource address and access
+> entry ID to prevent the shell from interpreting the square brackets and colons
+> and to preserve the double quotes in the resource address.
 
 After successfully importing the resource, run `terraform apply`
 (generating a new planfile) to add tags to the entry and make any other
