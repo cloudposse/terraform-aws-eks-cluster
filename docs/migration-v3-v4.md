@@ -315,7 +315,7 @@ by associating the ClusterAdmin policy with them, with type `cluster`.
 > association with the `ClusterAdmin` policy.
 
 > [!NOTE]
-> #### Special support is not provided for `access_entries`
+> #### No special legacy support is provided for `access_entries`
 >
 > Note that this substitution is not done for `access_entries` because the
 > use case for `access_entries` is when values are not known at plan time,
@@ -433,7 +433,8 @@ ClusterAdmin with and without `systems:masters`:
 > `atmos`, or running the `atmos terraform shell` command to set up your
 > environment to run Terraform commands. Normally, we recommend `atmos`
 > users run all the commands under `atmos`, but this document needs to
-> support users not using `atmos` and instead using `terraform` only.
+> support users not using `atmos` and instead using `terraform` only, and so
+> may err on the side of providing only `terraform` commands at some points.
 >
 > Terraform users are expected to add any necessary steps or arguments (such
 > as selecting a workspace or adding a `-var-file` argument) to the commands
@@ -449,9 +450,9 @@ ClusterAdmin with and without `systems:masters`:
 > environment variables set to run Terraform without extra arguments. You can
 > exit the subshell by typing `exit`.
 >
-> One caveat is that if you want to run `terraform apply <planfile>` you
-> will need to temporarily unset the `TF_CLI_ARGS_apply` environment variable,
-> which sets a `-var-file` argument that is not allowed when applying a plan:
+> One caveat is that if you want to run `terraform apply <planfile>` in an
+> `atmos` sub-shell, you will need to temporarily unset the `TF_CLI_ARGS_apply`
+> environment variable, which sets a `-var-file` argument that is not allowed when applying a plan:
 >
 > ```
 > # inside the atmos subshell
