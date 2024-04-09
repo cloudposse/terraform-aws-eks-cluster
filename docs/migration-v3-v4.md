@@ -27,6 +27,8 @@ This guide consists of 4 parts:
 
 ## Usage notes
 
+#### Critical usage notes:
+
 > [!CAUTION]
 > #### Close security loophole by migrating all the way to "API" mode
 >
@@ -60,6 +62,10 @@ This guide consists of 4 parts:
 > EKS cluster configuration and find changing that too challenging, then you
 > should delay the upgrade to version 4 of this module until you can address it.
 
+#### Recommendations:
+
+The following recommendations apply to both new and existing users of this module:
+
 - We recommend leaving `bootstrap_cluster_creator_admin_permissions` set to
   `false`. When set to `true`, EKS automatically adds an access entry for the
   EKS cluster creator during creation, but this interferes with Terraform's
@@ -77,7 +83,10 @@ This guide consists of 4 parts:
   EKS Access Entry that used the old IAM role ARN, requiring you to remove
   the old access entry and add the new one. Follow [`containers-roadmap`
   issue 474](https://github.com/aws/containers-roadmap/issues/474) for
-  updates on features that will mitigate this issue.
+  updates on features that will mitigate this issue. Until then, we recommend
+  you create a regular IAM role with a deterministic ARN and use that in your
+  EKS Access Entries, and then giving Permission Sets the necessary permissions
+  to assume that role.
 - For new clusters, we recommend setting `access_config.authentication_mode
   = "API"` to use the new access control API exclusively, so that is the
   default. However, AWS does not support a direct upgrade from the legacy
