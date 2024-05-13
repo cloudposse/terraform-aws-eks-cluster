@@ -46,6 +46,14 @@ output "eks_cluster_role_arn" {
   value       = local.eks_service_role_arn
 }
 
+output "eks_cluster_ipv4_service_cidr" {
+  description = <<-EOT
+    The IPv4 CIDR block that Kubernetes pod and service IP addresses are assigned from
+    if `kubernetes_network_ipv6_enabled` is set to false. If set to true this output will be null.
+    EOT
+  value       = one(aws_eks_cluster.default[*].kubernetes_network_config[0].service_ipv4_cidr)
+}
+
 output "eks_cluster_ipv6_service_cidr" {
   description = <<-EOT
     The IPv6 CIDR block that Kubernetes pod and service IP addresses are assigned from
