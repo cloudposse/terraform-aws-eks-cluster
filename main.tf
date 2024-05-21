@@ -35,6 +35,7 @@ resource "aws_cloudwatch_log_group" "default" {
   retention_in_days = var.cluster_log_retention_period
   kms_key_id        = var.cloudwatch_log_group_kms_key_id
   tags              = module.label.tags
+  log_group_class   = var.cloudwatch_log_group_class
 }
 
 resource "aws_kms_key" "cluster" {

@@ -155,6 +155,12 @@ variable "cloudwatch_log_group_kms_key_id" {
   default     = null
 }
 
+variable "cloudwatch_log_group_class" {
+  type        = string
+  description = "Specified the log class of the log group. Possible values are: `STANDARD` or `INFREQUENT_ACCESS`"
+  default     = null
+}
+
 variable "addons" {
   type = list(object({
     addon_name           = string
