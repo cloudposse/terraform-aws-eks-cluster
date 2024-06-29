@@ -66,7 +66,7 @@ The module provisions the following resources:
 
 For a complete example, see [examples/complete](examples/complete).
 
-For automated tests of the complete example using [bats](https://github.com/bats-core/bats-core) and [Terratest](https://github.com/gruntwork-io/terratest) (which tests and deploys the example on AWS), see [test/src](test/scc).
+For automated tests of the complete example using [bats](https://github.com/bats-core/bats-core) and [Terratest](https://github.com/gruntwork-io/terratest) (which tests and deploys the example on AWS), see [test/src](test/src).
 
 Other examples:
 
