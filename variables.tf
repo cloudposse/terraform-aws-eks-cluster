@@ -197,6 +197,12 @@ variable "addons_depends_on" {
   default     = null
 }
 
+variable "bootstrap_self_managed_addons" {
+  description = "Manages bootstrap of default networking addons after cluster has been created"
+  type        = bool
+  default     = null
+}
+
 variable "cluster_attributes" {
   type        = list(string)
   description = "Override label module default cluster attributes"
