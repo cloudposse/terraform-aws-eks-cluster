@@ -197,7 +197,7 @@ variable "addons_depends_on" {
   default     = null
 }
 
-variable "bootstrap_self_managed_addons" {
+variable "bootstrap_self_managed_addons_enabled" {
   description = "Manages bootstrap of default networking addons after cluster has been created"
   type        = bool
   default     = null

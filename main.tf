@@ -62,7 +62,7 @@ resource "aws_eks_cluster" "default" {
   role_arn                      = local.eks_service_role_arn
   version                       = var.kubernetes_version
   enabled_cluster_log_types     = var.enabled_cluster_log_types
-  bootstrap_self_managed_addons = var.bootstrap_self_managed_addons
+  bootstrap_self_managed_addons = var.bootstrap_self_managed_addons_enabled
 
   access_config {
     authentication_mode                         = var.access_config.authentication_mode

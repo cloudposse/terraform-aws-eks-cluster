@@ -112,7 +112,7 @@ module "eks_cluster" {
 
   addons                        = local.addons
   addons_depends_on             = [module.eks_node_group]
-  bootstrap_self_managed_addons = var.bootstrap_self_managed_addons
+  bootstrap_self_managed_addons = var.bootstrap_self_managed_addons_enabled
 
   access_entry_map = local.access_entry_map
   access_config = {
