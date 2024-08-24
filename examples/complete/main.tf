@@ -110,8 +110,9 @@ module "eks_cluster" {
   cluster_encryption_config_kms_key_policy                  = var.cluster_encryption_config_kms_key_policy
   cluster_encryption_config_resources                       = var.cluster_encryption_config_resources
 
-  addons            = local.addons
-  addons_depends_on = [module.eks_node_group]
+  addons                                = local.addons
+  addons_depends_on                     = [module.eks_node_group]
+  bootstrap_self_managed_addons_enabled = var.bootstrap_self_managed_addons_enabled
 
   access_entry_map = local.access_entry_map
   access_config = {
