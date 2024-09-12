@@ -155,6 +155,12 @@ variable "cloudwatch_log_group_kms_key_id" {
   default     = null
 }
 
+variable "cloudwatch_log_group_class" {
+  type        = string
+  description = "Specified the log class of the log group. Possible values are: `STANDARD` or `INFREQUENT_ACCESS`"
+  default     = null
+}
+
 variable "addons" {
   type = list(object({
     addon_name           = string
@@ -188,6 +194,12 @@ variable "addons_depends_on" {
     This is useful if you want to ensure that addons are not applied before some other condition is met, e.g. node groups are created.
     See [issue #170](https://github.com/cloudposse/terraform-aws-eks-cluster/issues/170) for more details.
     EOT
+  default     = null
+}
+
+variable "bootstrap_self_managed_addons_enabled" {
+  description = "Manages bootstrap of default networking addons after cluster has been created"
+  type        = bool
   default     = null
 }
 

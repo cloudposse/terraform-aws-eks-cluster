@@ -78,6 +78,8 @@ resource "aws_iam_policy" "cluster_elb_service_role" {
 
   name   = "${module.label.id}-ServiceRole"
   policy = one(data.aws_iam_policy_document.cluster_elb_service_role[*].json)
+
+  tags = module.this.tags
 }
 
 resource "aws_iam_role_policy_attachment" "cluster_elb_service_role" {

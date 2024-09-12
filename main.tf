@@ -35,6 +35,7 @@ resource "aws_cloudwatch_log_group" "default" {
   retention_in_days = var.cluster_log_retention_period
   kms_key_id        = var.cloudwatch_log_group_kms_key_id
   tags              = module.label.tags
+  log_group_class   = var.cloudwatch_log_group_class
 }
 
 resource "aws_kms_key" "cluster" {
@@ -55,12 +56,13 @@ resource "aws_kms_alias" "cluster" {
 resource "aws_eks_cluster" "default" {
   #bridgecrew:skip=BC_AWS_KUBERNETES_1:Allow permissive security group for public access, difficult to restrict without a VPN
   #bridgecrew:skip=BC_AWS_KUBERNETES_4:Let user decide on control plane logging, not necessary in non-production environments
-  count                     = local.enabled ? 1 : 0
-  name                      = module.label.id
-  tags                      = module.label.tags
-  role_arn                  = local.eks_service_role_arn
-  version                   = var.kubernetes_version
-  enabled_cluster_log_types = var.enabled_cluster_log_types
+  count                         = local.enabled ? 1 : 0
+  name                          = module.label.id
+  tags                          = module.label.tags
+  role_arn                      = local.eks_service_role_arn
+  version                       = var.kubernetes_version
+  enabled_cluster_log_types     = var.enabled_cluster_log_types
+  bootstrap_self_managed_addons = var.bootstrap_self_managed_addons_enabled
 
   access_config {
     authentication_mode                         = var.access_config.authentication_mode
