@@ -110,6 +110,13 @@ resource "aws_eks_cluster" "default" {
     }
   }
 
+  dynamic "zonal_shift_config" {
+    for_each = var.zonal_shift_config != null ? [var.zonal_shift_config] : []
+    content {
+      enabled = zonal_shift_config.value.enabled
+    }
+  }
+
   depends_on = [
     aws_iam_role.default,
     aws_iam_role_policy_attachment.cluster_elb_service_role,
