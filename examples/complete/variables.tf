@@ -115,6 +115,14 @@ variable "bootstrap_self_managed_addons_enabled" {
   default     = null
 }
 
+variable "zonal_shift_config" {
+  type = object({
+    enabled = optional(bool, null)
+  })
+  description = "Configuration block with zonal shift configuration for the cluster"
+  default     = null
+}
+
 variable "private_ipv6_enabled" {
   type        = bool
   default     = false

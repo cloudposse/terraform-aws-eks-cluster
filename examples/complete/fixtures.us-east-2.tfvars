@@ -49,3 +49,7 @@ addons = [
     service_account_role_arn = null
   },
 ]
+
+zonal_shift_config = {
+  enabled = true
+}
