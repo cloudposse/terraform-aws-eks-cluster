@@ -203,6 +203,14 @@ variable "bootstrap_self_managed_addons_enabled" {
   default     = null
 }
 
+variable "upgrade_policy" {
+  type = object({
+    support_type = optional(string, null)
+  })
+  description = "Configuration block for the support policy to use for the cluster"
+  default     = null
+}
+
 variable "zonal_shift_config" {
   type = object({
     enabled = optional(bool, null)

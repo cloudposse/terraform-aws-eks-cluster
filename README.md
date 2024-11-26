@@ -454,6 +454,7 @@ Available targets:
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | A list of subnet IDs to launch the cluster in | `list(string)` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Additional tags (e.g. `{'BusinessUnit': 'XYZ'}`).<br/>Neither the tag keys nor the tag values will be modified by this module. | `map(string)` | `{}` | no |
 | <a name="input_tenant"></a> [tenant](#input\_tenant) | ID element \_(Rarely used, not included by default)\_. A customer identifier, indicating who this instance of a resource is for | `string` | `null` | no |
+| <a name="input_upgrade_policy"></a> [upgrade\_policy](#input\_upgrade\_policy) | Configuration block for the support policy to use for the cluster | <pre>object({<br/>    support_type = optional(string, null)<br/>  })</pre> | `null` | no |
 | <a name="input_zonal_shift_config"></a> [zonal\_shift\_config](#input\_zonal\_shift\_config) | Configuration block with zonal shift configuration for the cluster | <pre>object({<br/>    enabled = optional(bool, null)<br/>  })</pre> | `null` | no |
 
 ## Outputs
