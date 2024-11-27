@@ -50,6 +50,10 @@ addons = [
   },
 ]
 
+upgrade_policy = {
+  support_type = "STANDARD"
+}
+
 zonal_shift_config = {
   enabled = true
 }

@@ -110,6 +110,13 @@ resource "aws_eks_cluster" "default" {
     }
   }
 
+  dynamic "upgrade_policy" {
+    for_each = var.upgrade_policy != null ? [var.upgrade_policy] : []
+    content {
+      support_type = upgrade_policy.value.support_type
+    }
+  }
+
   dynamic "zonal_shift_config" {
     for_each = var.zonal_shift_config != null ? [var.zonal_shift_config] : []
     content {
