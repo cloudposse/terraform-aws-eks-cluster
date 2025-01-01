@@ -1,6 +1,5 @@
 # tflint-ignore: terraform_unused_declarations
 variable "region" {
-
   type        = string
   description = "OBSOLETE (not needed): AWS Region"
   default     = null
@@ -175,6 +174,10 @@ variable "addons" {
     create_timeout              = optional(string, null)
     update_timeout              = optional(string, null)
     delete_timeout              = optional(string, null)
+    pod_identity_association = optional(object({
+      role_arn        = string
+      service_account = string
+    }))
   }))
   description = <<-EOT
     Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources.
