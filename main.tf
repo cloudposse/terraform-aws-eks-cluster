@@ -65,7 +65,7 @@ resource "aws_eks_cluster" "default" {
   version                   = var.kubernetes_version
   enabled_cluster_log_types = var.enabled_cluster_log_types
   # Enabling EKS Auto Mode also requires that bootstrap_self_managed_addons is set to false
-  bootstrap_self_managed_addons = local.auto_mode_enabled ? false : var.bootstrap_self_managed_addons
+  bootstrap_self_managed_addons = local.auto_mode_enabled ? false : var.bootstrap_self_managed_addons_enabled
 
   access_config {
     authentication_mode                         = var.access_config.authentication_mode
