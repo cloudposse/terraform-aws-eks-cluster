@@ -59,6 +59,5 @@ zonal_shift_config = {
 }
 
 cluster_compute_config = {
-  enabled    = true
-  node_pools = ["general-purpose"]
+  enabled = true
 }

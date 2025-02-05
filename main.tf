@@ -127,7 +127,7 @@ resource "aws_eks_cluster" "default" {
   }
 
   dynamic "kubernetes_network_config" {
-    for_each = local.use_elastic_load_balancing ? [] : [1]
+    for_each = local.use_elastic_load_balancing ? [1] : []
 
     content {
       dynamic "elastic_load_balancing" {
