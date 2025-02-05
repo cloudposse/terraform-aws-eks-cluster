@@ -57,3 +57,8 @@ upgrade_policy = {
 zonal_shift_config = {
   enabled = true
 }
+
+cluster_compute_config = {
+  enabled    = true
+  node_pools = ["general-purpose"]
+}

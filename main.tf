@@ -14,6 +14,8 @@ locals {
   }
 
   cloudwatch_log_group_name = "/aws/eks/${module.label.id}/cluster"
+
+  auto_mode_enabled = try(var.cluster_compute_config.enabled, false)
 }
 
 module "label" {
@@ -56,17 +58,29 @@ resource "aws_kms_alias" "cluster" {
 resource "aws_eks_cluster" "default" {
   #bridgecrew:skip=BC_AWS_KUBERNETES_1:Allow permissive security group for public access, difficult to restrict without a VPN
   #bridgecrew:skip=BC_AWS_KUBERNETES_4:Let user decide on control plane logging, not necessary in non-production environments
-  count                         = local.enabled ? 1 : 0
-  name                          = module.label.id
-  tags                          = module.label.tags
-  role_arn                      = local.eks_service_role_arn
-  version                       = var.kubernetes_version
-  enabled_cluster_log_types     = var.enabled_cluster_log_types
-  bootstrap_self_managed_addons = var.bootstrap_self_managed_addons_enabled
+  count                     = local.enabled ? 1 : 0
+  name                      = module.label.id
+  tags                      = module.label.tags
+  role_arn                  = local.eks_service_role_arn
+  version                   = var.kubernetes_version
+  enabled_cluster_log_types = var.enabled_cluster_log_types
+  # Enabling EKS Auto Mode also requires that bootstrap_self_managed_addons is set to false
+  bootstrap_self_managed_addons = local.auto_mode_enabled ? coalesce(var.bootstrap_self_managed_addons, false) : var.bootstrap_self_managed_addons
 
   access_config {
     authentication_mode                         = var.access_config.authentication_mode
     bootstrap_cluster_creator_admin_permissions = var.access_config.bootstrap_cluster_creator_admin_permissions
+  }
+
+  # EKS Auto Mode
+  dynamic "compute_config" {
+    for_each = length(var.cluster_compute_config) > 0 ? [var.cluster_compute_config] : []
+
+    content {
+      enabled       = local.auto_mode_enabled
+      node_pools    = local.auto_mode_enabled ? try(compute_config.value.node_pools, []) : null
+      node_role_arn = local.auto_mode_enabled && length(try(compute_config.value.node_pools, [])) > 0 ? try(compute_config.value.node_role_arn, aws_iam_role.eks_auto[0].arn, null) : null
+    }
   }
 
   lifecycle {

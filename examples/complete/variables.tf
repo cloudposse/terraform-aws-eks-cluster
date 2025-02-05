@@ -131,6 +131,18 @@ variable "zonal_shift_config" {
   default     = null
 }
 
+variable "cluster_compute_config" {
+  description = <<-EOT
+  Configuration block with compute configuration for EKS Auto Mode
+
+  enabled: Request to enable or disable the compute capability on your EKS Auto Mode cluster. If the compute capability is enabled, EKS Auto Mode will create and delete EC2 Managed Instances in your Amazon Web Services account.
+  node_pools: Optional configuration for node pools that defines the compute resources for your EKS Auto Mode cluster. Valid options are general-purpose and system.
+  node_role_arn: Optional ARN of the IAM Role EKS will assign to EC2 Managed Instances in your EKS Auto Mode cluster.
+  EOT
+  type        = any
+  default     = {}
+}
+
 variable "private_ipv6_enabled" {
   type        = bool
   default     = false
