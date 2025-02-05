@@ -110,6 +110,12 @@ variable "kubernetes_network_ipv6_enabled" {
   default     = false
 }
 
+variable "kubernetes_elastic_load_balancing_enabled" {
+  type        = bool
+  description = "Indicates if the load balancing capability is enabled on your EKS Auto Mode cluster. If the load balancing capability is enabled, EKS Auto Mode will create and delete load balancers in your Amazon Web Services account."
+  default     = false
+}
+
 variable "enabled_cluster_log_types" {
   type        = list(string)
   description = "A list of the desired control plane logging to enable. For more information, see https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html. Possible values [`api`, `audit`, `authenticator`, `controllerManager`, `scheduler`]"
