@@ -64,6 +64,12 @@ variable "cluster_encryption_config_enabled" {
   description = "Set to `true` to enable Cluster Encryption Configuration"
 }
 
+variable "kubernetes_elastic_load_balancing_enabled" {
+  type        = bool
+  description = "Indicates if the load balancing capability is enabled on your EKS Auto Mode cluster. If the load balancing capability is enabled, EKS Auto Mode will create and delete load balancers in your Amazon Web Services account."
+  default     = false
+}
+
 variable "cluster_encryption_config_kms_key_id" {
   type        = string
   default     = ""

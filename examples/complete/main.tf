@@ -128,7 +128,8 @@ module "eks_cluster" {
   allowed_security_group_ids = [module.vpc.vpc_default_security_group_id]
   allowed_cidr_blocks        = [module.vpc.vpc_cidr_block]
 
-  kubernetes_network_ipv6_enabled = local.private_ipv6_enabled
+  kubernetes_network_ipv6_enabled           = local.private_ipv6_enabled
+  kubernetes_elastic_load_balancing_enabled = var.kubernetes_elastic_load_balancing_enabled
 
   context = module.this.context
 
