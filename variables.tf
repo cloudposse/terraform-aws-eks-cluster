@@ -44,24 +44,6 @@ variable "cluster_compute_config" {
   default     = {}
 }
 
-variable "cluster_ip_family" {
-  description = "The IP family used to assign Kubernetes pod and service addresses. Valid values are `ipv4` (default) and `ipv6`. You can only specify an IP family when you create a cluster, changing this value will force a new cluster to be created"
-  type        = string
-  default     = "ipv4"
-}
-
-variable "cluster_service_ipv4_cidr" {
-  description = "The CIDR block to assign Kubernetes service IP addresses from. If you don't specify a block, Kubernetes assigns addresses from either the 10.100.0.0/16 or 172.20.0.0/16 CIDR blocks"
-  type        = string
-  default     = null
-}
-
-variable "cluster_service_ipv6_cidr" {
-  description = "The CIDR block to assign Kubernetes pod and service IP addresses from if `ipv6` was specified when the cluster was created. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster"
-  type        = string
-  default     = null
-}
-
 variable "create_eks_service_role" {
   type        = bool
   description = "Set `false` to use existing `eks_cluster_service_role_arn` instead of creating one"
