@@ -1,6 +1,5 @@
 # tflint-ignore: terraform_unused_declarations
 variable "region" {
-
   type        = string
   description = "OBSOLETE (not needed): AWS Region"
   default     = null
@@ -43,6 +42,24 @@ variable "cluster_compute_config" {
     node_role_arn: Optional ARN of the IAM Role EKS will assign to EC2 Managed Instances in your EKS Auto Mode cluster.
     EOT
   default     = {}
+}
+
+variable "cluster_ip_family" {
+  description = "The IP family used to assign Kubernetes pod and service addresses. Valid values are `ipv4` (default) and `ipv6`. You can only specify an IP family when you create a cluster, changing this value will force a new cluster to be created"
+  type        = string
+  default     = "ipv4"
+}
+
+variable "cluster_service_ipv4_cidr" {
+  description = "The CIDR block to assign Kubernetes service IP addresses from. If you don't specify a block, Kubernetes assigns addresses from either the 10.100.0.0/16 or 172.20.0.0/16 CIDR blocks"
+  type        = string
+  default     = null
+}
+
+variable "cluster_service_ipv6_cidr" {
+  description = "The CIDR block to assign Kubernetes pod and service IP addresses from if `ipv6` was specified when the cluster was created. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster"
+  type        = string
+  default     = null
 }
 
 variable "create_eks_service_role" {

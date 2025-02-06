@@ -123,6 +123,10 @@ resource "aws_eks_cluster" "default" {
         content {
           enabled = local.auto_mode_enabled
         }
+
+        ip_family         = var.cluster_ip_family
+        service_ipv4_cidr = var.cluster_service_ipv4_cidr
+        service_ipv6_cidr = var.cluster_service_ipv6_cidr
       }
     }
   }
