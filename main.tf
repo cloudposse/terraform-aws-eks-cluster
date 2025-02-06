@@ -3,7 +3,7 @@ locals {
 
   use_ipv6 = var.kubernetes_network_ipv6_enabled
 
-  use_elastic_load_balancing = try(var.kubernetes_elastic_load_balancing_enabled, false)
+  use_elastic_load_balancing = var.kubernetes_elastic_load_balancing_enabled
 
   eks_cluster_id = one(aws_eks_cluster.default[*].id)
 

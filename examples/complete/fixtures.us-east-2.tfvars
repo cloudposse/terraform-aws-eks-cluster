@@ -61,3 +61,5 @@ zonal_shift_config = {
 cluster_compute_config = {
   enabled = true
 }
+
+kubernetes_elastic_load_balancing_enabled = true
