@@ -3,8 +3,6 @@ locals {
 
   use_ipv6 = var.kubernetes_network_ipv6_enabled
 
-  use_elastic_load_balancing = var.kubernetes_elastic_load_balancing_enabled
-
   eks_cluster_id = one(aws_eks_cluster.default[*].id)
 
   cluster_encryption_config = {
@@ -113,13 +111,27 @@ resource "aws_eks_cluster" "default" {
   }
 
   dynamic "kubernetes_network_config" {
-    for_each = local.use_ipv6 || local.use_elastic_load_balancing || length(compact([var.service_ipv4_cidr])) > 0 ? [true] : []
+    for_each = local.use_ipv6 ? [] : compact([var.service_ipv4_cidr])
 
     content {
-      ip_family         = local.use_ipv6 ? "ipv6" : null
-      service_ipv4_cidr = local.use_ipv6 ? null : kubernetes_network_config.value
+      service_ipv4_cidr = kubernetes_network_config.value
+    }
+  }
+
+  dynamic "kubernetes_network_config" {
+    for_each = local.use_ipv6 ? [true] : []
+
+    content {
+      ip_family = "ipv6"
+    }
+  }
+
+  dynamic "kubernetes_network_config" {
+    for_each = local.auto_mode_enabled ? [1] : []
+
+    content {
       dynamic "elastic_load_balancing" {
-        for_each = local.use_elastic_load_balancing && local.auto_mode_enabled ? [1] : []
+        for_each = local.auto_mode_enabled ? [1] : []
         content {
           enabled = local.auto_mode_enabled
         }
