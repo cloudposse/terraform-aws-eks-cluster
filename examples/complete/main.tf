@@ -139,7 +139,7 @@ module "eks_node_group" {
   version = "3.2.0"
 
   # node group <= 3.2 requires a non-empty list of subnet_ids, even when disabled
-  subnet_ids        = module.this.enabled ? module.subnets.public_subnet_ids : ["filler_string_for_enabled_is_false"]
+  subnet_ids        = local.enabled ? module.subnets.public_subnet_ids : ["filler_string_for_enabled_is_false"]
   cluster_name      = module.eks_cluster.eks_cluster_id
   instance_types    = var.instance_types
   desired_size      = var.desired_size
@@ -148,7 +148,7 @@ module "eks_node_group" {
   kubernetes_labels = var.kubernetes_labels
 
   # Test default of using cluster's version, but when disabled node group <= 3.2.0 requires kubernetes_version be supplied
-  kubernetes_version = module.this.enabled ? null : [var.kubernetes_version]
+  kubernetes_version = local.enabled ? null : [var.kubernetes_version]
 
   context = module.this.context
 }
