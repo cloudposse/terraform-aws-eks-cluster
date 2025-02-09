@@ -29,9 +29,9 @@
 
 Terraform module to provision an [EKS](https://aws.amazon.com/eks/) cluster on AWS.
 <br/><br/>
-This Terraform module provisions a fully-configured AWS [EKS](https://aws.amazon.com/eks/) (Elastic Kubernetes Service) cluster. 
-It's engineered to integrate smoothly with [Karpenter](https://karpenter.sh/) and [EKS addons](https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html), 
-forming a critical part of [Cloud Posse's reference architecture](https://cloudposse.com/reference-architecture). 
+This Terraform module provisions a fully configured AWS [EKS](https://aws.amazon.com/eks/) (Elastic Kubernetes Service) cluster.
+It's engineered to integrate smoothly with [Karpenter](https://karpenter.sh/) and [EKS addons](https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html),
+forming a critical part of [Cloud Posse's reference architecture](https://cloudposse.com/reference-architecture).
 Ideal for teams looking to deploy scalable and manageable Kubernetes clusters on AWS with minimal fuss.
 
 
@@ -66,7 +66,7 @@ The module provisions the following resources:
 
 For a complete example, see [examples/complete](examples/complete).
 
-For automated tests of the complete example using [bats](https://github.com/bats-core/bats-core) and [Terratest](https://github.com/gruntwork-io/terratest) (which tests and deploys the example on AWS), see [test/src](test/scc).
+For automated tests of the complete example using [bats](https://github.com/bats-core/bats-core) and [Terratest](https://github.com/gruntwork-io/terratest) (which tests and deploys the example on AWS), see [test/src](test/src).
 
 Other examples:
 
@@ -81,20 +81,20 @@ Other examples:
   # but in practice, you should use a static map of IAM users or roles that should have access to the cluster.
   # Granting access to the current user in this way is not recommended for production use.
   data "aws_caller_identity" "current" {}
-  
+
   # IAM session context converts an assumed role ARN into an IAM Role ARN.
   # Again, this is primarily to simplify the example, and in practice, you should use a static map of IAM users or roles.
   data "aws_iam_session_context" "current" {
     arn = data.aws_caller_identity.current.arn
   }
-  
+
   locals {
     # The usage of the specific kubernetes.io/cluster/* resource tags below are required
     # for EKS and Kubernetes to discover and manage networking resources
     # https://aws.amazon.com/premiumsupport/knowledge-center/eks-vpc-subnet-discovery/
     # https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/main/docs/deploy/subnet_discovery.md
     tags = { "kubernetes.io/cluster/${module.label.id}" = "shared" }
-  
+
     # required tags to make ALB ingress work https://docs.aws.amazon.com/eks/latest/userguide/alb-ingress.html
     public_subnets_additional_tags = {
       "kubernetes.io/role/elb" : 1
@@ -102,7 +102,7 @@ Other examples:
     private_subnets_additional_tags = {
       "kubernetes.io/role/internal-elb" : 1
     }
-  
+
     # Enable the IAM user creating the cluster to administer it,
     # without using the bootstrap_cluster_creator_admin_permissions option,
     # as an example of how to use the access_entry_map feature.
@@ -313,9 +313,9 @@ Module usage with two unmanaged worker groups:
 > To prevent this, follow the instructions in the [v1 to v2 migration path](./docs/migration-v1-v2.md).
 
 > [!NOTE]
-> Prior to v4 of this module, AWS did not provide an API to manage access to the EKS cluster, 
+> Prior to v4 of this module, AWS did not provide an API to manage access to the EKS cluster,
 > causing numerous challenges. With v4 of this module, it exclusively uses the AWS API, resolving
-> many issues you may read about that had affected prior versions. See the version 2 README and release notes 
+> many issues you may read about that had affected prior versions. See the version 2 README and release notes
 > for more information on the challenges and workarounds that were required prior to v3.
 
 > [!IMPORTANT]
@@ -403,9 +403,9 @@ Available targets:
 | <a name="input_access_entries"></a> [access\_entries](#input\_access\_entries) | List of IAM principles to allow to access the EKS cluster.<br/>It is recommended to use the default `user_name` because the default includes<br/>the IAM role or user name and the session name for assumed roles.<br/>Use when Principal ARN is not known at plan time. | <pre>list(object({<br/>    principal_arn     = string<br/>    user_name         = optional(string, null)<br/>    kubernetes_groups = optional(list(string), null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_access_entries_for_nodes"></a> [access\_entries\_for\_nodes](#input\_access\_entries\_for\_nodes) | Map of list of IAM roles for the EKS non-managed worker nodes.<br/>The map key is the node type, either `EC2_LINUX` or `EC2_WINDOWS`,<br/>and the list contains the IAM roles of the nodes of that type.<br/>There is no need for or utility in creating Fargate access entries, as those<br/>are always created automatically by AWS, just as with managed nodes.<br/>Use when Principal ARN is not known at plan time. | `map(list(string))` | `{}` | no |
 | <a name="input_access_entry_map"></a> [access\_entry\_map](#input\_access\_entry\_map) | Map of IAM Principal ARNs to access configuration.<br/>Preferred over other inputs as this configuration remains stable<br/>when elements are added or removed, but it requires that the Principal ARNs<br/>and Policy ARNs are known at plan time.<br/>Can be used along with other `access_*` inputs, but do not duplicate entries.<br/>Map `access_policy_associations` keys are policy ARNs, policy<br/>full name (AmazonEKSViewPolicy), or short name (View).<br/>It is recommended to use the default `user_name` because the default includes<br/>IAM role or user name and the session name for assumed roles.<br/>As a special case in support of backwards compatibility, membership in the<br/>`system:masters` group is is translated to an association with the ClusterAdmin policy.<br/>In all other cases, including any `system:*` group in `kubernetes_groups` is prohibited. | <pre>map(object({<br/>    # key is principal_arn<br/>    user_name = optional(string)<br/>    # Cannot assign "system:*" groups to IAM users, use ClusterAdmin and Admin instead<br/>    kubernetes_groups = optional(list(string), [])<br/>    type              = optional(string, "STANDARD")<br/>    access_policy_associations = optional(map(object({<br/>      # key is policy_arn or policy_name<br/>      access_scope = optional(object({<br/>        type       = optional(string, "cluster")<br/>        namespaces = optional(list(string))<br/>      }), {}) # access_scope<br/>    })), {})  # access_policy_associations<br/>  }))</pre> | `{}` | no |
-| <a name="input_access_policy_associations"></a> [access\_policy\_associations](#input\_access\_policy\_associations) | List of AWS managed EKS access policies to associate with IAM principles.<br/>Use when Principal ARN or Policy ARN is not known at plan time.<br/>`policy_arn` can be the full ARN, the full name (AmazonEKSViewPolicy) or short name (View). | <pre>list(object({<br/>    principal_arn = string<br/>    policy_arn    = string<br/>    access_scope = object({<br/>      type       = optional(string, "cluster")<br/>      namespaces = optional(list(string))<br/>    })<br/>  }))</pre> | `[]` | no |
+| <a name="input_access_policy_associations"></a> [access\_policy\_associations](#input\_access\_policy\_associations) | List of AWS managed EKS access policies to associate with IAM principles.<br/>Use when Principal ARN or Policy ARN is not known at plan time.<br/>`policy_arn` can be the full ARN, the full name (AmazonEKSViewPolicy) or short name (View). | <pre>list(object({<br/>    principal_arn = string<br/>    policy_arn    = string<br/>    access_scope = optional(object({<br/>      type       = optional(string, "cluster")<br/>      namespaces = optional(list(string))<br/>    }), {})<br/>  }))</pre> | `[]` | no |
 | <a name="input_additional_tag_map"></a> [additional\_tag\_map](#input\_additional\_tag\_map) | Additional key-value pairs to add to each map in `tags_as_list_of_maps`. Not added to `tags` or `id`.<br/>This is for some rare cases where resources want additional configuration of tags<br/>and therefore take a list of maps with tag key, value, and additional configuration. | `map(string)` | `{}` | no |
-| <a name="input_addons"></a> [addons](#input\_addons) | Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources.<br/>Note: `resolve_conflicts` is deprecated. If `resolve_conflicts` is set and<br/>`resolve_conflicts_on_create` or `resolve_conflicts_on_update` is not set,<br/>`resolve_conflicts` will be used instead. If `resolve_conflicts_on_create` is<br/>not set and `resolve_conflicts` is `PRESERVE`, `resolve_conflicts_on_create`<br/>will be set to `NONE`. | <pre>list(object({<br/>    addon_name           = string<br/>    addon_version        = optional(string, null)<br/>    configuration_values = optional(string, null)<br/>    # resolve_conflicts is deprecated, but we keep it for backwards compatibility<br/>    # and because if not declared, Terraform will silently ignore it.<br/>    resolve_conflicts           = optional(string, null)<br/>    resolve_conflicts_on_create = optional(string, null)<br/>    resolve_conflicts_on_update = optional(string, null)<br/>    service_account_role_arn    = optional(string, null)<br/>    create_timeout              = optional(string, null)<br/>    update_timeout              = optional(string, null)<br/>    delete_timeout              = optional(string, null)<br/>  }))</pre> | `[]` | no |
+| <a name="input_addons"></a> [addons](#input\_addons) | Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources.<br/>Note: `resolve_conflicts` is deprecated. If `resolve_conflicts` is set and<br/>`resolve_conflicts_on_create` or `resolve_conflicts_on_update` is not set,<br/>`resolve_conflicts` will be used instead. If `resolve_conflicts_on_create` is<br/>not set and `resolve_conflicts` is `PRESERVE`, `resolve_conflicts_on_create`<br/>will be set to `NONE`.<br/>If `additional_tags` are specified, they are added to the standard resource tags. | <pre>list(object({<br/>    addon_name           = string<br/>    addon_version        = optional(string, null)<br/>    configuration_values = optional(string, null)<br/>    # resolve_conflicts is deprecated, but we keep it for backwards compatibility<br/>    # and because if not declared, Terraform will silently ignore it.<br/>    resolve_conflicts           = optional(string, null)<br/>    resolve_conflicts_on_create = optional(string, null)<br/>    resolve_conflicts_on_update = optional(string, null)<br/>    service_account_role_arn    = optional(string, null)<br/>    create_timeout              = optional(string, null)<br/>    update_timeout              = optional(string, null)<br/>    delete_timeout              = optional(string, null)<br/>    additional_tags             = optional(map(string), {})<br/>  }))</pre> | `[]` | no |
 | <a name="input_addons_depends_on"></a> [addons\_depends\_on](#input\_addons\_depends\_on) | If provided, all addons will depend on this object, and therefore not be installed until this object is finalized.<br/>This is useful if you want to ensure that addons are not applied before some other condition is met, e.g. node groups are created.<br/>See [issue #170](https://github.com/cloudposse/terraform-aws-eks-cluster/issues/170) for more details. | `any` | `null` | no |
 | <a name="input_allowed_cidr_blocks"></a> [allowed\_cidr\_blocks](#input\_allowed\_cidr\_blocks) | A list of IPv4 CIDRs to allow access to the cluster.<br/>The length of this list must be known at "plan" time. | `list(string)` | `[]` | no |
 | <a name="input_allowed_security_group_ids"></a> [allowed\_security\_group\_ids](#input\_allowed\_security\_group\_ids) | A list of IDs of Security Groups to allow access to the cluster. | `list(string)` | `[]` | no |

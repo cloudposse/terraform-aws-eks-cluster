@@ -136,15 +136,19 @@ module "eks_cluster" {
 
 module "eks_node_group" {
   source  = "cloudposse/eks-node-group/aws"
-  version = "2.12.0"
+  version = "3.2.0"
 
-  subnet_ids        = module.subnets.private_subnet_ids
+  # node group <= 3.2 requires a non-empty list of subnet_ids, even when disabled
+  subnet_ids        = local.enabled ? module.subnets.public_subnet_ids : ["filler_string_for_enabled_is_false"]
   cluster_name      = module.eks_cluster.eks_cluster_id
   instance_types    = var.instance_types
   desired_size      = var.desired_size
   min_size          = var.min_size
   max_size          = var.max_size
   kubernetes_labels = var.kubernetes_labels
+
+  # Test default of using cluster's version, but when disabled node group <= 3.2.0 requires kubernetes_version be supplied
+  kubernetes_version = local.enabled ? null : [var.kubernetes_version]
 
   context = module.this.context
 }

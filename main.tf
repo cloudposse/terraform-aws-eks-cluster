@@ -175,7 +175,7 @@ resource "aws_eks_addon" "cluster" {
   resolve_conflicts_on_update = lookup(each.value, "resolve_conflicts_on_update", lookup(each.value, "resolve_conflicts", null))
   service_account_role_arn    = lookup(each.value, "service_account_role_arn", null)
 
-  tags = module.label.tags
+  tags = merge(module.label.tags, each.value.additional_tags)
 
   depends_on = [
     var.addons_depends_on,
