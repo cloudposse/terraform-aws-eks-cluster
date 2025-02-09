@@ -29,9 +29,9 @@
 
 Terraform module to provision an [EKS](https://aws.amazon.com/eks/) cluster on AWS.
 <br/><br/>
-This Terraform module provisions a fully-configured AWS [EKS](https://aws.amazon.com/eks/) (Elastic Kubernetes Service) cluster. 
-It's engineered to integrate smoothly with [Karpenter](https://karpenter.sh/) and [EKS addons](https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html), 
-forming a critical part of [Cloud Posse's reference architecture](https://cloudposse.com/reference-architecture). 
+This Terraform module provisions a fully-configured AWS [EKS](https://aws.amazon.com/eks/) (Elastic Kubernetes Service) cluster.
+It's engineered to integrate smoothly with [Karpenter](https://karpenter.sh/) and [EKS addons](https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html),
+forming a critical part of [Cloud Posse's reference architecture](https://cloudposse.com/reference-architecture).
 Ideal for teams looking to deploy scalable and manageable Kubernetes clusters on AWS with minimal fuss.
 
 
@@ -66,7 +66,7 @@ The module provisions the following resources:
 
 For a complete example, see [examples/complete](examples/complete).
 
-For automated tests of the complete example using [bats](https://github.com/bats-core/bats-core) and [Terratest](https://github.com/gruntwork-io/terratest) (which tests and deploys the example on AWS), see [test/src](test/scc).
+For automated tests of the complete example using [bats](https://github.com/bats-core/bats-core) and [Terratest](https://github.com/gruntwork-io/terratest) (which tests and deploys the example on AWS), see [test/src](test/src).
 
 Other examples:
 
@@ -81,20 +81,20 @@ Other examples:
   # but in practice, you should use a static map of IAM users or roles that should have access to the cluster.
   # Granting access to the current user in this way is not recommended for production use.
   data "aws_caller_identity" "current" {}
-  
+
   # IAM session context converts an assumed role ARN into an IAM Role ARN.
   # Again, this is primarily to simplify the example, and in practice, you should use a static map of IAM users or roles.
   data "aws_iam_session_context" "current" {
     arn = data.aws_caller_identity.current.arn
   }
-  
+
   locals {
     # The usage of the specific kubernetes.io/cluster/* resource tags below are required
     # for EKS and Kubernetes to discover and manage networking resources
     # https://aws.amazon.com/premiumsupport/knowledge-center/eks-vpc-subnet-discovery/
     # https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/main/docs/deploy/subnet_discovery.md
     tags = { "kubernetes.io/cluster/${module.label.id}" = "shared" }
-  
+
     # required tags to make ALB ingress work https://docs.aws.amazon.com/eks/latest/userguide/alb-ingress.html
     public_subnets_additional_tags = {
       "kubernetes.io/role/elb" : 1
@@ -102,7 +102,7 @@ Other examples:
     private_subnets_additional_tags = {
       "kubernetes.io/role/internal-elb" : 1
     }
-  
+
     # Enable the IAM user creating the cluster to administer it,
     # without using the bootstrap_cluster_creator_admin_permissions option,
     # as an example of how to use the access_entry_map feature.
@@ -313,9 +313,9 @@ Module usage with two unmanaged worker groups:
 > To prevent this, follow the instructions in the [v1 to v2 migration path](./docs/migration-v1-v2.md).
 
 > [!NOTE]
-> Prior to v4 of this module, AWS did not provide an API to manage access to the EKS cluster, 
+> Prior to v4 of this module, AWS did not provide an API to manage access to the EKS cluster,
 > causing numerous challenges. With v4 of this module, it exclusively uses the AWS API, resolving
-> many issues you may read about that had affected prior versions. See the version 2 README and release notes 
+> many issues you may read about that had affected prior versions. See the version 2 README and release notes
 > for more information on the challenges and workarounds that were required prior to v3.
 
 > [!IMPORTANT]
