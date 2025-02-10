@@ -189,6 +189,7 @@ variable "addons" {
     create_timeout              = optional(string, null)
     update_timeout              = optional(string, null)
     delete_timeout              = optional(string, null)
+    additional_tags             = optional(map(string), {})
   }))
   description = <<-EOT
     Manages [`aws_eks_addon`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) resources.
@@ -197,6 +198,7 @@ variable "addons" {
     `resolve_conflicts` will be used instead. If `resolve_conflicts_on_create` is
     not set and `resolve_conflicts` is `PRESERVE`, `resolve_conflicts_on_create`
     will be set to `NONE`.
+    If `additional_tags` are specified, they are added to the standard resource tags.
     EOT
   default     = []
 }
@@ -307,10 +309,10 @@ variable "access_policy_associations" {
   type = list(object({
     principal_arn = string
     policy_arn    = string
-    access_scope = object({
+    access_scope = optional(object({
       type       = optional(string, "cluster")
       namespaces = optional(list(string))
-    })
+    }), {})
   }))
   description = <<-EOT
     List of AWS managed EKS access policies to associate with IAM principles.
