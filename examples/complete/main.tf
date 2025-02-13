@@ -115,6 +115,7 @@ module "eks_cluster" {
   bootstrap_self_managed_addons_enabled = var.bootstrap_self_managed_addons_enabled
   upgrade_policy                        = var.upgrade_policy
   zonal_shift_config                    = var.zonal_shift_config
+  cluster_compute_config                = var.cluster_compute_config
 
   access_entry_map = local.access_entry_map
   access_config = {

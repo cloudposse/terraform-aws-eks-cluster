@@ -1,6 +1,5 @@
 # tflint-ignore: terraform_unused_declarations
 variable "region" {
-
   type        = string
   description = "OBSOLETE (not needed): AWS Region"
   default     = null
@@ -29,6 +28,22 @@ variable "cluster_depends_on" {
   default     = null
 }
 
+variable "cluster_compute_config" {
+  type = object({
+    enabled       = optional(bool, false)
+    node_pools    = optional(list(string), [])
+    node_role_arn = optional(string, null)
+  })
+  description = <<-EOT
+    Configuration block with compute configuration for EKS Auto Mode
+
+    enabled: Request to enable or disable the compute capability on your EKS Auto Mode cluster. If the compute capability is enabled, EKS Auto Mode will create and delete EC2 Managed Instances in your Amazon Web Services account.
+    node_pools: Optional configuration for node pools that defines the compute resources for your EKS Auto Mode cluster. Valid options are general-purpose and system.
+    node_role_arn: Optional ARN of the IAM Role EKS will assign to EC2 Managed Instances in your EKS Auto Mode cluster.
+    EOT
+  default     = {}
+}
+
 variable "create_eks_service_role" {
   type        = bool
   description = "Set `false` to use existing `eks_cluster_service_role_arn` instead of creating one"
@@ -44,7 +59,6 @@ variable "eks_cluster_service_role_arn" {
     EOT
   default     = null
 }
-
 
 variable "kubernetes_version" {
   type        = string
