@@ -59,6 +59,6 @@ zonal_shift_config = {
 }
 
 cluster_compute_config = {
-  enabled = true
+  enabled = false
 }
 
