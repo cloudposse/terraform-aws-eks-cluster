@@ -14,6 +14,8 @@ locals {
   }
 
   cloudwatch_log_group_name = "/aws/eks/${module.label.id}/cluster"
+
+  auto_mode_enabled = var.cluster_auto_mode_enabled
 }
 
 module "label" {
@@ -56,12 +58,13 @@ resource "aws_kms_alias" "cluster" {
 resource "aws_eks_cluster" "default" {
   #bridgecrew:skip=BC_AWS_KUBERNETES_1:Allow permissive security group for public access, difficult to restrict without a VPN
   #bridgecrew:skip=BC_AWS_KUBERNETES_4:Let user decide on control plane logging, not necessary in non-production environments
-  count                         = local.enabled ? 1 : 0
-  name                          = module.label.id
-  tags                          = module.label.tags
-  role_arn                      = local.eks_service_role_arn
-  version                       = var.kubernetes_version
-  enabled_cluster_log_types     = var.enabled_cluster_log_types
+  count                     = local.enabled ? 1 : 0
+  name                      = module.label.id
+  tags                      = module.label.tags
+  role_arn                  = local.eks_service_role_arn
+  version                   = var.kubernetes_version
+  enabled_cluster_log_types = var.enabled_cluster_log_types
+  # Enabling EKS Auto Mode also requires that bootstrap_self_managed_addons is set to false
   bootstrap_self_managed_addons = var.bootstrap_self_managed_addons_enabled
 
   access_config {
@@ -69,11 +72,28 @@ resource "aws_eks_cluster" "default" {
     bootstrap_cluster_creator_admin_permissions = var.access_config.bootstrap_cluster_creator_admin_permissions
   }
 
+  # EKS Auto Mode
+dynamic "compute_config" {
+  for_each = local.auto_mode_enabled ? [1] : []
+
+  content {
+    enabled = true
+
+    # Only set if both node_pools and node_role_arn are passed
+    node_pools    = (var.node_pools != null && length(var.node_pools) > 0) ? var.node_pools : null
+    node_role_arn = (var.node_pools != null && length(var.node_pools) > 0) ? local.node_role_arn : null
+  }
+}
+
   lifecycle {
     # bootstrap_cluster_creator_admin_permissions is documented as only applying
     # to the initial creation of the cluster, and being unreliable afterward,
     # so we want to ignore it except at cluster creation time.
     ignore_changes = [access_config[0].bootstrap_cluster_creator_admin_permissions]
+    precondition {
+      condition     = !(local.auto_mode_enabled && var.bootstrap_self_managed_addons_enabled)
+      error_message = "EKS Auto Mode cannot be enabled at the same time as bootstrap_self_managed_addons. Please disable one of them."
+    }
   }
 
   dynamic "encryption_config" {
@@ -98,6 +118,7 @@ resource "aws_eks_cluster" "default" {
 
   dynamic "kubernetes_network_config" {
     for_each = local.use_ipv6 ? [] : compact([var.service_ipv4_cidr])
+
     content {
       service_ipv4_cidr = kubernetes_network_config.value
     }
@@ -105,8 +126,32 @@ resource "aws_eks_cluster" "default" {
 
   dynamic "kubernetes_network_config" {
     for_each = local.use_ipv6 ? [true] : []
+
     content {
       ip_family = "ipv6"
+    }
+  }
+
+  dynamic "kubernetes_network_config" {
+    for_each = local.auto_mode_enabled ? [1] : []
+
+    content {
+      dynamic "elastic_load_balancing" {
+        for_each = local.auto_mode_enabled ? [1] : []
+        content {
+          enabled = true
+        }
+      }
+    }
+  }
+
+  dynamic "storage_config" {
+    for_each = local.auto_mode_enabled ? [1] : []
+
+    content {
+      block_storage {
+        enabled = true
+      }
     }
   }
 
@@ -126,9 +171,14 @@ resource "aws_eks_cluster" "default" {
 
   depends_on = [
     aws_iam_role.default,
+    aws_iam_role.node,
     aws_iam_role_policy_attachment.cluster_elb_service_role,
     aws_iam_role_policy_attachment.amazon_eks_cluster_policy,
     aws_iam_role_policy_attachment.amazon_eks_service_policy,
+    aws_iam_role_policy_attachment.auto_mode_policies,
+    aws_iam_role_policy_attachment.amazon_eks_cluster_policy,
+    aws_iam_role_policy_attachment.amazon_ec2_container_registry_read_only,
+    aws_iam_role_policy_attachment.amazon_eks_cni_policy,
     aws_kms_alias.cluster,
     aws_cloudwatch_log_group.default,
     var.associated_security_group_ids,
