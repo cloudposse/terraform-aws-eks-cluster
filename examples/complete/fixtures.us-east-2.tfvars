@@ -28,7 +28,7 @@ kubernetes_labels = {}
 cluster_encryption_config_enabled = true
 
 # When updating the Kubernetes version, also update the API and client-go version in test/src/go.mod
-kubernetes_version = "1.29"
+kubernetes_version = "1.32"
 
 private_ipv6_enabled = false
 
