@@ -412,14 +412,4 @@ variable "node_role_arn" {
   EOT
   type        = string
   default     = null
-
-  validation {
-    condition = (
-      var.create_node_role || (
-        (length(var.node_pools) == 0) ||
-        (var.node_role_arn != null && length(var.node_role_arn) > 0)
-      )
-    )
-    error_message = "If create_node_role is false and node_pools is set, node_role_arn must also be provided."
-  }
 }

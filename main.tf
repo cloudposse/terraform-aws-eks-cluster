@@ -73,17 +73,17 @@ resource "aws_eks_cluster" "default" {
   }
 
   # EKS Auto Mode
-dynamic "compute_config" {
-  for_each = local.auto_mode_enabled ? [1] : []
+  dynamic "compute_config" {
+    for_each = local.auto_mode_enabled ? [1] : []
 
-  content {
-    enabled = true
+    content {
+      enabled = true
 
-    # Only set if both node_pools and node_role_arn are passed
-    node_pools    = (var.node_pools != null && length(var.node_pools) > 0) ? var.node_pools : null
-    node_role_arn = (var.node_pools != null && length(var.node_pools) > 0) ? local.node_role_arn : null
+      # Only set if both node_pools and node_role_arn are passed
+      node_pools    = (var.node_pools != null && length(var.node_pools) > 0) ? var.node_pools : null
+      node_role_arn = (var.node_pools != null && length(var.node_pools) > 0) ? local.node_role_arn : null
+    }
   }
-}
 
   lifecycle {
     # bootstrap_cluster_creator_admin_permissions is documented as only applying
@@ -93,6 +93,14 @@ dynamic "compute_config" {
     precondition {
       condition     = !(local.auto_mode_enabled && var.bootstrap_self_managed_addons_enabled)
       error_message = "EKS Auto Mode cannot be enabled at the same time as bootstrap_self_managed_addons. Please disable one of them."
+    }
+    precondition {
+      condition = (
+        var.create_node_role ||
+        (length(var.node_pools) == 0) ||
+        (var.node_role_arn != null && length(var.node_role_arn) > 0)
+      )
+      error_message = "If create_node_role is false and node_pools is set, node_role_arn must also be provided."
     }
   }
 
