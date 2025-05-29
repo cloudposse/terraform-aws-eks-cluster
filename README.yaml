@@ -13,7 +13,7 @@ badges:
     url: https://github.com/cloudposse/terraform-aws-eks-cluster/commits
   - name: Slack Community
     image: https://slack.cloudposse.com/for-the-badge.svg
-    url: https://slack.cloudposse.com
+    url: https://cloudposse.com/slack
 
 # List any related terraform modules that this module may be used with or that this module depends on.
 related:
@@ -328,14 +328,5 @@ usage: |-
   > many issues you may read about that had affected prior versions. See the version 2 README and release notes
   > for more information on the challenges and workarounds that were required prior to v3.
 
-include:
-  - docs/targets.md
-  - docs/terraform.md
-
-contributors:
-  - name: "Erik Osterman"
-    github: "osterman"
-  - name: "Andriy Knysh"
-    github: "aknysh"
-  - name: "Nuru"
-    github: "Nuru"
+include: []
+contributors: []
