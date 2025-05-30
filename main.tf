@@ -15,6 +15,8 @@ locals {
 
   cloudwatch_log_group_name = "/aws/eks/${module.label.id}/cluster"
 
+  node_role_arn_trimmed = can(trimspace(var.node_role_arn)) ? trimspace(var.node_role_arn) : ""
+
   auto_mode_enabled = var.cluster_auto_mode_enabled
 }
 
@@ -97,8 +99,8 @@ resource "aws_eks_cluster" "default" {
     precondition {
       condition = (
         var.create_node_role ||
-        (length(var.node_pools) == 0) ||
-        (var.node_role_arn != null && length(var.node_role_arn) > 0)
+        length(var.node_pools) == 0 ||
+        local.node_role_arn_trimmed != ""
       )
       error_message = "If create_node_role is false and node_pools is set, node_role_arn must also be provided."
     }
