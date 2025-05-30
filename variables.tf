@@ -1,6 +1,5 @@
 # tflint-ignore: terraform_unused_declarations
 variable "region" {
-
   type        = string
   description = "OBSOLETE (not needed): AWS Region"
   default     = null
@@ -379,4 +378,38 @@ variable "custom_ingress_rules" {
   description = <<-EOT
     A List of Objects, which are custom security group rules that
     EOT
+}
+
+variable "cluster_auto_mode_enabled" {
+  type        = bool
+  description = "Set to true to enable EKS Auto Mode. When enabled, EKS will manage compute automatically using node_pools and node_role_arn."
+  default     = false
+}
+
+variable "node_pools" {
+  description = "Optional node pools for EKS Auto Mode. Allowed values: general-purpose, system"
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition = alltrue([
+      for pool in var.node_pools : contains(["general-purpose", "system"], pool)
+    ])
+    error_message = "node_pools must contain only 'general-purpose' and/or 'system'."
+  }
+}
+
+variable "create_node_role" {
+  type        = bool
+  description = "Set to false to use an existing node_role_arn instead of creating one."
+  default     = true
+}
+
+variable "node_role_arn" {
+  description = <<-EOT
+    The ARN of an IAM role for EKS nodes to use that provides permissions for EC2 Managed Instances.
+    Required if `create_node_role` is `false` and `node_pools` is set (non-empty).
+  EOT
+  type        = string
+  default     = null
 }
