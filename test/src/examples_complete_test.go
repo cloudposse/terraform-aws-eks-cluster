@@ -213,3 +213,74 @@ func TestExamplesCompleteDisabled(t *testing.T) {
 	match := re.FindString(results)
 	assert.Equal(t, "Resources: 0 added, 0 changed, 0 destroyed.", match, "Applying with enabled=false should not create any resources")
 }
+
+func TestExamplesAutoMode(t *testing.T) {
+	// Generate a random ID for resource uniqueness
+	randId := strings.ToLower(random.UniqueId())
+	attributes := []string{randId}
+
+	// Configure Terraform options for the test
+	terraformOptions := &terraform.Options{
+		TerraformDir: "../../examples/complete",
+		Upgrade:      true,
+		VarFiles:     []string{"fixtures.us-east-2.tfvars"},
+		Vars: map[string]interface{}{
+			"attributes": attributes,
+			"cluster_auto_mode_enabled": true,                  // Enable EKS auto mode
+			"bootstrap_self_managed_addons_enabled": false,     // Disable bootstrap addons
+			"create_node_role": true,                           // Create node IAM role
+			"node_pools": []string{"system", "general-purpose"},// Define node pools
+		},
+	}
+
+	// Ensure resources are destroyed on test crash or completion
+	defer runtime.HandleCrash(func(i interface{}) {
+		terraform.Destroy(t, terraformOptions)
+	})
+	defer terraform.Destroy(t, terraformOptions)
+
+	// Initialize and apply Terraform configuration
+	terraform.InitAndApply(t, terraformOptions)
+
+	// Validate VPC CIDR output
+	vpcCidr := terraform.Output(t, terraformOptions, "vpc_cidr")
+	assert.Equal(t, "172.16.0.0/16", vpcCidr)
+
+	// Validate private subnet CIDRs
+	privateSubnetCidrs := terraform.OutputList(t, terraformOptions, "private_subnet_cidrs")
+	assert.Equal(t, []string{"172.16.0.0/19", "172.16.32.0/19"}, privateSubnetCidrs)
+
+	// Validate public subnet CIDRs
+	publicSubnetCidrs := terraform.OutputList(t, terraformOptions, "public_subnet_cidrs")
+	assert.Equal(t, []string{"172.16.96.0/19", "172.16.128.0/19"}, publicSubnetCidrs)
+
+	// Validate EKS cluster ID output
+	eksClusterId := terraform.Output(t, terraformOptions, "eks_cluster_id")
+	assert.Equal(t, "eg-test-eks-"+randId+"-cluster", eksClusterId)
+
+	// In auto mode, node group outputs should be empty
+	eksNodeGroupId := terraform.Output(t, terraformOptions, "eks_node_group_id")
+	assert.Equal(t, "", eksNodeGroupId)
+
+	eksNodeGroupRoleName := terraform.Output(t, terraformOptions, "eks_node_group_role_name")
+	assert.Equal(t, "", eksNodeGroupRoleName)
+
+	eksNodeGroupStatus := terraform.Output(t, terraformOptions, "eks_node_group_status")
+	assert.Equal(t, "", eksNodeGroupStatus)
+
+	// Create AWS session for EKS API calls
+	sess := session.Must(session.NewSession(&aws.Config{
+		Region: aws.String("us-east-2"),
+	}))
+
+	// Describe the EKS cluster to verify its status
+	eksSvc := eks.New(sess)
+	input := &eks.DescribeClusterInput{
+		Name: aws.String("eg-test-eks-" + randId + "-cluster"),
+	}
+	result, err := eksSvc.DescribeCluster(input)
+	assert.NoError(t, err)
+	assert.Equal(t, "ACTIVE", aws.StringValue(result.Cluster.Status), "Expected EKS cluster status to be 'ACTIVE', but got '%s'", aws.StringValue(result.Cluster.Status))
+
+	fmt.Println("EKS cluster is available (Auto Mode)")
+}

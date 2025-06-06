@@ -114,7 +114,12 @@ module "eks_cluster" {
   addons_depends_on                     = [module.eks_node_group]
   bootstrap_self_managed_addons_enabled = var.bootstrap_self_managed_addons_enabled
   upgrade_policy                        = var.upgrade_policy
-  zonal_shift_config                    = var.zonal_shift_config
+  zonal_shift_config                     = var.zonal_shift_config
+
+  cluster_auto_mode_enabled               = var.cluster_auto_mode_enabled
+
+  create_node_role                        = var.create_node_role
+  node_pools                              = var.node_pools
 
   access_entry_map = local.access_entry_map
   access_config = {
@@ -135,6 +140,7 @@ module "eks_cluster" {
 }
 
 module "eks_node_group" {
+  count   = var.cluster_auto_mode_enabled ? 0 : 1
   source  = "cloudposse/eks-node-group/aws"
   version = "3.2.0"
 

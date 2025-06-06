@@ -1,4 +1,5 @@
 variable "region" {
+
   type        = string
   description = "AWS Region"
 }
@@ -10,7 +11,7 @@ variable "availability_zones" {
 
 variable "kubernetes_version" {
   type        = string
-  default     = "1.29"
+  default     = "1.32"
   description = "Desired Kubernetes master version. If you do not specify a value, the latest available version is used"
 }
 
@@ -135,4 +136,29 @@ variable "private_ipv6_enabled" {
   type        = bool
   default     = false
   description = "Whether to use IPv6 addresses for the pods in the node group"
+}
+
+variable "cluster_auto_mode_enabled" {
+  type        = bool
+  default     = false
+  description = "Set to true to enable EKS Auto Mode"
+}
+
+variable "node_pools" {
+  type        = list(string)
+  description = "Node pools for EKS Auto Mode. Valid values are 'general-purpose' and 'system'. Optional."
+  default     = []
+}
+
+variable "create_node_role" {
+  type        = bool
+  description = "Set to false to use an existing node_role_arn instead of creating one"
+  default     = true
+}
+
+
+variable "node_role_arn" {
+  type        = string
+  description = "ARN of the node IAM role for Auto Mode. Required if node_pools is set."
+  default     = null
 }
