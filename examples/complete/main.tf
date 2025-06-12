@@ -20,6 +20,8 @@ data "aws_iam_session_context" "current" {
 locals {
   enabled = module.this.enabled
 
+  auto_mode_enabled = var.cluster_auto_mode_enabled
+
   private_ipv6_enabled = var.private_ipv6_enabled
 
   # The usage of the specific kubernetes.io/cluster/* resource tags below are required
@@ -116,6 +118,11 @@ module "eks_cluster" {
   upgrade_policy                        = var.upgrade_policy
   zonal_shift_config                    = var.zonal_shift_config
 
+  cluster_auto_mode_enabled = local.auto_mode_enabled
+
+  create_node_role = var.create_node_role
+  node_pools       = var.node_pools
+
   access_entry_map = local.access_entry_map
   access_config = {
     authentication_mode                         = "API"
@@ -135,6 +142,7 @@ module "eks_cluster" {
 }
 
 module "eks_node_group" {
+  enabled = local.auto_mode_enabled
   source  = "cloudposse/eks-node-group/aws"
   version = "3.2.0"
 
