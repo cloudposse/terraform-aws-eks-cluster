@@ -76,7 +76,7 @@ resource "aws_eks_cluster" "default" {
 
   # EKS Auto Mode
   dynamic "compute_config" {
-    for_each = local.auto_mode_enabled ? [1] : []
+    for_each = local.auto_mode_enabled ? [true] : []
 
     content {
       enabled = true
@@ -143,11 +143,11 @@ resource "aws_eks_cluster" "default" {
   }
 
   dynamic "kubernetes_network_config" {
-    for_each = local.auto_mode_enabled ? [1] : []
+    for_each = local.auto_mode_enabled ? [true] : []
 
     content {
       dynamic "elastic_load_balancing" {
-        for_each = local.auto_mode_enabled ? [1] : []
+        for_each = local.auto_mode_enabled ? [true] : []
         content {
           enabled = true
         }
@@ -156,7 +156,7 @@ resource "aws_eks_cluster" "default" {
   }
 
   dynamic "storage_config" {
-    for_each = local.auto_mode_enabled ? [1] : []
+    for_each = local.auto_mode_enabled ? [true] : []
 
     content {
       block_storage {
