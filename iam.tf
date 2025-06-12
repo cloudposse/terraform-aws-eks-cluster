@@ -18,7 +18,7 @@ data "aws_iam_policy_document" "assume_role" {
 
   statement {
     effect  = "Allow"
-    actions = concat(["sts:AssumeRole"], var.cluster_auto_mode_enabled ? ["sts:TagSession"] : [])
+    actions = concat(["sts:AssumeRole"], local.auto_mode_enabled ? ["sts:TagSession"] : [])
 
     principals {
       type        = "Service"
@@ -100,7 +100,7 @@ resource "aws_iam_role_policy_attachment" "cluster_elb_service_role" {
 }
 
 resource "aws_iam_role_policy_attachment" "auto_mode_policies" {
-  count      = var.cluster_auto_mode_enabled && local.create_eks_service_role ? length(local.auto_mode_policies) : 0
+  count      = local.auto_mode_enabled && local.create_eks_service_role ? length(local.auto_mode_policies) : 0
   policy_arn = element(local.auto_mode_policies, count.index)
   role       = one(aws_iam_role.default[*].name)
 }
