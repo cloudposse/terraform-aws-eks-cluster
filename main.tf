@@ -176,7 +176,7 @@ resource "aws_eks_addon" "cluster" {
   service_account_role_arn    = lookup(each.value, "service_account_role_arn", null)
 
   dynamic "pod_identity_association" {
-    for_each = lookup(each.value, "pod_identity_association", {})
+    for_each = merge({}, lookup(each.value, "pod_identity_association", {}))
 
     content {
       service_account = pod_identity_association.key
