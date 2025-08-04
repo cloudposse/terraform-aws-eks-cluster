@@ -15,6 +15,8 @@ enabled_cluster_log_types = ["audit"]
 
 cluster_log_retention_period = 7
 
+ami_type = "AL2023_x86_64_STANDARD"
+
 instance_types = ["t3.small"]
 
 desired_size = 2
@@ -28,7 +30,7 @@ kubernetes_labels = {}
 cluster_encryption_config_enabled = true
 
 # When updating the Kubernetes version, also update the API and client-go version in test/src/go.mod
-kubernetes_version = "1.29"
+kubernetes_version = "1.33"
 
 private_ipv6_enabled = false
 

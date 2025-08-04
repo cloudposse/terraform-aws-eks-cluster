@@ -141,6 +141,7 @@ module "eks_node_group" {
   # node group <= 3.2 requires a non-empty list of subnet_ids, even when disabled
   subnet_ids        = local.enabled ? module.subnets.public_subnet_ids : ["filler_string_for_enabled_is_false"]
   cluster_name      = module.eks_cluster.eks_cluster_id
+  ami_type          = var.ami_type
   instance_types    = var.instance_types
   desired_size      = var.desired_size
   min_size          = var.min_size

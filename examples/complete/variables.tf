@@ -32,6 +32,11 @@ variable "oidc_provider_enabled" {
   description = "Create an IAM OIDC identity provider for the cluster, then you can create IAM roles to associate with a service account in the cluster, instead of using `kiam` or `kube2iam`. For more information, see https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html"
 }
 
+variable "ami_type" {
+  type        = string
+  description = "The AMI type to use for EKS node group instances (e.g., AL2_ARM_64, AL2_x86_64, /etc)."
+}
+
 variable "instance_types" {
   type        = list(string)
   description = "Set of instance types associated with the EKS Node Group. Defaults to [\"t3.medium\"]. Terraform will only perform drift detection if a configuration value is provided"

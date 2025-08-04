@@ -172,6 +172,7 @@ variable "addons" {
     resolve_conflicts_on_create = optional(string, null)
     resolve_conflicts_on_update = optional(string, null)
     service_account_role_arn    = optional(string, null)
+    pod_identity_association    = optional(map(string), {})
     create_timeout              = optional(string, null)
     update_timeout              = optional(string, null)
     delete_timeout              = optional(string, null)

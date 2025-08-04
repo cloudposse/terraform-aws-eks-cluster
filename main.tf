@@ -175,6 +175,15 @@ resource "aws_eks_addon" "cluster" {
   resolve_conflicts_on_update = lookup(each.value, "resolve_conflicts_on_update", lookup(each.value, "resolve_conflicts", null))
   service_account_role_arn    = lookup(each.value, "service_account_role_arn", null)
 
+  dynamic "pod_identity_association" {
+    for_each = merge({}, lookup(each.value, "pod_identity_association", {}))
+
+    content {
+      service_account = pod_identity_association.key
+      role_arn        = pod_identity_association.value
+    }
+  }
+
   tags = merge(module.label.tags, each.value.additional_tags)
 
   depends_on = [
