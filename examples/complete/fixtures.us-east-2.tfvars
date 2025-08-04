@@ -15,6 +15,8 @@ enabled_cluster_log_types = ["audit"]
 
 cluster_log_retention_period = 7
 
+ami_type = "AL2023_x86_64_STANDARD"
+
 instance_types = ["t3.small"]
 
 desired_size = 2
