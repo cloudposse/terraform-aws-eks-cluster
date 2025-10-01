@@ -110,6 +110,28 @@ resource "aws_eks_cluster" "default" {
     }
   }
 
+  dynamic "remote_network_config" {
+    for_each = var.remote_network_config != null ? [var.remote_network_config] : []
+
+    content {
+      dynamic "remote_node_networks" {
+        for_each = [remote_network_config.value.remote_node_networks_cidrs]
+
+        content {
+          cidrs = remote_network_config.value.remote_node_networks_cidrs
+        }
+      }
+
+      dynamic "remote_pod_networks" {
+        for_each = remote_network_config.value.remote_pod_networks_cidrs != null ? [remote_network_config.value.remote_pod_networks_cidrs] : []
+
+        content {
+          cidrs = remote_network_config.value.remote_pod_networks_cidrs
+        }
+      }
+    }
+  }
+
   dynamic "upgrade_policy" {
     for_each = var.upgrade_policy != null ? [var.upgrade_policy] : []
     content {

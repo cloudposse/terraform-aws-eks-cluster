@@ -59,3 +59,9 @@ upgrade_policy = {
 zonal_shift_config = {
   enabled = true
 }
+
+
+remote_network_config = {
+  remote_node_networks_cidrs = ["10.255.0.0/16"]
+  remote_pod_networks_cidrs  = ["192.168.0.0/16"]
+}

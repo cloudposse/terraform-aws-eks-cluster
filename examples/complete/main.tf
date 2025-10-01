@@ -129,6 +129,8 @@ module "eks_cluster" {
 
   kubernetes_network_ipv6_enabled = local.private_ipv6_enabled
 
+  remote_network_config = local.remote_network_config
+
   context = module.this.context
 
   cluster_depends_on = [module.subnets]
