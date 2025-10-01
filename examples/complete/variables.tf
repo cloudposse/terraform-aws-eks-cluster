@@ -141,3 +141,12 @@ variable "private_ipv6_enabled" {
   default     = false
   description = "Whether to use IPv6 addresses for the pods in the node group"
 }
+
+variable "remote_network_config" {
+  description = "Configuration block for the cluster remote network configuration"
+  type = object({
+    remote_node_networks_cidrs = list(string)
+    remote_pod_networks_cidrs  = optional(list(string))
+  })
+  default = null
+}

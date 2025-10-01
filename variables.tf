@@ -381,3 +381,12 @@ variable "custom_ingress_rules" {
     A List of Objects, which are custom security group rules that
     EOT
 }
+
+variable "remote_network_config" {
+  description = "Configuration block for the cluster remote network configuration"
+  type = object({
+    remote_node_networks_cidrs = list(string)
+    remote_pod_networks_cidrs  = optional(list(string))
+  })
+  default = null
+}
