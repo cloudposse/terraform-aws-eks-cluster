@@ -25,8 +25,8 @@ locals {
   auto_mode_all_disabled = !anytrue(local.auto_mode_flags)
 
   # Auto-set bootstrap_self_managed_addons to false when Auto Mode is enabled, unless overridden
-  effective_bootstrap_self_managed_addons = coalesce(
-    var.bootstrap_self_managed_addons_enabled,
+  # When user provides an explicit value, use it; otherwise default to false for Auto Mode, null otherwise
+  effective_bootstrap_self_managed_addons = var.bootstrap_self_managed_addons_enabled != null ? var.bootstrap_self_managed_addons_enabled : (
     local.auto_mode_all_enabled ? false : null
   )
 }
