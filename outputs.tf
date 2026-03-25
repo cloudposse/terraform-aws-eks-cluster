@@ -70,6 +70,11 @@ output "eks_addons_versions" {
   } : {}
 }
 
+output "auto_mode_enabled" {
+  description = "Whether EKS Auto Mode is enabled (all three capabilities: compute, storage, networking)"
+  value       = local.auto_mode_all_enabled
+}
+
 output "cluster_encryption_config_enabled" {
   description = "If true, Cluster Encryption Configuration is enabled"
   value       = var.cluster_encryption_config_enabled

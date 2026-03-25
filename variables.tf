@@ -201,9 +201,49 @@ variable "addons_depends_on" {
 }
 
 variable "bootstrap_self_managed_addons_enabled" {
-  description = "Manages bootstrap of default networking addons after cluster has been created"
+  description = "Manages bootstrap of default networking addons after cluster has been created. Must be false when Auto Mode is enabled. Changing this forces cluster recreation."
   type        = bool
   default     = null
+}
+
+variable "compute_config" {
+  description = <<-EOT
+    EKS Auto Mode compute configuration. When enabled, AWS manages node
+    provisioning via managed Karpenter.
+  EOT
+  type = object({
+    enabled       = optional(bool, false)
+    node_pools    = optional(set(string), ["general-purpose", "system"])
+    node_role_arn = optional(string, null)
+  })
+  default  = {}
+  nullable = false
+}
+
+variable "storage_config" {
+  description = <<-EOT
+    EKS Auto Mode storage configuration. When block_storage is enabled,
+    AWS manages EBS volumes via the ebs.csi.eks.amazonaws.com provisioner.
+  EOT
+  type = object({
+    block_storage = optional(object({
+      enabled = optional(bool, false)
+    }), {})
+  })
+  default  = {}
+  nullable = false
+}
+
+variable "elastic_load_balancing" {
+  description = <<-EOT
+    EKS Auto Mode elastic load balancing configuration. When enabled,
+    AWS manages ALB/NLB creation for Services and Ingress resources.
+  EOT
+  type = object({
+    enabled = optional(bool, false)
+  })
+  default  = {}
+  nullable = false
 }
 
 variable "upgrade_policy" {

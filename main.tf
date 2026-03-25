@@ -14,6 +14,28 @@ locals {
   }
 
   cloudwatch_log_group_name = "/aws/eks/${module.label.id}/cluster"
+
+  # EKS Auto Mode
+  auto_mode_flags = [
+    var.compute_config.enabled,
+    var.storage_config.block_storage.enabled,
+    var.elastic_load_balancing.enabled,
+  ]
+  auto_mode_all_enabled  = alltrue(local.auto_mode_flags)
+  auto_mode_all_disabled = !anytrue(local.auto_mode_flags)
+
+  # Auto-set bootstrap_self_managed_addons to false when Auto Mode is enabled, unless overridden
+  effective_bootstrap_self_managed_addons = coalesce(
+    var.bootstrap_self_managed_addons_enabled,
+    local.auto_mode_all_enabled ? false : null
+  )
+}
+
+check "auto_mode_consistency" {
+  assert {
+    condition     = local.auto_mode_all_enabled || local.auto_mode_all_disabled
+    error_message = "compute_config.enabled, storage_config.block_storage.enabled, and elastic_load_balancing.enabled must all be true or all be false."
+  }
 }
 
 module "label" {
@@ -62,7 +84,7 @@ resource "aws_eks_cluster" "default" {
   role_arn                      = local.eks_service_role_arn
   version                       = var.kubernetes_version
   enabled_cluster_log_types     = var.enabled_cluster_log_types
-  bootstrap_self_managed_addons = var.bootstrap_self_managed_addons_enabled
+  bootstrap_self_managed_addons = local.effective_bootstrap_self_managed_addons
 
   access_config {
     authentication_mode                         = var.access_config.authentication_mode
@@ -96,17 +118,33 @@ resource "aws_eks_cluster" "default" {
     public_access_cidrs    = var.public_access_cidrs
   }
 
+  # IPv4 kubernetes_network_config: render when service_ipv4_cidr is set or ELB is enabled (and not IPv6)
   dynamic "kubernetes_network_config" {
-    for_each = local.use_ipv6 ? [] : compact([var.service_ipv4_cidr])
+    for_each = !local.use_ipv6 && (var.service_ipv4_cidr != null || var.elastic_load_balancing.enabled) ? [true] : []
     content {
-      service_ipv4_cidr = kubernetes_network_config.value
+      service_ipv4_cidr = var.service_ipv4_cidr
+
+      dynamic "elastic_load_balancing" {
+        for_each = var.elastic_load_balancing.enabled ? [true] : []
+        content {
+          enabled = true
+        }
+      }
     }
   }
 
+  # IPv6 kubernetes_network_config
   dynamic "kubernetes_network_config" {
     for_each = local.use_ipv6 ? [true] : []
     content {
       ip_family = "ipv6"
+
+      dynamic "elastic_load_balancing" {
+        for_each = var.elastic_load_balancing.enabled ? [true] : []
+        content {
+          enabled = true
+        }
+      }
     }
   }
 
@@ -143,6 +181,25 @@ resource "aws_eks_cluster" "default" {
     for_each = var.zonal_shift_config != null ? [var.zonal_shift_config] : []
     content {
       enabled = zonal_shift_config.value.enabled
+    }
+  }
+
+  # EKS Auto Mode configuration
+  dynamic "compute_config" {
+    for_each = var.compute_config.enabled ? [var.compute_config] : []
+    content {
+      enabled       = true
+      node_pools    = compute_config.value.node_pools
+      node_role_arn = compute_config.value.node_role_arn
+    }
+  }
+
+  dynamic "storage_config" {
+    for_each = var.storage_config.block_storage.enabled ? [var.storage_config] : []
+    content {
+      block_storage {
+        enabled = true
+      }
     }
   }
 

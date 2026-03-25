@@ -8,8 +8,11 @@ data "aws_iam_policy_document" "assume_role" {
   count = local.create_eks_service_role ? 1 : 0
 
   statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
+    effect = "Allow"
+    actions = compact(concat(
+      ["sts:AssumeRole"],
+      local.auto_mode_all_enabled ? ["sts:TagSession"] : []
+    ))
 
     principals {
       type        = "Service"
@@ -86,5 +89,22 @@ resource "aws_iam_role_policy_attachment" "cluster_elb_service_role" {
   count = local.create_eks_service_role ? 1 : 0
 
   policy_arn = one(aws_iam_policy.cluster_elb_service_role[*].arn)
+  role       = one(aws_iam_role.default[*].name)
+}
+
+# EKS Auto Mode requires additional cluster-level IAM policies
+locals {
+  auto_mode_cluster_policies = local.create_eks_service_role && local.auto_mode_all_enabled ? toset([
+    "arn:${one(data.aws_partition.current[*].partition)}:iam::aws:policy/AmazonEKSComputePolicy",
+    "arn:${one(data.aws_partition.current[*].partition)}:iam::aws:policy/AmazonEKSBlockStoragePolicy",
+    "arn:${one(data.aws_partition.current[*].partition)}:iam::aws:policy/AmazonEKSLoadBalancingPolicy",
+    "arn:${one(data.aws_partition.current[*].partition)}:iam::aws:policy/AmazonEKSNetworkingPolicy",
+  ]) : toset([])
+}
+
+resource "aws_iam_role_policy_attachment" "auto_mode" {
+  for_each = local.auto_mode_cluster_policies
+
+  policy_arn = each.value
   role       = one(aws_iam_role.default[*].name)
 }
