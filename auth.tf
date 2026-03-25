@@ -3,6 +3,15 @@ locals {
   # Extract the cluster certificate for use in OIDC configuration
   certificate_authority_data = try(aws_eks_cluster.default[0].certificate_authority[0]["data"], "")
 
+  # When Auto Mode is enabled, EKS automatically creates the access entry for the node role.
+  # Filter it out to avoid a 409 ResourceInUseException.
+  linux_node_arns = lookup(var.access_entries_for_nodes, "EC2_LINUX", [])
+  filtered_linux_node_arns = local.auto_mode_all_enabled ? [
+    for arn in local.linux_node_arns : arn if arn != try(var.compute_config.node_role_arn, null)
+  ] : local.linux_node_arns
+
+  windows_node_arns = lookup(var.access_entries_for_nodes, "EC2_WINDOWS", [])
+
   eks_policy_short_abbreviation_map = {
     # List available policies with `aws eks list-access-policies --output table`
 
@@ -103,20 +112,20 @@ resource "aws_eks_access_entry" "standard" {
 }
 
 resource "aws_eks_access_entry" "linux" {
-  count = local.enabled ? length(lookup(var.access_entries_for_nodes, "EC2_LINUX", [])) : 0
+  count = local.enabled ? length(local.filtered_linux_node_arns) : 0
 
   cluster_name  = local.eks_cluster_id
-  principal_arn = var.access_entries_for_nodes.EC2_LINUX[count.index]
+  principal_arn = local.filtered_linux_node_arns[count.index]
   type          = "EC2_LINUX"
 
   tags = module.this.tags
 }
 
 resource "aws_eks_access_entry" "windows" {
-  count = local.enabled ? length(lookup(var.access_entries_for_nodes, "EC2_WINDOWS", [])) : 0
+  count = local.enabled ? length(local.windows_node_arns) : 0
 
   cluster_name  = local.eks_cluster_id
-  principal_arn = var.access_entries_for_nodes.EC2_WINDOWS[count.index]
+  principal_arn = local.windows_node_arns[count.index]
   type          = "EC2_WINDOWS"
 
   tags = module.this.tags
