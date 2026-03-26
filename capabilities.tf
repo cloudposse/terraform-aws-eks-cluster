@@ -12,15 +12,17 @@ locals {
     for k, v in var.capabilities : k => v if local.enabled && v.enabled
   }
 
-  # Keys of capabilities that need auto-created IAM roles
+  # Keys of capabilities that need auto-created IAM roles.
+  # Uses create_iam_role (a static bool) instead of role_arn == null
+  # to ensure for_each keys are always known at plan time.
   capability_keys_needing_roles = toset([
-    for k, v in var.capabilities : k if local.enabled && v.enabled && v.role_arn == null
+    for k, v in var.capabilities : k if local.enabled && v.enabled && v.create_iam_role
   ])
 
   # Final role ARN map: auto-created or user-provided
   capability_role_arns = {
     for k in local.enabled_capability_keys : k => (
-      var.capabilities[k].role_arn != null ? var.capabilities[k].role_arn : aws_iam_role.capability[k].arn
+      var.capabilities[k].create_iam_role ? aws_iam_role.capability[k].arn : var.capabilities[k].role_arn
     )
   }
 }

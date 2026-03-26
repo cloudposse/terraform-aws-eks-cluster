@@ -251,8 +251,10 @@ variable "capabilities" {
     Map of EKS Capabilities to enable on the cluster. Each key is the capability
     name (must be unique within the cluster). Supported types: ACK, ARGOCD, KRO.
 
-    When `role_arn` is null, an IAM role with a trust policy for
-    `capabilities.eks.amazonaws.com` is automatically created.
+    When `create_iam_role` is true (default) and `role_arn` is null, an IAM
+    role with a trust policy for `capabilities.eks.amazonaws.com` is
+    automatically created. Set `create_iam_role = false` and provide `role_arn`
+    when the calling module creates its own IAM roles (avoids plan-time unknowns).
 
     The `configuration` block is only applicable to ARGOCD capabilities.
     ACK and KRO do not currently support configuration.
@@ -260,6 +262,7 @@ variable "capabilities" {
   type = map(object({
     enabled                   = optional(bool, true)
     type                      = string # ACK, ARGOCD, KRO
+    create_iam_role           = optional(bool, true)
     role_arn                  = optional(string, null)
     delete_propagation_policy = optional(string, "RETAIN")
     configuration = optional(object({
