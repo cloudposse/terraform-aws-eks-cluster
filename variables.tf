@@ -268,10 +268,10 @@ variable "capabilities" {
     configuration = optional(object({
       argo_cd = optional(object({
         namespace = optional(string, "argocd")
-        aws_idc = optional(object({
+        aws_idc = object({
           idc_instance_arn = string
           idc_region       = optional(string, null)
-        }), null)
+        })
         network_access = optional(object({
           vpce_ids = optional(list(string), [])
         }), null)

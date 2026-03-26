@@ -79,12 +79,10 @@ resource "aws_eks_capability" "default" {
         content {
           namespace = argo_cd.value.namespace
 
-          dynamic "aws_idc" {
-            for_each = argo_cd.value.aws_idc != null ? [argo_cd.value.aws_idc] : []
-            content {
-              idc_instance_arn = aws_idc.value.idc_instance_arn
-              idc_region       = aws_idc.value.idc_region
-            }
+          # aws_idc is required by the provider when configuring Argo CD
+          aws_idc {
+            idc_instance_arn = argo_cd.value.aws_idc.idc_instance_arn
+            idc_region       = argo_cd.value.aws_idc.idc_region
           }
 
           dynamic "network_access" {
