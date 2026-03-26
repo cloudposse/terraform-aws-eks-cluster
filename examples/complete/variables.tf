@@ -142,6 +142,12 @@ variable "private_ipv6_enabled" {
   description = "Whether to use IPv6 addresses for the pods in the node group"
 }
 
+variable "auto_mode_enabled" {
+  type        = bool
+  default     = false
+  description = "Set to true to enable EKS Auto Mode"
+}
+
 variable "remote_network_config" {
   description = "Configuration block for the cluster remote network configuration"
   type = object({
