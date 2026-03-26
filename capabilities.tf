@@ -68,13 +68,17 @@ resource "aws_eks_capability" "default" {
   tags                      = module.label.tags
 
   dynamic "configuration" {
-    for_each = var.capabilities[each.value].configuration != null && var.capabilities[each.value].type == "ARGOCD" ? [var.capabilities[each.value].configuration] : []
+    # The AWS API requires configuration with argo_cd and aws_idc for ARGOCD capabilities.
+    # Skip the entire configuration block if aws_idc is not provided -- the capability
+    # cannot be created without it. Provide aws_idc in your stack config to enable.
+    for_each = (
+      var.capabilities[each.value].type == "ARGOCD" &&
+      var.capabilities[each.value].configuration != null &&
+      try(var.capabilities[each.value].configuration.argo_cd.aws_idc, null) != null
+    ) ? [var.capabilities[each.value].configuration] : []
     content {
-      # aws_idc is required by the provider when rendering argo_cd configuration.
-      # If aws_idc is not provided, skip the entire argo_cd block -- the capability
-      # will be created without configuration and can be configured later via console.
       dynamic "argo_cd" {
-        for_each = configuration.value.argo_cd != null && configuration.value.argo_cd.aws_idc != null ? [configuration.value.argo_cd] : []
+        for_each = configuration.value.argo_cd != null ? [configuration.value.argo_cd] : []
         content {
           namespace = argo_cd.value.namespace
 

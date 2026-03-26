@@ -305,6 +305,14 @@ variable "capabilities" {
     ])
     error_message = "The configuration block is only supported for ARGOCD capabilities."
   }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.capabilities :
+      v.type != "ARGOCD" || !v.enabled || try(v.configuration.argo_cd.aws_idc.idc_instance_arn, null) != null
+    ])
+    error_message = "ARGOCD capabilities require configuration.argo_cd.aws_idc.idc_instance_arn. The AWS API requires AWS Identity Center configuration for Argo CD capabilities."
+  }
 }
 
 variable "upgrade_policy" {
