@@ -2,27 +2,32 @@
 # https://docs.aws.amazon.com/eks/latest/userguide/capabilities.html
 
 locals {
+  # Use toset of keys to ensure for_each keys are always known at plan time.
+  # The map keys come from var.capabilities which is a static configuration.
+  enabled_capability_keys = toset([
+    for k, v in var.capabilities : k if local.enabled && v.enabled
+  ])
+
   enabled_capabilities = {
     for k, v in var.capabilities : k => v if local.enabled && v.enabled
   }
 
-  # Capabilities that need auto-created IAM roles
-  capabilities_needing_roles = {
-    for k, v in local.enabled_capabilities : k => v if v.role_arn == null
-  }
+  # Keys of capabilities that need auto-created IAM roles
+  capability_keys_needing_roles = toset([
+    for k, v in var.capabilities : k if local.enabled && v.enabled && v.role_arn == null
+  ])
 
   # Final role ARN map: auto-created or user-provided
   capability_role_arns = {
-    for k, v in local.enabled_capabilities : k => coalesce(
-      v.role_arn,
-      try(aws_iam_role.capability[k].arn, null)
+    for k in local.enabled_capability_keys : k => (
+      var.capabilities[k].role_arn != null ? var.capabilities[k].role_arn : aws_iam_role.capability[k].arn
     )
   }
 }
 
 # IAM roles for capabilities that don't provide their own
 module "capability_label" {
-  for_each = local.capabilities_needing_roles
+  for_each = local.capability_keys_needing_roles
 
   source  = "cloudposse/label/null"
   version = "0.25.0"
@@ -32,7 +37,7 @@ module "capability_label" {
 }
 
 data "aws_iam_policy_document" "capability_assume_role" {
-  count = length(local.capabilities_needing_roles) > 0 ? 1 : 0
+  count = length(local.capability_keys_needing_roles) > 0 ? 1 : 0
 
   statement {
     effect  = "Allow"
@@ -46,7 +51,7 @@ data "aws_iam_policy_document" "capability_assume_role" {
 }
 
 resource "aws_iam_role" "capability" {
-  for_each = local.capabilities_needing_roles
+  for_each = local.capability_keys_needing_roles
 
   name                 = module.capability_label[each.key].id
   assume_role_policy   = one(data.aws_iam_policy_document.capability_assume_role[*].json)
@@ -55,17 +60,17 @@ resource "aws_iam_role" "capability" {
 }
 
 resource "aws_eks_capability" "default" {
-  for_each = local.enabled_capabilities
+  for_each = local.enabled_capability_keys
 
   cluster_name              = local.eks_cluster_id
-  capability_name           = each.key
-  type                      = each.value.type
-  role_arn                  = local.capability_role_arns[each.key]
-  delete_propagation_policy = each.value.delete_propagation_policy
+  capability_name           = each.value
+  type                      = var.capabilities[each.value].type
+  role_arn                  = local.capability_role_arns[each.value]
+  delete_propagation_policy = var.capabilities[each.value].delete_propagation_policy
   tags                      = module.label.tags
 
   dynamic "configuration" {
-    for_each = each.value.configuration != null && each.value.type == "ARGOCD" ? [each.value.configuration] : []
+    for_each = var.capabilities[each.value].configuration != null && var.capabilities[each.value].type == "ARGOCD" ? [var.capabilities[each.value].configuration] : []
     content {
       dynamic "argo_cd" {
         for_each = configuration.value.argo_cd != null ? [configuration.value.argo_cd] : []
@@ -107,9 +112,9 @@ resource "aws_eks_capability" "default" {
   }
 
   timeouts {
-    create = each.value.create_timeout
-    update = each.value.update_timeout
-    delete = each.value.delete_timeout
+    create = var.capabilities[each.value].create_timeout
+    update = var.capabilities[each.value].update_timeout
+    delete = var.capabilities[each.value].delete_timeout
   }
 
   depends_on = [
