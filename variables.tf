@@ -206,7 +206,7 @@ variable "bootstrap_self_managed_addons_enabled" {
   default     = null
 }
 
-variable "compute_config" {
+variable "auto_mode_compute_config" {
   description = <<-EOT
     EKS Auto Mode compute configuration. When enabled, AWS manages node
     provisioning via managed Karpenter.
@@ -220,7 +220,7 @@ variable "compute_config" {
   nullable = false
 }
 
-variable "storage_config" {
+variable "auto_mode_storage_config" {
   description = <<-EOT
     EKS Auto Mode storage configuration. When block_storage is enabled,
     AWS manages EBS volumes via the ebs.csi.eks.amazonaws.com provisioner.
@@ -234,7 +234,7 @@ variable "storage_config" {
   nullable = false
 }
 
-variable "elastic_load_balancing" {
+variable "auto_mode_elastic_load_balancing" {
   description = <<-EOT
     EKS Auto Mode elastic load balancing configuration. When enabled,
     AWS manages ALB/NLB creation for Services and Ingress resources.

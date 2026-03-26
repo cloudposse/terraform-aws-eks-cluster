@@ -17,9 +17,9 @@ locals {
 
   # EKS Auto Mode
   auto_mode_flags = [
-    var.compute_config.enabled,
-    var.storage_config.block_storage.enabled,
-    var.elastic_load_balancing.enabled,
+    var.auto_mode_compute_config.enabled,
+    var.auto_mode_storage_config.block_storage.enabled,
+    var.auto_mode_elastic_load_balancing.enabled,
   ]
   auto_mode_all_enabled  = alltrue(local.auto_mode_flags)
   auto_mode_all_disabled = !anytrue(local.auto_mode_flags)
@@ -120,12 +120,12 @@ resource "aws_eks_cluster" "default" {
 
   # IPv4 kubernetes_network_config: render when service_ipv4_cidr is set or ELB is enabled (and not IPv6)
   dynamic "kubernetes_network_config" {
-    for_each = !local.use_ipv6 && (var.service_ipv4_cidr != null || var.elastic_load_balancing.enabled) ? [true] : []
+    for_each = !local.use_ipv6 && (var.service_ipv4_cidr != null || var.auto_mode_elastic_load_balancing.enabled) ? [true] : []
     content {
       service_ipv4_cidr = var.service_ipv4_cidr
 
       dynamic "elastic_load_balancing" {
-        for_each = var.elastic_load_balancing.enabled ? [true] : []
+        for_each = var.auto_mode_elastic_load_balancing.enabled ? [true] : []
         content {
           enabled = true
         }
@@ -140,7 +140,7 @@ resource "aws_eks_cluster" "default" {
       ip_family = "ipv6"
 
       dynamic "elastic_load_balancing" {
-        for_each = var.elastic_load_balancing.enabled ? [true] : []
+        for_each = var.auto_mode_elastic_load_balancing.enabled ? [true] : []
         content {
           enabled = true
         }
@@ -186,7 +186,7 @@ resource "aws_eks_cluster" "default" {
 
   # EKS Auto Mode configuration
   dynamic "compute_config" {
-    for_each = var.compute_config.enabled ? [var.compute_config] : []
+    for_each = var.auto_mode_compute_config.enabled ? [var.auto_mode_compute_config] : []
     content {
       enabled       = true
       node_pools    = compute_config.value.node_pools
@@ -195,7 +195,7 @@ resource "aws_eks_cluster" "default" {
   }
 
   dynamic "storage_config" {
-    for_each = var.storage_config.block_storage.enabled ? [var.storage_config] : []
+    for_each = var.auto_mode_storage_config.block_storage.enabled ? [var.auto_mode_storage_config] : []
     content {
       block_storage {
         enabled = true
