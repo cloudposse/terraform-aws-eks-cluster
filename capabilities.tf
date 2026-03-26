@@ -8,10 +8,6 @@ locals {
     for k, v in var.capabilities : k if local.enabled && v.enabled
   ])
 
-  enabled_capabilities = {
-    for k, v in var.capabilities : k => v if local.enabled && v.enabled
-  }
-
   # Keys of capabilities that need auto-created IAM roles.
   # Uses create_iam_role (a static bool) instead of role_arn == null
   # to ensure for_each keys are always known at plan time.
