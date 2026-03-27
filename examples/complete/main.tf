@@ -196,7 +196,7 @@ module "eks_node_group" {
   source  = "cloudposse/eks-node-group/aws"
   version = "3.2.0"
 
-  enabled = !var.auto_mode_enabled
+  enabled = var.enabled && !var.auto_mode_enabled
 
   # node group <= 3.2 requires a non-empty list of subnet_ids, even when disabled
   subnet_ids        = local.enabled ? module.subnets.public_subnet_ids : ["filler_string_for_enabled_is_false"]
