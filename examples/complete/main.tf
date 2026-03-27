@@ -2,6 +2,8 @@ provider "aws" {
   region = var.region
 }
 
+data "aws_partition" "current" {}
+
 module "label" {
   source  = "cloudposse/label/null"
   version = "0.25.0"
@@ -180,14 +182,14 @@ resource "aws_iam_role_policy_attachment" "auto_mode_node_minimal" {
   count = local.enabled && var.auto_mode_enabled ? 1 : 0
 
   role       = one(aws_iam_role.auto_mode_node[*].name)
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodeMinimalPolicy"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSWorkerNodeMinimalPolicy"
 }
 
 resource "aws_iam_role_policy_attachment" "auto_mode_node_ecr" {
   count = local.enabled && var.auto_mode_enabled ? 1 : 0
 
   role       = one(aws_iam_role.auto_mode_node[*].name)
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly"
 }
 
 module "eks_node_group" {

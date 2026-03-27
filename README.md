@@ -366,12 +366,12 @@ When Auto Mode is enabled, this module automatically:
 - Attaches 4 additional IAM policies to the cluster role: `AmazonEKSComputePolicy`, `AmazonEKSBlockStoragePolicy`,
   `AmazonEKSLoadBalancingPolicy`, and `AmazonEKSNetworkingPolicy`
 
-### Capabilities
+### Auto Mode Managed Add-ons
 
-All three capabilities must be enabled or disabled together:
+When Auto Mode is enabled, AWS manages the following add-ons automatically:
 
-| Capability | Variable | What AWS Manages |
-|-----------|----------|-----------------|
+| Add-on | Variable | What AWS Manages |
+|--------|----------|-----------------|
 | **Compute** | `auto_mode_compute_config` | Node provisioning via managed Karpenter |
 | **Storage** | `auto_mode_storage_config` | EBS volumes via `ebs.csi.eks.amazonaws.com` |
 | **Networking** | `auto_mode_elastic_load_balancing` | ALB/NLB for Services and Ingress |
