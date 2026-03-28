@@ -321,12 +321,6 @@ Module usage with two unmanaged worker groups:
 > many issues you may read about that had affected prior versions. See the version 2 README and release notes
 > for more information on the challenges and workarounds that were required prior to v3.
 
-> [!IMPORTANT]
-> In Cloud Posse's examples, we avoid pinning modules to specific versions to prevent discrepancies between the documentation
-> and the latest released versions. However, for your own projects, we strongly advise pinning each module to the exact version
-> you're using. This practice ensures the stability of your infrastructure. Additionally, we recommend implementing a systematic
-> approach for updating versions to avoid unexpected changes.
-
 ## EKS Auto Mode
 
 This module supports [EKS Auto Mode](https://docs.aws.amazon.com/eks/latest/userguide/automode.html) (GA December 2024),
@@ -393,6 +387,14 @@ With Auto Mode, Kubernetes version upgrades are simplified:
 2. Managed Karpenter detects version drift and automatically replaces nodes
 3. Auto Mode-managed add-ons are automatically upgraded to compatible versions
 
+> [!IMPORTANT]
+> In Cloud Posse's examples, we avoid pinning modules to specific versions to prevent discrepancies between the documentation
+> and the latest released versions. However, for your own projects, we strongly advise pinning each module to the exact version
+> you're using. This practice ensures the stability of your infrastructure. Additionally, we recommend implementing a systematic
+> approach for updating versions to avoid unexpected changes.
+
+
+
 
 
 
@@ -404,20 +406,21 @@ With Auto Mode, Kubernetes version upgrades are simplified:
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.75.1 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.25.0 |
 | <a name="requirement_tls"></a> [tls](#requirement\_tls) | >= 3.1.0, != 4.0.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.75.1 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.25.0 |
 | <a name="provider_tls"></a> [tls](#provider\_tls) | >= 3.1.0, != 4.0.0 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_capability_label"></a> [capability\_label](#module\_capability\_label) | cloudposse/label/null | 0.25.0 |
 | <a name="module_label"></a> [label](#module\_label) | cloudposse/label/null | 0.25.0 |
 | <a name="module_this"></a> [this](#module\_this) | cloudposse/label/null | 0.25.0 |
 
@@ -433,12 +436,15 @@ With Auto Mode, Kubernetes version upgrades are simplified:
 | [aws_eks_access_policy_association.list](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_access_policy_association) | resource |
 | [aws_eks_access_policy_association.map](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_access_policy_association) | resource |
 | [aws_eks_addon.cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon) | resource |
+| [aws_eks_capability.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_capability) | resource |
 | [aws_eks_cluster.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_cluster) | resource |
 | [aws_iam_openid_connect_provider.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_openid_connect_provider) | resource |
 | [aws_iam_policy.cluster_elb_service_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_role.capability](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.amazon_eks_cluster_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_iam_role_policy_attachment.amazon_eks_service_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.auto_mode](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_iam_role_policy_attachment.cluster_elb_service_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_kms_alias.cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
 | [aws_kms_key.cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
@@ -446,6 +452,7 @@ With Auto Mode, Kubernetes version upgrades are simplified:
 | [aws_vpc_security_group_ingress_rule.managed_ingress_cidr_blocks](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_ingress_rule) | resource |
 | [aws_vpc_security_group_ingress_rule.managed_ingress_security_groups](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_ingress_rule) | resource |
 | [aws_iam_policy_document.assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.capability_assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.cluster_elb_service_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_partition.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition) | data source |
 | [tls_certificate.cluster](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/data-sources/certificate) | data source |
@@ -466,7 +473,11 @@ With Auto Mode, Kubernetes version upgrades are simplified:
 | <a name="input_allowed_security_group_ids"></a> [allowed\_security\_group\_ids](#input\_allowed\_security\_group\_ids) | A list of IDs of Security Groups to allow access to the cluster. | `list(string)` | `[]` | no |
 | <a name="input_associated_security_group_ids"></a> [associated\_security\_group\_ids](#input\_associated\_security\_group\_ids) | A list of IDs of Security Groups to associate the cluster with.<br/>These security groups will not be modified. | `list(string)` | `[]` | no |
 | <a name="input_attributes"></a> [attributes](#input\_attributes) | ID element. Additional attributes (e.g. `workers` or `cluster`) to add to `id`,<br/>in the order they appear in the list. New attributes are appended to the<br/>end of the list. The elements of the list are joined by the `delimiter`<br/>and treated as a single ID element. | `list(string)` | `[]` | no |
-| <a name="input_bootstrap_self_managed_addons_enabled"></a> [bootstrap\_self\_managed\_addons\_enabled](#input\_bootstrap\_self\_managed\_addons\_enabled) | Manages bootstrap of default networking addons after cluster has been created | `bool` | `null` | no |
+| <a name="input_auto_mode_compute_config"></a> [auto\_mode\_compute\_config](#input\_auto\_mode\_compute\_config) | EKS Auto Mode compute configuration. When enabled, AWS manages node<br/>provisioning via managed Karpenter. | <pre>object({<br/>    enabled       = optional(bool, false)<br/>    node_pools    = optional(set(string), ["general-purpose", "system"])<br/>    node_role_arn = optional(string, null)<br/>  })</pre> | `{}` | no |
+| <a name="input_auto_mode_elastic_load_balancing"></a> [auto\_mode\_elastic\_load\_balancing](#input\_auto\_mode\_elastic\_load\_balancing) | EKS Auto Mode elastic load balancing configuration. When enabled,<br/>AWS manages ALB/NLB creation for Services and Ingress resources. | <pre>object({<br/>    enabled = optional(bool, false)<br/>  })</pre> | `{}` | no |
+| <a name="input_auto_mode_storage_config"></a> [auto\_mode\_storage\_config](#input\_auto\_mode\_storage\_config) | EKS Auto Mode storage configuration. When block\_storage is enabled,<br/>AWS manages EBS volumes via the ebs.csi.eks.amazonaws.com provisioner. | <pre>object({<br/>    block_storage = optional(object({<br/>      enabled = optional(bool, false)<br/>    }), {})<br/>  })</pre> | `{}` | no |
+| <a name="input_bootstrap_self_managed_addons_enabled"></a> [bootstrap\_self\_managed\_addons\_enabled](#input\_bootstrap\_self\_managed\_addons\_enabled) | Manages bootstrap of default networking addons after cluster has been created. Must be false when Auto Mode is enabled. Changing this forces cluster recreation. | `bool` | `null` | no |
+| <a name="input_capabilities"></a> [capabilities](#input\_capabilities) | Map of EKS Capabilities to enable on the cluster. Each key is the capability<br/>name (must be unique within the cluster). Supported types: ACK, ARGOCD, KRO.<br/><br/>When `create_iam_role` is true (default) and `role_arn` is null, an IAM<br/>role with a trust policy for `capabilities.eks.amazonaws.com` is<br/>automatically created. Set `create_iam_role = false` and provide `role_arn`<br/>when the calling module creates its own IAM roles (avoids plan-time unknowns).<br/><br/>The `configuration` block is only applicable to ARGOCD capabilities.<br/>ACK and KRO do not currently support configuration. | <pre>map(object({<br/>    enabled                   = optional(bool, true)<br/>    type                      = string # ACK, ARGOCD, KRO<br/>    create_iam_role           = optional(bool, true)<br/>    role_arn                  = optional(string, null)<br/>    delete_propagation_policy = optional(string, "RETAIN")<br/>    configuration = optional(object({<br/>      argo_cd = optional(object({<br/>        namespace = optional(string, "argocd")<br/>        aws_idc = optional(object({<br/>          idc_instance_arn = string<br/>          idc_region       = optional(string, null)<br/>        }), null)<br/>        network_access = optional(object({<br/>          vpce_ids = optional(list(string), [])<br/>        }), null)<br/>        rbac_role_mapping = optional(list(object({<br/>          role = string # ADMIN, EDITOR, VIEWER<br/>          identity = list(object({<br/>            id   = string<br/>            type = string # SSO_USER, SSO_GROUP<br/>          }))<br/>        })), [])<br/>      }), null)<br/>    }), null)<br/>    create_timeout = optional(string, null)<br/>    update_timeout = optional(string, null)<br/>    delete_timeout = optional(string, null)<br/>  }))</pre> | `{}` | no |
 | <a name="input_cloudwatch_log_group_class"></a> [cloudwatch\_log\_group\_class](#input\_cloudwatch\_log\_group\_class) | Specified the log class of the log group. Possible values are: `STANDARD` or `INFREQUENT_ACCESS` | `string` | `null` | no |
 | <a name="input_cloudwatch_log_group_kms_key_id"></a> [cloudwatch\_log\_group\_kms\_key\_id](#input\_cloudwatch\_log\_group\_kms\_key\_id) | If provided, the KMS Key ID to use to encrypt AWS CloudWatch logs | `string` | `null` | no |
 | <a name="input_cluster_attributes"></a> [cluster\_attributes](#input\_cluster\_attributes) | Override label module default cluster attributes | `list(string)` | <pre>[<br/>  "cluster"<br/>]</pre> | no |
@@ -517,6 +528,9 @@ With Auto Mode, Kubernetes version upgrades are simplified:
 
 | Name | Description |
 |------|-------------|
+| <a name="output_auto_mode_enabled"></a> [auto\_mode\_enabled](#output\_auto\_mode\_enabled) | Whether EKS Auto Mode is enabled (all three capabilities: compute, storage, networking) |
+| <a name="output_capabilities"></a> [capabilities](#output\_capabilities) | Map of enabled EKS Capabilities with their ARNs and types |
+| <a name="output_capability_role_arns"></a> [capability\_role\_arns](#output\_capability\_role\_arns) | Map of auto-created capability IAM role ARNs |
 | <a name="output_cloudwatch_log_group_kms_key_id"></a> [cloudwatch\_log\_group\_kms\_key\_id](#output\_cloudwatch\_log\_group\_kms\_key\_id) | KMS Key ID to encrypt AWS CloudWatch logs |
 | <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | The name of the log group created in cloudwatch where cluster logs are forwarded to if enabled |
 | <a name="output_cluster_encryption_config_enabled"></a> [cluster\_encryption\_config\_enabled](#output\_cluster\_encryption\_config\_enabled) | If true, Cluster Encryption Configuration is enabled |
