@@ -70,6 +70,29 @@ output "eks_addons_versions" {
   } : {}
 }
 
+output "auto_mode_enabled" {
+  description = "Whether EKS Auto Mode is enabled (all three capabilities: compute, storage, networking)"
+  value       = local.auto_mode_all_enabled
+}
+
+output "capabilities" {
+  description = "Map of enabled EKS Capabilities with their ARNs and types"
+  value = {
+    for k, v in aws_eks_capability.default : k => {
+      arn     = v.arn
+      type    = v.type
+      version = v.version
+    }
+  }
+}
+
+output "capability_role_arns" {
+  description = "Map of auto-created capability IAM role ARNs"
+  value = {
+    for k, v in aws_iam_role.capability : k => v.arn
+  }
+}
+
 output "cluster_encryption_config_enabled" {
   description = "If true, Cluster Encryption Configuration is enabled"
   value       = var.cluster_encryption_config_enabled

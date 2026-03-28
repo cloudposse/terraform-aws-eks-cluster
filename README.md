@@ -327,7 +327,71 @@ Module usage with two unmanaged worker groups:
 > you're using. This practice ensures the stability of your infrastructure. Additionally, we recommend implementing a systematic
 > approach for updating versions to avoid unexpected changes.
 
+## EKS Auto Mode
 
+This module supports [EKS Auto Mode](https://docs.aws.amazon.com/eks/latest/userguide/automode.html) (GA December 2024),
+which delegates compute, networking, and storage management to AWS. Enable it using the `auto_mode_compute_config`,
+`auto_mode_storage_config`, and `auto_mode_elastic_load_balancing` variables.
+
+### Enabling Auto Mode
+
+```hcl
+module "eks_cluster" {
+  source  = "cloudposse/eks-cluster/aws"
+  # version = "..."
+
+  auto_mode_compute_config = {
+    enabled       = true
+    node_pools    = ["general-purpose", "system"]
+    node_role_arn = aws_iam_role.auto_mode_node.arn
+  }
+
+  auto_mode_storage_config = {
+    block_storage = {
+      enabled = true
+    }
+  }
+
+  auto_mode_elastic_load_balancing = {
+    enabled = true
+  }
+
+  # ... other configuration
+}
+```
+
+When Auto Mode is enabled, this module automatically:
+- Sets `bootstrap_self_managed_addons = false` (unless explicitly overridden)
+- Adds `sts:TagSession` to the cluster IAM role trust policy
+- Attaches 4 additional IAM policies to the cluster role: `AmazonEKSComputePolicy`, `AmazonEKSBlockStoragePolicy`,
+  `AmazonEKSLoadBalancingPolicy`, and `AmazonEKSNetworkingPolicy`
+
+### Auto Mode Managed Add-ons
+
+When Auto Mode is enabled, AWS manages the following add-ons automatically:
+
+| Add-on | Variable | What AWS Manages |
+|--------|----------|-----------------|
+| **Compute** | `auto_mode_compute_config` | Node provisioning via managed Karpenter |
+| **Storage** | `auto_mode_storage_config` | EBS volumes via `ebs.csi.eks.amazonaws.com` |
+| **Networking** | `auto_mode_elastic_load_balancing` | ALB/NLB for Services and Ingress |
+
+### Important Notes
+
+- Requires AWS provider `>= 5.79.0` and Kubernetes `>= 1.29`
+- Auto Mode manages `vpc-cni`, `kube-proxy`, `coredns`, and `aws-ebs-csi-driver` add-ons automatically.
+  Do not include these in the `addons` variable when Auto Mode is enabled.
+- Auto Mode nodes are Bottlerocket-only, immutable, with no SSH/IMDS access
+- Nodes have a 21-day maximum lifetime and are automatically rotated
+- The `node_role_arn` in `auto_mode_compute_config` must be an IAM role with
+  `AmazonEKSWorkerNodeMinimalPolicy` and `AmazonEC2ContainerRegistryPullOnly` attached
+
+### Cluster Version Upgrades
+
+With Auto Mode, Kubernetes version upgrades are simplified:
+1. Bump `kubernetes_version` and apply -- control plane upgrades in place
+2. Managed Karpenter detects version drift and automatically replaces nodes
+3. Auto Mode-managed add-ons are automatically upgraded to compatible versions
 
 
 

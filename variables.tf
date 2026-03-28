@@ -201,9 +201,118 @@ variable "addons_depends_on" {
 }
 
 variable "bootstrap_self_managed_addons_enabled" {
-  description = "Manages bootstrap of default networking addons after cluster has been created"
+  description = "Manages bootstrap of default networking addons after cluster has been created. Must be false when Auto Mode is enabled. Changing this forces cluster recreation."
   type        = bool
   default     = null
+}
+
+variable "auto_mode_compute_config" {
+  description = <<-EOT
+    EKS Auto Mode compute configuration. When enabled, AWS manages node
+    provisioning via managed Karpenter.
+  EOT
+  type = object({
+    enabled       = optional(bool, false)
+    node_pools    = optional(set(string), ["general-purpose", "system"])
+    node_role_arn = optional(string, null)
+  })
+  default  = {}
+  nullable = false
+}
+
+variable "auto_mode_storage_config" {
+  description = <<-EOT
+    EKS Auto Mode storage configuration. When block_storage is enabled,
+    AWS manages EBS volumes via the ebs.csi.eks.amazonaws.com provisioner.
+  EOT
+  type = object({
+    block_storage = optional(object({
+      enabled = optional(bool, false)
+    }), {})
+  })
+  default  = {}
+  nullable = false
+}
+
+variable "auto_mode_elastic_load_balancing" {
+  description = <<-EOT
+    EKS Auto Mode elastic load balancing configuration. When enabled,
+    AWS manages ALB/NLB creation for Services and Ingress resources.
+  EOT
+  type = object({
+    enabled = optional(bool, false)
+  })
+  default  = {}
+  nullable = false
+}
+
+variable "capabilities" {
+  description = <<-EOT
+    Map of EKS Capabilities to enable on the cluster. Each key is the capability
+    name (must be unique within the cluster). Supported types: ACK, ARGOCD, KRO.
+
+    When `create_iam_role` is true (default) and `role_arn` is null, an IAM
+    role with a trust policy for `capabilities.eks.amazonaws.com` is
+    automatically created. Set `create_iam_role = false` and provide `role_arn`
+    when the calling module creates its own IAM roles (avoids plan-time unknowns).
+
+    The `configuration` block is only applicable to ARGOCD capabilities.
+    ACK and KRO do not currently support configuration.
+  EOT
+  type = map(object({
+    enabled                   = optional(bool, true)
+    type                      = string # ACK, ARGOCD, KRO
+    create_iam_role           = optional(bool, true)
+    role_arn                  = optional(string, null)
+    delete_propagation_policy = optional(string, "RETAIN")
+    configuration = optional(object({
+      argo_cd = optional(object({
+        namespace = optional(string, "argocd")
+        aws_idc = optional(object({
+          idc_instance_arn = string
+          idc_region       = optional(string, null)
+        }), null)
+        network_access = optional(object({
+          vpce_ids = optional(list(string), [])
+        }), null)
+        rbac_role_mapping = optional(list(object({
+          role = string # ADMIN, EDITOR, VIEWER
+          identity = list(object({
+            id   = string
+            type = string # SSO_USER, SSO_GROUP
+          }))
+        })), [])
+      }), null)
+    }), null)
+    create_timeout = optional(string, null)
+    update_timeout = optional(string, null)
+    delete_timeout = optional(string, null)
+  }))
+  default  = {}
+  nullable = false
+
+  validation {
+    condition = alltrue([
+      for k, v in var.capabilities : contains(["ACK", "ARGOCD", "KRO"], v.type)
+    ])
+    error_message = "Each capability type must be one of: ACK, ARGOCD, KRO."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.capabilities :
+      v.configuration == null || v.type == "ARGOCD"
+    ])
+    error_message = "The configuration block is only supported for ARGOCD capabilities."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.capabilities :
+      v.type != "ARGOCD" || !v.enabled || try(v.configuration.argo_cd.aws_idc.idc_instance_arn, null) != null
+    ])
+    error_message = "ARGOCD capabilities require configuration.argo_cd.aws_idc.idc_instance_arn. The AWS API requires AWS Identity Center configuration for Argo CD capabilities."
+  }
 }
 
 variable "upgrade_policy" {

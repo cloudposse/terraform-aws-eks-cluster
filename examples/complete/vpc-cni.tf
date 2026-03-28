@@ -42,7 +42,7 @@ resource "aws_iam_role_policy_attachment" "vpc_cni" {
   count = local.vpc_cni_sa_needed ? 1 : 0
 
   role       = module.vpc_cni_eks_iam_role.service_account_role_name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKS_CNI_Policy"
 }
 
 module "vpc_cni_eks_iam_role" {

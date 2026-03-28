@@ -2,6 +2,8 @@ provider "aws" {
   region = var.region
 }
 
+data "aws_partition" "current" {}
+
 module "label" {
   source  = "cloudposse/label/null"
   version = "0.25.0"
@@ -111,10 +113,27 @@ module "eks_cluster" {
   cluster_encryption_config_resources                       = var.cluster_encryption_config_resources
 
   addons                                = local.addons
-  addons_depends_on                     = [module.eks_node_group]
+  addons_depends_on                     = var.auto_mode_enabled ? null : [module.eks_node_group]
   bootstrap_self_managed_addons_enabled = var.bootstrap_self_managed_addons_enabled
   upgrade_policy                        = var.upgrade_policy
   zonal_shift_config                    = var.zonal_shift_config
+
+  # EKS Auto Mode
+  auto_mode_compute_config = {
+    enabled       = var.auto_mode_enabled
+    node_pools    = var.auto_mode_enabled ? ["general-purpose", "system"] : []
+    node_role_arn = var.auto_mode_enabled ? one(aws_iam_role.auto_mode_node[*].arn) : null
+  }
+
+  auto_mode_storage_config = {
+    block_storage = {
+      enabled = var.auto_mode_enabled
+    }
+  }
+
+  auto_mode_elastic_load_balancing = {
+    enabled = var.auto_mode_enabled
+  }
 
   access_entry_map = local.access_entry_map
   access_config = {
@@ -136,9 +155,48 @@ module "eks_cluster" {
   cluster_depends_on = [module.subnets]
 }
 
+# Auto Mode node role (only when auto_mode_enabled = true)
+data "aws_iam_policy_document" "auto_mode_node_assume_role" {
+  count = local.enabled && var.auto_mode_enabled ? 1 : 0
+
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "auto_mode_node" {
+  count = local.enabled && var.auto_mode_enabled ? 1 : 0
+
+  name               = "${module.label.id}-auto-mode-node"
+  assume_role_policy = one(data.aws_iam_policy_document.auto_mode_node_assume_role[*].json)
+  tags               = module.label.tags
+}
+
+resource "aws_iam_role_policy_attachment" "auto_mode_node_minimal" {
+  count = local.enabled && var.auto_mode_enabled ? 1 : 0
+
+  role       = one(aws_iam_role.auto_mode_node[*].name)
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSWorkerNodeMinimalPolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "auto_mode_node_ecr" {
+  count = local.enabled && var.auto_mode_enabled ? 1 : 0
+
+  role       = one(aws_iam_role.auto_mode_node[*].name)
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly"
+}
+
 module "eks_node_group" {
   source  = "cloudposse/eks-node-group/aws"
   version = "3.2.0"
+
+  enabled = local.enabled && !var.auto_mode_enabled
 
   # node group <= 3.2 requires a non-empty list of subnet_ids, even when disabled
   subnet_ids        = local.enabled ? module.subnets.public_subnet_ids : ["filler_string_for_enabled_is_false"]
