@@ -404,7 +404,7 @@ With Auto Mode, Kubernetes version upgrades are simplified:
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.25.0 |
 | <a name="requirement_tls"></a> [tls](#requirement\_tls) | >= 3.1.0, != 4.0.0 |
@@ -412,14 +412,14 @@ With Auto Mode, Kubernetes version upgrades are simplified:
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.25.0 |
 | <a name="provider_tls"></a> [tls](#provider\_tls) | >= 3.1.0, != 4.0.0 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_capability_label"></a> [capability\_label](#module\_capability\_label) | cloudposse/label/null | 0.25.0 |
 | <a name="module_label"></a> [label](#module\_label) | cloudposse/label/null | 0.25.0 |
 | <a name="module_this"></a> [this](#module\_this) | cloudposse/label/null | 0.25.0 |
@@ -427,7 +427,7 @@ With Auto Mode, Kubernetes version upgrades are simplified:
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_cloudwatch_log_group.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_eks_access_entry.linux](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_access_entry) | resource |
 | [aws_eks_access_entry.map](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_access_entry) | resource |
@@ -460,7 +460,7 @@ With Auto Mode, Kubernetes version upgrades are simplified:
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_access_config"></a> [access\_config](#input\_access\_config) | Access configuration for the EKS cluster. | <pre>object({<br/>    authentication_mode                         = optional(string, "API")<br/>    bootstrap_cluster_creator_admin_permissions = optional(bool, false)<br/>  })</pre> | `{}` | no |
 | <a name="input_access_entries"></a> [access\_entries](#input\_access\_entries) | List of IAM principles to allow to access the EKS cluster.<br/>It is recommended to use the default `user_name` because the default includes<br/>the IAM role or user name and the session name for assumed roles.<br/>Use when Principal ARN is not known at plan time. | <pre>list(object({<br/>    principal_arn     = string<br/>    user_name         = optional(string, null)<br/>    kubernetes_groups = optional(list(string), null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_access_entries_for_nodes"></a> [access\_entries\_for\_nodes](#input\_access\_entries\_for\_nodes) | Map of list of IAM roles for the EKS non-managed worker nodes.<br/>The map key is the node type, either `EC2_LINUX` or `EC2_WINDOWS`,<br/>and the list contains the IAM roles of the nodes of that type.<br/>There is no need for or utility in creating Fargate access entries, as those<br/>are always created automatically by AWS, just as with managed nodes.<br/>Use when Principal ARN is not known at plan time. | `map(list(string))` | `{}` | no |
@@ -492,6 +492,7 @@ With Auto Mode, Kubernetes version upgrades are simplified:
 | <a name="input_context"></a> [context](#input\_context) | Single object for setting entire context at once.<br/>See description of individual variables for details.<br/>Leave string and numeric variables as `null` to use default value.<br/>Individual variable settings (non-null) override settings in context object,<br/>except for attributes, tags, and additional\_tag\_map, which are merged. | `any` | <pre>{<br/>  "additional_tag_map": {},<br/>  "attributes": [],<br/>  "delimiter": null,<br/>  "descriptor_formats": {},<br/>  "enabled": true,<br/>  "environment": null,<br/>  "id_length_limit": null,<br/>  "label_key_case": null,<br/>  "label_order": [],<br/>  "label_value_case": null,<br/>  "labels_as_tags": [<br/>    "unset"<br/>  ],<br/>  "name": null,<br/>  "namespace": null,<br/>  "regex_replace_chars": null,<br/>  "stage": null,<br/>  "tags": {},<br/>  "tenant": null<br/>}</pre> | no |
 | <a name="input_create_eks_service_role"></a> [create\_eks\_service\_role](#input\_create\_eks\_service\_role) | Set `false` to use existing `eks_cluster_service_role_arn` instead of creating one | `bool` | `true` | no |
 | <a name="input_custom_ingress_rules"></a> [custom\_ingress\_rules](#input\_custom\_ingress\_rules) | A List of Objects, which are custom security group rules that | <pre>list(object({<br/>    description              = string<br/>    from_port                = number<br/>    to_port                  = number<br/>    protocol                 = string<br/>    source_security_group_id = string<br/>  }))</pre> | `[]` | no |
+| <a name="input_deletion_protection_enabled"></a> [deletion\_protection\_enabled](#input\_deletion\_protection\_enabled) | Whether to enable deletion protection for the cluster. When enabled, the cluster cannot be deleted unless deletion protection is first disabled. | `bool` | `false` | no |
 | <a name="input_delimiter"></a> [delimiter](#input\_delimiter) | Delimiter to be used between ID elements.<br/>Defaults to `-` (hyphen). Set to `""` to use no delimiter at all. | `string` | `null` | no |
 | <a name="input_descriptor_formats"></a> [descriptor\_formats](#input\_descriptor\_formats) | Describe additional descriptors to be output in the `descriptors` output map.<br/>Map of maps. Keys are names of descriptors. Values are maps of the form<br/>`{<br/>   format = string<br/>   labels = list(string)<br/>}`<br/>(Type is `any` so the map values can later be enhanced to provide additional options.)<br/>`format` is a Terraform format string to be passed to the `format()` function.<br/>`labels` is a list of labels, in order, to pass to `format()` function.<br/>Label values will be normalized before being passed to `format()` so they will be<br/>identical to how they appear in `id`.<br/>Default is `{}` (`descriptors` output will be empty). | `any` | `{}` | no |
 | <a name="input_eks_cluster_service_role_arn"></a> [eks\_cluster\_service\_role\_arn](#input\_eks\_cluster\_service\_role\_arn) | The ARN of an IAM role for the EKS cluster to use that provides permissions<br/>for the Kubernetes control plane to perform needed AWS API operations.<br/>Required if `create_eks_service_role` is `false`, ignored otherwise. | `string` | `null` | no |
@@ -527,7 +528,7 @@ With Auto Mode, Kubernetes version upgrades are simplified:
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_auto_mode_enabled"></a> [auto\_mode\_enabled](#output\_auto\_mode\_enabled) | Whether EKS Auto Mode is enabled (all three capabilities: compute, storage, networking) |
 | <a name="output_capabilities"></a> [capabilities](#output\_capabilities) | Map of enabled EKS Capabilities with their ARNs and types |
 | <a name="output_capability_role_arns"></a> [capability\_role\_arns](#output\_capability\_role\_arns) | Map of auto-created capability IAM role ARNs |
