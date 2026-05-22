@@ -85,6 +85,7 @@ resource "aws_eks_cluster" "default" {
   version                       = var.kubernetes_version
   enabled_cluster_log_types     = var.enabled_cluster_log_types
   bootstrap_self_managed_addons = local.effective_bootstrap_self_managed_addons
+  deletion_protection           = var.deletion_protection_enabled
 
   access_config {
     authentication_mode                         = var.access_config.authentication_mode

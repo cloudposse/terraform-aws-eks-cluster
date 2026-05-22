@@ -206,6 +206,12 @@ variable "bootstrap_self_managed_addons_enabled" {
   default     = null
 }
 
+variable "deletion_protection_enabled" {
+  description = " Whether to enable deletion protection for the cluster. When enabled, the cluster cannot be deleted unless deletion protection is first disabled."
+  type        = bool
+  default     = false
+}
+
 variable "auto_mode_compute_config" {
   description = <<-EOT
     EKS Auto Mode compute configuration. When enabled, AWS manages node
