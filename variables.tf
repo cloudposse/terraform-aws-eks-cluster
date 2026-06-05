@@ -52,6 +52,12 @@ variable "kubernetes_version" {
   default     = "1.21"
 }
 
+variable "force_update_version" {
+  type        = bool
+  description = "Force version update by overriding upgrade-blocking readiness checks when updating a cluster"
+  default     = false
+}
+
 variable "oidc_provider_enabled" {
   type        = bool
   description = <<-EOT
@@ -207,7 +213,7 @@ variable "bootstrap_self_managed_addons_enabled" {
 }
 
 variable "deletion_protection_enabled" {
-  description = " Whether to enable deletion protection for the cluster. When enabled, the cluster cannot be deleted unless deletion protection is first disabled."
+  description = "Whether to enable deletion protection for the cluster. When enabled, the cluster cannot be deleted unless deletion protection is first disabled."
   type        = bool
   default     = false
 }
@@ -224,6 +230,14 @@ variable "auto_mode_compute_config" {
   })
   default  = {}
   nullable = false
+}
+
+variable "control_plane_scaling_config" {
+  type = object({
+    tier = optional(string, "standard")
+  })
+  description = "The control plane scaling tier."
+  default     = null
 }
 
 variable "auto_mode_storage_config" {

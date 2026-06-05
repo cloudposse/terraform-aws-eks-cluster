@@ -26,35 +26,35 @@ variable "cluster_log_retention_period" {
   description = "Number of days to retain cluster logs. Requires `enabled_cluster_log_types` to be set. See https://docs.aws.amazon.com/en_us/eks/latest/userguide/control-plane-logs.html."
 }
 
-variable "map_additional_aws_accounts" {
-  description = "Additional AWS account numbers to add to `config-map-aws-auth` ConfigMap"
-  type        = list(string)
-  default     = []
-}
-
-variable "map_additional_iam_roles" {
-  description = "Additional IAM roles to add to `config-map-aws-auth` ConfigMap"
-
-  type = list(object({
-    rolearn  = string
-    username = string
-    groups   = list(string)
-  }))
-
-  default = []
-}
-
-variable "map_additional_iam_users" {
-  description = "Additional IAM users to add to `config-map-aws-auth` ConfigMap"
-
-  type = list(object({
-    userarn  = string
-    username = string
-    groups   = list(string)
-  }))
-
-  default = []
-}
+# variable "map_additional_aws_accounts" {
+#   description = "Additional AWS account numbers to add to `config-map-aws-auth` ConfigMap"
+#   type        = list(string)
+#   default     = []
+# }
+#
+# variable "map_additional_iam_roles" {
+#   description = "Additional IAM roles to add to `config-map-aws-auth` ConfigMap"
+#
+#   type = list(object({
+#     rolearn  = string
+#     username = string
+#     groups   = list(string)
+#   }))
+#
+#   default = []
+# }
+#
+# variable "map_additional_iam_users" {
+#   description = "Additional IAM users to add to `config-map-aws-auth` ConfigMap"
+#
+#   type = list(object({
+#     userarn  = string
+#     username = string
+#     groups   = list(string)
+#   }))
+#
+#   default = []
+# }
 
 variable "oidc_provider_enabled" {
   type        = bool
@@ -144,5 +144,5 @@ variable "addons" {
 variable "apply_config_map_aws_auth" {
   type        = bool
   default     = true
-  description = "Whether to apply the ConfigMap to allow worker nodes to join the EKS cluster and allow additional users, accounts and roles to acces the cluster"
+  description = "Whether to apply the ConfigMap to allow worker nodes to join the EKS cluster and allow additional users, accounts and roles to access the cluster"
 }

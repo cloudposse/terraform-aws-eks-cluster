@@ -624,7 +624,7 @@ Test your access with `kubectl` and optionally `rakkess`.
 ([rakkess](https://github.com/corneliusweig/rakkess) is a tool that shows
 what kind of access you have to resources in a Kubernetes cluster. It is
 pre-installed in most versions of Geodesic and can be installed on Linux
-systems via Cloud Posse's Debain or RPM package repositories.)
+systems via Cloud Posse's Debian or RPM package repositories.)
 
 
 ```shell
