@@ -236,7 +236,7 @@ variable "control_plane_scaling_config" {
   type = object({
     tier = optional(string, "standard")
   })
-  description = "The control plane scaling tier."
+  description = "The control plane scaling tier configuration. Available options are `standard`, `tier-xl`, `tier-2xl`, `tier-4xl`, or `tier-8xl`. For more information, see EKS Provisioned Control Plane in the Amazon EKS User Guide."
   default     = null
 }
 
