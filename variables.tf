@@ -172,6 +172,8 @@ variable "addons" {
     resolve_conflicts_on_create = optional(string, null)
     resolve_conflicts_on_update = optional(string, null)
     service_account_role_arn    = optional(string, null)
+    preserve                    = optional(bool, null)
+    namespace                   = optional(string, null)
     pod_identity_association    = optional(map(string), {})
     create_timeout              = optional(string, null)
     update_timeout              = optional(string, null)
@@ -185,6 +187,13 @@ variable "addons" {
     `resolve_conflicts` will be used instead. If `resolve_conflicts_on_create` is
     not set and `resolve_conflicts` is `PRESERVE`, `resolve_conflicts_on_create`
     will be set to `NONE`.
+    If `preserve` is `true`, the add-on's Kubernetes resources (e.g. the CoreDNS,
+    VPC CNI, or kube-proxy DaemonSets/Deployments) are left running when the
+    add-on is removed from Terraform management, rather than being deleted. This
+    is useful when handing an add-on off to another manager, such as EKS Auto Mode.
+    If `namespace` is set, the add-on's Kubernetes resources are created in that
+    namespace instead of the add-on's default namespace. Only supported by add-ons
+    that allow a configurable namespace.
     If `additional_tags` are specified, they are added to the standard resource tags.
     EOT
   default     = []

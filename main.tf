@@ -254,6 +254,15 @@ resource "aws_eks_addon" "cluster" {
   resolve_conflicts_on_create = lookup(each.value, "resolve_conflicts_on_create", try(replace(each.value.resolve_conflicts, "PRESERVE", "NONE"), null))
   resolve_conflicts_on_update = lookup(each.value, "resolve_conflicts_on_update", lookup(each.value, "resolve_conflicts", null))
   service_account_role_arn    = lookup(each.value, "service_account_role_arn", null)
+  preserve                    = lookup(each.value, "preserve", null)
+
+  dynamic "namespace_config" {
+    for_each = lookup(each.value, "namespace", null) != null ? [each.value.namespace] : []
+
+    content {
+      namespace = namespace_config.value
+    }
+  }
 
   dynamic "pod_identity_association" {
     for_each = merge({}, lookup(each.value, "pod_identity_association", {}))
