@@ -83,6 +83,7 @@ resource "aws_eks_cluster" "default" {
   tags                          = module.label.tags
   role_arn                      = local.eks_service_role_arn
   version                       = var.kubernetes_version
+  force_update_version          = var.force_update_version
   enabled_cluster_log_types     = var.enabled_cluster_log_types
   bootstrap_self_managed_addons = local.effective_bootstrap_self_managed_addons
   deletion_protection           = var.deletion_protection_enabled
@@ -192,6 +193,13 @@ resource "aws_eks_cluster" "default" {
       enabled       = true
       node_pools    = compute_config.value.node_pools
       node_role_arn = compute_config.value.node_role_arn
+    }
+  }
+
+  dynamic "control_plane_scaling_config" {
+    for_each = var.control_plane_scaling_config != null ? [var.control_plane_scaling_config] : []
+    content {
+      tier = control_plane_scaling_config.value.tier
     }
   }
 
