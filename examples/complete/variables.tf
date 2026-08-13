@@ -10,7 +10,7 @@ variable "availability_zones" {
 
 variable "kubernetes_version" {
   type        = string
-  default     = "1.29"
+  default     = "1.36"
   description = "Desired Kubernetes master version. If you do not specify a value, the latest available version is used"
 }
 
@@ -133,6 +133,34 @@ variable "zonal_shift_config" {
     enabled = optional(bool, null)
   })
   description = "Configuration block with zonal shift configuration for the cluster"
+  default     = null
+}
+
+variable "kube_api_server_config" {
+  type = object({
+    event_ttl = optional(string)
+    service_node_port_range = optional(object({
+      min_port = optional(number)
+      max_port = optional(number)
+    }))
+  })
+  description = "Configuration block for customizing the Kubernetes API server"
+  default     = null
+}
+
+variable "kube_scheduler_config" {
+  type = object({
+    node_resources_fit = optional(object({
+      scoring_strategy = optional(object({
+        type = optional(string)
+        resources = optional(list(object({
+          name   = string
+          weight = number
+        })))
+      }))
+    }))
+  })
+  description = "Configuration block for customizing the Kubernetes scheduler"
   default     = null
 }
 

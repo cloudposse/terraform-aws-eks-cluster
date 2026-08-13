@@ -379,7 +379,7 @@ usage: |-
 
   ### Important Notes
 
-  - Requires AWS provider `>= 5.79.0` and Kubernetes `>= 1.29`
+  - Requires Kubernetes `>= 1.29`
   - Auto Mode manages `vpc-cni`, `kube-proxy`, `coredns`, and `aws-ebs-csi-driver` add-ons automatically.
     Do not include these in the `addons` variable when Auto Mode is enabled.
   - Auto Mode nodes are Bottlerocket-only, immutable, with no SSH/IMDS access
@@ -393,6 +393,77 @@ usage: |-
   1. Bump `kubernetes_version` and apply -- control plane upgrades in place
   2. Managed Karpenter detects version drift and automatically replaces nodes
   3. Auto Mode-managed add-ons are automatically upgraded to compatible versions
+
+  ## Advanced Control Plane Configuration
+
+  This module supports
+  [advanced Kubernetes control plane configuration](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-configuration.html),
+  which tunes the API server, scheduler, and controller manager that AWS manages for your cluster. Configure it
+  using the `kube_api_server_config`, `kube_scheduler_config`, and `kube_controller_manager_config` variables.
+
+  These are advanced settings. Each one changes how a core Kubernetes component behaves for every workload on
+  the cluster, and the right value depends on your workload. EKS runs upstream defaults that work well for most
+  clusters, so leave these unset unless you have a specific reason to change them, and test changes outside
+  production first.
+
+  | Variable | Parameter | Supported values | Default | Requires Provisioned Control Plane |
+  |----------|-----------|------------------|---------|-----------------------------------|
+  | `kube_api_server_config` | `event_ttl` | `10m` to `60m` | `60m` | No |
+  | `kube_api_server_config` | `service_node_port_range.min_port` / `.max_port` | `10260` to `32767`, `min_port` <= `max_port` | `30000` / `32767` | No |
+  | `kube_scheduler_config` | `node_resources_fit.scoring_strategy.type` | `LeastAllocated`, `MostAllocated` | `LeastAllocated` | No |
+  | `kube_scheduler_config` | `node_resources_fit.scoring_strategy.resources[*].weight` | `1` to `100` | `cpu: 1`, `memory: 1` | No |
+  | `kube_controller_manager_config` | `horizontal_pod_autoscaler_controller_config.horizontal_pod_autoscaler_sync_period` | `10s` to `15s` | `15s` | **Yes** |
+
+  ```hcl
+  module "eks_cluster" {
+    source  = "cloudposse/eks-cluster/aws"
+    # version = "..."
+
+    # Retain events for 30m instead of 60m to reduce etcd storage pressure
+    kube_api_server_config = {
+      event_ttl = "30m"
+    }
+
+    # Pack pods onto fewer nodes to reduce compute spend
+    kube_scheduler_config = {
+      node_resources_fit = {
+        scoring_strategy = {
+          type = "MostAllocated"
+          resources = [
+            { name = "cpu", weight = 1 },
+            { name = "memory", weight = 1 },
+          ]
+        }
+      }
+    }
+
+    # ... other configuration
+  }
+  ```
+
+  ### Important Notes
+
+  - Requires Kubernetes `>= 1.31`. Parameters apply to the entire cluster and cannot be scoped to a namespace
+    or workload.
+  - This module performs no client-side validation of these values. EKS validates each configuration before
+    applying it and returns the reason on failure.
+  - `horizontal_pod_autoscaler_sync_period` requires
+    [EKS Provisioned Control Plane](https://docs.aws.amazon.com/eks/latest/userguide/provisioned-control-plane.html),
+    so `control_plane_scaling_config.tier` must be `tier-xl` or higher. Setting it on a `standard` tier cluster
+    fails. Once it holds a non-default value you cannot return the cluster to the `standard` tier until you set
+    it back to `15s`, so plan the exit before you set it.
+  - **Removing one of these variables does not revert the cluster.** AWS provides no reset operation, and
+    updates merge with the existing configuration: fields you omit keep their current values. To return a
+    parameter to its default, set it explicitly to that default. Because the provider treats these as computed
+    attributes, dropping the variable produces no diff and no drift while the setting stays live on the cluster.
+  - Defaults and supported values can change between Kubernetes versions. Use `DescribeClusterVersions` to
+    retrieve the current values for the version your cluster runs.
+  - Changes are not instant. EKS applies them through a rolling control plane update, so expect several minutes
+    before a change takes full effect.
+  - Shortening `event_ttl` applies to new events only; events that already exist expire on the schedule set when
+    they were created.
+  - Narrowing `service_node_port_range` does not reassign ports for existing services, but a service that is
+    deleted and recreated cannot reclaim a port outside the new range.
 
 include: []
 contributors: []

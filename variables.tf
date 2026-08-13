@@ -49,7 +49,7 @@ variable "eks_cluster_service_role_arn" {
 variable "kubernetes_version" {
   type        = string
   description = "Desired Kubernetes master version. If you do not specify a value, the latest available version is used"
-  default     = "1.21"
+  default     = "1.36"
 }
 
 variable "force_update_version" {
@@ -246,6 +246,72 @@ variable "control_plane_scaling_config" {
     tier = optional(string, "standard")
   })
   description = "The control plane scaling tier configuration. Available options are `standard`, `tier-xl`, `tier-2xl`, `tier-4xl`, or `tier-8xl`. For more information, see EKS Provisioned Control Plane in the Amazon EKS User Guide."
+  default     = null
+}
+
+variable "kube_api_server_config" {
+  type = object({
+    event_ttl = optional(string)
+    service_node_port_range = optional(object({
+      min_port = optional(number)
+      max_port = optional(number)
+    }))
+  })
+  description = <<-EOT
+    Configuration block for customizing the Kubernetes API server. Requires Kubernetes `1.31` or later.
+    `event_ttl` is how long the API server retains Kubernetes events, from `10m` to `60m` (default `60m`).
+    `service_node_port_range` bounds the ports available to NodePort services, from `10260` to `32767`
+    (default `min_port` `30000`, `max_port` `32767`); `min_port` must be less than or equal to `max_port`.
+    Removing this variable does not revert the cluster: AWS provides no reset operation and omitted fields
+    keep their current values, so return a parameter to its default by setting it to that default explicitly.
+    EOT
+  default     = null
+}
+
+variable "kube_controller_manager_config" {
+  type = object({
+    horizontal_pod_autoscaler_controller_config = optional(object({
+      horizontal_pod_autoscaler_sync_period = optional(string)
+    }))
+  })
+  description = <<-EOT
+    Configuration block for customizing the Kubernetes controller manager. Requires Kubernetes `1.31` or later.
+    `horizontal_pod_autoscaler_sync_period` is how often the Horizontal Pod Autoscaler controller evaluates
+    scaling decisions, from `10s` to `15s` (default `15s`). This parameter requires a Provisioned Control Plane,
+    so `control_plane_scaling_config.tier` must be `tier-xl` or higher; setting it on a `standard` tier cluster
+    fails. Once set to a non-default value, the cluster cannot return to the `standard` tier until the parameter
+    is set back to `15s`. Shortening the period reduces how many HorizontalPodAutoscaler objects the control
+    plane can reconcile on schedule, and AWS does not validate the period against your object count.
+    Removing this variable does not revert the cluster: AWS provides no reset operation and omitted fields
+    keep their current values, so return a parameter to its default by setting it to that default explicitly.
+    EOT
+  default     = null
+}
+
+variable "kube_scheduler_config" {
+  type = object({
+    node_resources_fit = optional(object({
+      scoring_strategy = optional(object({
+        type = optional(string)
+        resources = optional(list(object({
+          name   = string
+          weight = number
+        })))
+      }))
+    }))
+  })
+  description = <<-EOT
+    Configuration block for customizing the Kubernetes scheduler. Requires Kubernetes `1.31` or later.
+    `scoring_strategy.type` is either `LeastAllocated` (the default, which spreads pods across nodes) or
+    `MostAllocated` (which packs pods onto fewer nodes to reduce compute spend); the upstream Kubernetes
+    `RequestedToCapacityRatio` strategy is not supported. `resources` assigns each scored resource a relative
+    weight from `1` to `100` (default `cpu` `1` and `memory` `1`). Weights are relative rather than absolute,
+    and specifying `resources` scores only the resources you list, so omitting a resource excludes it from
+    scoring entirely rather than reducing its influence. Changing the strategy affects future scheduling only;
+    running pods are never relocated.
+    Removing this variable does not revert the cluster: AWS provides no reset operation and omitted fields
+    keep their current values, so return a parameter to its default by setting it to that default explicitly.
+    EOT
   default     = null
 }
 

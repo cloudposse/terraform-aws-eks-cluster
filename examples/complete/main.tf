@@ -118,6 +118,9 @@ module "eks_cluster" {
   upgrade_policy                        = var.upgrade_policy
   zonal_shift_config                    = var.zonal_shift_config
 
+  kube_api_server_config = var.kube_api_server_config
+  kube_scheduler_config  = var.kube_scheduler_config
+
   # EKS Auto Mode
   auto_mode_compute_config = {
     enabled       = var.auto_mode_enabled

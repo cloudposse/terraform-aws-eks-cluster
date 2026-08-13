@@ -60,6 +60,34 @@ zonal_shift_config = {
   enabled = true
 }
 
+kube_api_server_config = {
+  event_ttl = "30m"
+
+  service_node_port_range = {
+    min_port = 30000
+    max_port = 32767
+  }
+}
+
+kube_scheduler_config = {
+  node_resources_fit = {
+    scoring_strategy = {
+      type = "MostAllocated"
+
+      resources = [
+        {
+          name   = "cpu"
+          weight = 1
+        },
+        {
+          name   = "memory"
+          weight = 1
+        },
+      ]
+    }
+  }
+}
+
 
 remote_network_config = {
   remote_node_networks_cidrs = ["10.255.0.0/16"]
