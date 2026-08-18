@@ -372,7 +372,7 @@ When Auto Mode is enabled, AWS manages the following add-ons automatically:
 
 ### Important Notes
 
-- Requires AWS provider `>= 5.79.0` and Kubernetes `>= 1.29`
+- Requires Kubernetes `>= 1.29`
 - Auto Mode manages `vpc-cni`, `kube-proxy`, `coredns`, and `aws-ebs-csi-driver` add-ons automatically.
   Do not include these in the `addons` variable when Auto Mode is enabled.
 - Auto Mode nodes are Bottlerocket-only, immutable, with no SSH/IMDS access
@@ -386,6 +386,77 @@ With Auto Mode, Kubernetes version upgrades are simplified:
 1. Bump `kubernetes_version` and apply -- control plane upgrades in place
 2. Managed Karpenter detects version drift and automatically replaces nodes
 3. Auto Mode-managed add-ons are automatically upgraded to compatible versions
+
+## Advanced Control Plane Configuration
+
+This module supports
+[advanced Kubernetes control plane configuration](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-configuration.html),
+which tunes the API server, scheduler, and controller manager that AWS manages for your cluster. Configure it
+using the `kube_api_server_config`, `kube_scheduler_config`, and `kube_controller_manager_config` variables.
+
+These are advanced settings. Each one changes how a core Kubernetes component behaves for every workload on
+the cluster, and the right value depends on your workload. EKS runs upstream defaults that work well for most
+clusters, so leave these unset unless you have a specific reason to change them, and test changes outside
+production first.
+
+| Variable | Parameter | Supported values | Default | Requires Provisioned Control Plane |
+|----------|-----------|------------------|---------|-----------------------------------|
+| `kube_api_server_config` | `event_ttl` | `10m` to `60m` | `60m` | No |
+| `kube_api_server_config` | `service_node_port_range.min_port` / `.max_port` | `10260` to `32767`, `min_port` <= `max_port` | `30000` / `32767` | No |
+| `kube_scheduler_config` | `node_resources_fit.scoring_strategy.type` | `LeastAllocated`, `MostAllocated` | `LeastAllocated` | No |
+| `kube_scheduler_config` | `node_resources_fit.scoring_strategy.resources[*].weight` | `1` to `100` | `cpu: 1`, `memory: 1` | No |
+| `kube_controller_manager_config` | `horizontal_pod_autoscaler_controller_config.horizontal_pod_autoscaler_sync_period` | `10s` to `15s` | `15s` | **Yes** |
+
+```hcl
+module "eks_cluster" {
+  source  = "cloudposse/eks-cluster/aws"
+  # version = "..."
+
+  # Retain events for 30m instead of 60m to reduce etcd storage pressure
+  kube_api_server_config = {
+    event_ttl = "30m"
+  }
+
+  # Pack pods onto fewer nodes to reduce compute spend
+  kube_scheduler_config = {
+    node_resources_fit = {
+      scoring_strategy = {
+        type = "MostAllocated"
+        resources = [
+          { name = "cpu", weight = 1 },
+          { name = "memory", weight = 1 },
+        ]
+      }
+    }
+  }
+
+  # ... other configuration
+}
+```
+
+### Important Notes
+
+- Requires Kubernetes `>= 1.31`. Parameters apply to the entire cluster and cannot be scoped to a namespace
+  or workload.
+- This module performs no client-side validation of these values. EKS validates each configuration before
+  applying it and returns the reason on failure.
+- `horizontal_pod_autoscaler_sync_period` requires
+  [EKS Provisioned Control Plane](https://docs.aws.amazon.com/eks/latest/userguide/provisioned-control-plane.html),
+  so `control_plane_scaling_config.tier` must be `tier-xl` or higher. Setting it on a `standard` tier cluster
+  fails. Once it holds a non-default value you cannot return the cluster to the `standard` tier until you set
+  it back to `15s`, so plan the exit before you set it.
+- **Removing one of these variables does not revert the cluster.** AWS provides no reset operation, and
+  updates merge with the existing configuration: fields you omit keep their current values. To return a
+  parameter to its default, set it explicitly to that default. Because the provider treats these as computed
+  attributes, dropping the variable produces no diff and no drift while the setting stays live on the cluster.
+- Defaults and supported values can change between Kubernetes versions. Use `DescribeClusterVersions` to
+  retrieve the current values for the version your cluster runs.
+- Changes are not instant. EKS applies them through a rolling control plane update, so expect several minutes
+  before a change takes full effect.
+- Shortening `event_ttl` applies to new events only; events that already exist expire on the schedule set when
+  they were created.
+- Narrowing `service_node_port_range` does not reassign ports for existing services, but a service that is
+  deleted and recreated cannot reclaim a port outside the new range.
 
 > [!IMPORTANT]
 > In Cloud Posse's examples, we avoid pinning modules to specific versions to prevent discrepancies between the documentation
@@ -406,14 +477,14 @@ With Auto Mode, Kubernetes version upgrades are simplified:
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.42.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.59.0 |
 | <a name="requirement_tls"></a> [tls](#requirement\_tls) | >= 3.1.0, != 4.0.0 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.42.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.59.0 |
 | <a name="provider_tls"></a> [tls](#provider\_tls) | >= 3.1.0, != 4.0.0 |
 
 ## Modules
@@ -504,8 +575,11 @@ With Auto Mode, Kubernetes version upgrades are simplified:
 | <a name="input_environment"></a> [environment](#input\_environment) | ID element. Usually used for region e.g. 'uw2', 'us-west-2', OR role 'prod', 'staging', 'dev', 'UAT' | `string` | `null` | no |
 | <a name="input_force_update_version"></a> [force\_update\_version](#input\_force\_update\_version) | Force version update by overriding upgrade-blocking readiness checks when updating a cluster | `bool` | `false` | no |
 | <a name="input_id_length_limit"></a> [id\_length\_limit](#input\_id\_length\_limit) | Limit `id` to this many characters (minimum 6).<br/>Set to `0` for unlimited length.<br/>Set to `null` for keep the existing setting, which defaults to `0`.<br/>Does not affect `id_full`. | `number` | `null` | no |
+| <a name="input_kube_api_server_config"></a> [kube\_api\_server\_config](#input\_kube\_api\_server\_config) | Configuration block for customizing the Kubernetes API server. Requires Kubernetes `1.31` or later.<br/>`event_ttl` is how long the API server retains Kubernetes events, from `10m` to `60m` (default `60m`).<br/>`service_node_port_range` bounds the ports available to NodePort services, from `10260` to `32767`<br/>(default `min_port` `30000`, `max_port` `32767`); `min_port` must be less than or equal to `max_port`.<br/>Removing this variable does not revert the cluster: AWS provides no reset operation and omitted fields<br/>keep their current values, so return a parameter to its default by setting it to that default explicitly. | <pre>object({<br/>    event_ttl = optional(string)<br/>    service_node_port_range = optional(object({<br/>      min_port = optional(number)<br/>      max_port = optional(number)<br/>    }))<br/>  })</pre> | `null` | no |
+| <a name="input_kube_controller_manager_config"></a> [kube\_controller\_manager\_config](#input\_kube\_controller\_manager\_config) | Configuration block for customizing the Kubernetes controller manager. Requires Kubernetes `1.31` or later.<br/>`horizontal_pod_autoscaler_sync_period` is how often the Horizontal Pod Autoscaler controller evaluates<br/>scaling decisions, from `10s` to `15s` (default `15s`). This parameter requires a Provisioned Control Plane,<br/>so `control_plane_scaling_config.tier` must be `tier-xl` or higher; setting it on a `standard` tier cluster<br/>fails. Once set to a non-default value, the cluster cannot return to the `standard` tier until the parameter<br/>is set back to `15s`. Shortening the period reduces how many HorizontalPodAutoscaler objects the control<br/>plane can reconcile on schedule, and AWS does not validate the period against your object count.<br/>Removing this variable does not revert the cluster: AWS provides no reset operation and omitted fields<br/>keep their current values, so return a parameter to its default by setting it to that default explicitly. | <pre>object({<br/>    horizontal_pod_autoscaler_controller_config = optional(object({<br/>      horizontal_pod_autoscaler_sync_period = optional(string)<br/>    }))<br/>  })</pre> | `null` | no |
+| <a name="input_kube_scheduler_config"></a> [kube\_scheduler\_config](#input\_kube\_scheduler\_config) | Configuration block for customizing the Kubernetes scheduler. Requires Kubernetes `1.31` or later.<br/>`scoring_strategy.type` is either `LeastAllocated` (the default, which spreads pods across nodes) or<br/>`MostAllocated` (which packs pods onto fewer nodes to reduce compute spend); the upstream Kubernetes<br/>`RequestedToCapacityRatio` strategy is not supported. `resources` assigns each scored resource a relative<br/>weight from `1` to `100` (default `cpu` `1` and `memory` `1`). Weights are relative rather than absolute,<br/>and specifying `resources` scores only the resources you list, so omitting a resource excludes it from<br/>scoring entirely rather than reducing its influence. Changing the strategy affects future scheduling only;<br/>running pods are never relocated.<br/>Removing this variable does not revert the cluster: AWS provides no reset operation and omitted fields<br/>keep their current values, so return a parameter to its default by setting it to that default explicitly. | <pre>object({<br/>    node_resources_fit = optional(object({<br/>      scoring_strategy = optional(object({<br/>        type = optional(string)<br/>        resources = optional(list(object({<br/>          name   = string<br/>          weight = number<br/>        })))<br/>      }))<br/>    }))<br/>  })</pre> | `null` | no |
 | <a name="input_kubernetes_network_ipv6_enabled"></a> [kubernetes\_network\_ipv6\_enabled](#input\_kubernetes\_network\_ipv6\_enabled) | Set true to use IPv6 addresses for Kubernetes pods and services | `bool` | `false` | no |
-| <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version) | Desired Kubernetes master version. If you do not specify a value, the latest available version is used | `string` | `"1.21"` | no |
+| <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version) | Desired Kubernetes master version. If you do not specify a value, the latest available version is used | `string` | `"1.36"` | no |
 | <a name="input_label_key_case"></a> [label\_key\_case](#input\_label\_key\_case) | Controls the letter case of the `tags` keys (label names) for tags generated by this module.<br/>Does not affect keys of tags passed in via the `tags` input.<br/>Possible values: `lower`, `title`, `upper`.<br/>Default value: `title`. | `string` | `null` | no |
 | <a name="input_label_order"></a> [label\_order](#input\_label\_order) | The order in which the labels (ID elements) appear in the `id`.<br/>Defaults to ["namespace", "environment", "stage", "name", "attributes"].<br/>You can omit any of the 6 labels ("tenant" is the 6th), but at least one must be present. | `list(string)` | `null` | no |
 | <a name="input_label_value_case"></a> [label\_value\_case](#input\_label\_value\_case) | Controls the letter case of ID elements (labels) as included in `id`,<br/>set as tag values, and output by this module individually.<br/>Does not affect values of tags passed in via the `tags` input.<br/>Possible values: `lower`, `title`, `upper` and `none` (no transformation).<br/>Set this to `title` and set `delimiter` to `""` to yield Pascal Case IDs.<br/>Default value: `lower`. | `string` | `null` | no |
