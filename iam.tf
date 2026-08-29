@@ -44,6 +44,13 @@ resource "aws_iam_role_policy_attachment" "amazon_eks_service_policy" {
   role       = one(aws_iam_role.default[*].name)
 }
 
+resource "aws_iam_role_policy_attachment" "additional" {
+  for_each = local.create_eks_service_role ? toset(var.eks_cluster_role_policy_arns) : toset([])
+
+  policy_arn = each.value
+  role       = one(aws_iam_role.default[*].name)
+}
+
 # AmazonEKSClusterPolicy managed policy doesn't contain all necessary permissions to create
 # ELB service-linked role required during LB provisioning by Kubernetes.
 # Because of that, on a new AWS account (where load balancers have not been provisioned yet, `nginx-ingress` fails to provision a load balancer

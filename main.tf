@@ -269,6 +269,7 @@ resource "aws_eks_cluster" "default" {
     aws_iam_role_policy_attachment.cluster_elb_service_role,
     aws_iam_role_policy_attachment.amazon_eks_cluster_policy,
     aws_iam_role_policy_attachment.amazon_eks_service_policy,
+    aws_iam_role_policy_attachment.additional,
     aws_kms_alias.cluster,
     aws_cloudwatch_log_group.default,
     var.associated_security_group_ids,
