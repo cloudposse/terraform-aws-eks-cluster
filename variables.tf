@@ -45,6 +45,13 @@ variable "eks_cluster_service_role_arn" {
   default     = null
 }
 
+variable "eks_cluster_role_policy_arns" {
+  type        = list(string)
+  description = "List of policy ARNs to attach to the EKS cluster role this module creates in addition to the default ones"
+  default     = []
+  nullable    = false
+}
+
 
 variable "kubernetes_version" {
   type        = string

@@ -105,6 +105,10 @@ module "eks_cluster" {
   enabled_cluster_log_types    = var.enabled_cluster_log_types
   cluster_log_retention_period = var.cluster_log_retention_period
 
+  eks_cluster_role_policy_arns = [
+    "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSVPCResourceController"
+  ]
+
   cluster_encryption_config_enabled                         = var.cluster_encryption_config_enabled
   cluster_encryption_config_kms_key_id                      = var.cluster_encryption_config_kms_key_id
   cluster_encryption_config_kms_key_enable_key_rotation     = var.cluster_encryption_config_kms_key_enable_key_rotation
