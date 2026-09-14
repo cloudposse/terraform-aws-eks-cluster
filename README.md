@@ -357,7 +357,7 @@ module "eks_cluster" {
 When Auto Mode is enabled, this module automatically:
 - Sets `bootstrap_self_managed_addons = false` (unless explicitly overridden)
 - Adds `sts:TagSession` to the cluster IAM role trust policy
-- Attaches 4 additional IAM policies to the cluster role: `AmazonEKSComputePolicy`, `AmazonEKSBlockStoragePolicy`,
+- Attaches 4 additional IAM policies to the cluster role: `AmazonEKSComputePolicy`, `AmazonEKSBlockStoragePolicyV2`,
   `AmazonEKSLoadBalancingPolicy`, and `AmazonEKSNetworkingPolicy`
 
 ### Auto Mode Managed Add-ons
