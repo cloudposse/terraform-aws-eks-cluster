@@ -38,6 +38,7 @@ forming a critical part of [Cloud Posse's reference architecture](https://cloudp
 Ideal for teams looking to deploy scalable and manageable Kubernetes clusters on AWS with minimal fuss.
 
 
+
 > [!TIP]
 > #### 👽 Use Atmos with Terraform
 > Cloud Posse uses [`atmos`](https://atmos.tools) to easily orchestrate multiple environments using Terraform. <br/>
@@ -48,6 +49,7 @@ Ideal for teams looking to deploy scalable and manageable Kubernetes clusters on
 > <img src="https://github.com/cloudposse/atmos/blob/main/docs/demo.gif?raw=true"/><br/>
 > <i>Example of running <a href="https://atmos.tools"><code>atmos</code></a> to manage infrastructure from our <a href="https://atmos.tools/quick-start/">Quick Start</a> tutorial.</i>
 > </detalis>
+
 
 
 ## Introduction
@@ -479,13 +481,6 @@ module "eks_cluster" {
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.59.0 |
 | <a name="requirement_tls"></a> [tls](#requirement\_tls) | >= 3.1.0, != 4.0.0 |
-
-## Providers
-
-| Name | Version |
-| ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.59.0 |
-| <a name="provider_tls"></a> [tls](#provider\_tls) | >= 3.1.0, != 4.0.0 |
 
 ## Modules
 
